@@ -52,4 +52,21 @@ export const ApiEndpoints = {
   unitsOfMeasure: {
     list: () => `${environment.apiBaseUrl}/units-of-measure`,
   },
+  products: {
+    search: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/products`,
+    create: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/products`,
+    byId: (productId: string) => `${environment.apiBaseUrl}/products/${productId}`,
+    activate: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/activation`,
+    deactivate: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/deactivation`,
+    addUnit: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/units`,
+    unitFactor: (productId: string, productUnitId: string) =>
+      `${environment.apiBaseUrl}/products/${productId}/units/${productUnitId}/factor`,
+    activateUnit: (productId: string, productUnitId: string) =>
+      `${environment.apiBaseUrl}/products/${productId}/units/${productUnitId}/activation`,
+    deactivateUnit: (productId: string, productUnitId: string) =>
+      `${environment.apiBaseUrl}/products/${productId}/units/${productUnitId}/deactivation`,
+    baseUnit: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/base-unit`,
+  },
 } as const;
