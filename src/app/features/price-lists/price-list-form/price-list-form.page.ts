@@ -318,8 +318,15 @@ export class PriceListFormPage {
           validUntil: validUntil || undefined,
         });
 
+    const isCreate = !this.priceListId;
     request$.pipe(finalize(() => this.submitting.set(false))).subscribe({
-      next: () => void this.router.navigateByUrl('/price-lists'),
+      next: (savedPriceList) =>
+        // Recién creada, la mandamos a su propia edición en vez de al listado:
+        // ahí vive la sección "Precio de un producto" (HU-25) y sin este salto
+        // queda escondida detrás de un link "Editar" que nada anuncia.
+        void this.router.navigateByUrl(
+          isCreate ? `/price-lists/${savedPriceList.id}/edit` : '/price-lists',
+        ),
       error: (error: ApiError) => this.errorMessage.set(error.message ?? 'No se pudo guardar la lista de precios.'),
     });
   }
