@@ -1,0 +1,48 @@
+# Fase 2 — Fundación SCSS, cierre del hueco SSR y primer módulo de negocio (Sucursales)
+
+## Qué se hizo
+
+1. **Regla de SCSS añadida a `.claude/CLAUDE.md`** (pedido explícito del usuario): módulos `@use`/`@forward` en vez de `@import`, tokens centralizados, funciones para valores, mixins para patrones, mobile-first con `min-width`, sin colores/espaciados sueltos en componentes.
+2. **Fundación SCSS** en `src/styles/abstracts`:
+   - `_tokens.scss`: mapas Sass (`$breakpoints`, `$spacing`, `$colors`, `$radii`, `$shadows`, `$font-sizes`). Única fuente de verdad de diseño.
+   - `_functions.scss`: `space()`, `color()`, `radius()`, `shadow()`, `font-size()`, `breakpoint()` — leen los mapas anteriores y fallan en build (`@error`) si la clave no existe, para detectar typos en tiempo de compilación en vez de en runtime.
+   - `_mixins.scss`: `respond($breakpoint)` (media query `min-width`, mobile-first), `flex(...)`, `auto-grid(...)`, `truncate`, `visually-hidden`, `focus-ring`, `card`.
+   - `abstracts.scss`: barril que hace `@forward` de los tres, para que cualquier componente escriba `@use '.../styles/abstracts' as ds;` y tenga `ds.color(...)`, `ds.space(...)`, `@include ds.respond(...)`.
+   - `angular.json`: `stylePreprocessorOptions.includePaths: ["src/styles"]`, así el `@use` de arriba no depende de contar `../` hasta la raíz.
+   - `src/styles.scss`: reset global mínimo (box-sizing, tipografía base, colores) consumiendo los tokens.
+3. **Cierre del hueco SSR documentado al final de la Fase 1** (cookies no llegaban al primer render del servidor):
+   - `CookieService.get()` ahora, en el servidor, lee la cabecera `Cookie` de la petición Express entrante a través del token `REQUEST` de `@angular/core` (`inject(REQUEST, { optional: true })`), en vez de devolver siempre `null` fuera del navegador. `set()`/`delete()` siguen siendo no-op en servidor (no hace falta: login/logout son acciones de cliente, ya hidratado).
+   - Nuevo `ssrAbsoluteUrlInterceptor` (`core/infrastructure/http/ssr-absolute-url.interceptor.ts`), registrado **solo** en `app.config.server.ts`: vuelve absoluta cualquier URL relativa de la API (`environment.apiBaseUrl` es `/api/v1` en producción) usando, en orden, `API_ORIGIN` (variable de entorno del proceso Node) o el origen de la petición entrante (`REQUEST`). Sin esto, `HttpClient` en Node no tiene contra qué resolver una URL relativa y la petición fallaba.
+4. **Modelado de la entidad Sucursal** desde `APIDOC.json` (`BranchResponse`, `CreateBranchRequest`, `UpdateBranchRequest`, y los endpoints de activación/baja):
+   - Dominio: `Branch`, `BranchQuery` (extiende el nuevo `PageQuery` genérico), `CreateBranchInput`, `UpdateBranchInput` (`core/domain/models/branch.model.ts`); puerto `BranchRepository` (clase abstracta, mismo patrón que `AuthRepository`).
+   - Infraestructura: DTOs (`branch.dto.ts`), `PageResponseDto<T>` genérico (`page.dto.ts`) + mapper `toPage()` reutilizable para cualquier listado paginado futuro, mapper `toBranch()`, `BranchHttpRepository` (implementa `search/getById/create/update/activate/deactivate` contra los endpoints reales), y rutas centralizadas en `ApiEndpoints.branches`.
+   - Aplicación: un caso de uso por operación (`SearchBranchesUseCase`, `GetBranchUseCase`, `CreateBranchUseCase`, `UpdateBranchUseCase`, `SetBranchStatusUseCase` para activar/desactivar), siguiendo el mismo patrón que Auth en la Fase 1.
+   - Utilidad transversal: `toHttpParams()` (`core/infrastructure/http/http-params.util.ts`) construye `HttpParams` desde un objeto de filtros, omitiendo claves vacías — evita repetir ese filtrado en cada repositorio paginado.
+5. **Shell de aplicación autenticada** (`shared/ui/layout/app-shell.component.ts`): sidebar de navegación filtrada por rol (hoy solo "Panel" y "Sucursales", ambos visibles a cualquier autenticado) + topbar con usuario/cerrar sesión + `<router-outlet />` para la página activa. `app.routes.ts` se reestructuró: la ruta raíz (`''`) monta el shell bajo `authGuard` y todas las páginas protegidas (`dashboard`, `branches/...`) cuelgan de ahí como hijas, heredando el guard y el layout. `DashboardPage` se redujo a placeholder puro (ya no duplica topbar/logout).
+6. **Paginador reutilizable** (`shared/ui/table/paginator.component.ts`): recibe `page/totalPages/totalElements/hasNext` de cualquier `Page<T>` y emite `pageChange`. Pensado para no rehacerlo en cada módulo de listado futuro.
+7. **Módulo CRUD de Sucursales completo** (`features/branches`), primer módulo de negocio de la app:
+   - `branch-list/branch-list.page.ts`: listado paginado con filtros reactivos (texto, ciudad, estado) vía `FormGroup` + `valueChanges` debounced (`takeUntilDestroyed`), tabla responsiva que se reapila como tarjetas en móvil (patrón `data-label` + `::before`, sin duplicar markup ni lógica), acciones de reactivar/dar de baja.
+   - `branch-form/branch-form.page.ts`: un solo componente para alta y edición (el modo lo decide la presencia de `:id` en la ruta); en edición el código queda deshabilitado (es inmutable, según APIDOC.json).
+   - `branches.routes.ts`: listado abierto a cualquier autenticado (HU-06: un operador necesita ver qué sucursales existen antes de pedir una transferencia); alta/edición protegidas con `roleGuard([Role.Admin])` — capa de UX, la autorización real la hace el backend.
+   - Enlace del puerto en `app.config.ts`: `{ provide: BranchRepository, useClass: BranchHttpRepository }`.
+8. Verificado con `ng build --configuration development`: build limpio, sin errores de TypeScript ni de SCSS.
+
+## Cómo se hizo (decisiones clave)
+
+- **Tokens como mapas Sass + funciones que leen esos mapas**, no variables sueltas: permite iterar/validar (`map.has-key`) y centraliza cualquier cambio de paleta o escala de espaciado en un solo archivo, tal como pide la nueva regla de `CLAUDE.md`.
+- **`respond()` mobile-first (`min-width`)**: todas las reglas base están pensadas para móvil; los `@include respond('md') { ... }` añaden/ajustan para pantallas mayores. Nunca al revés (`max-width` decreciente), que es más frágil de mantener y menos legible.
+- **`REQUEST` de `@angular/core` para leer cookies en SSR**: es el mecanismo soportado por Angular 20 (`InjectionToken<Request | null>`, `null` fuera de una petición SSR real) para acceder a la petición Express entrante durante el render. Se inyecta `{ optional: true }` porque en cliente (y en cualquier contexto no-SSR) el token es `null` y `CookieService` debe seguir funcionando con `document.cookie` sin lanzar.
+- **`ssrAbsoluteUrlInterceptor` en un `provideHttpClient` separado, solo en `app.config.server.ts`**: `mergeApplicationConfig(appConfig, serverConfig)` concatena `providers` después de los de `app.config.ts`, así que este interceptor queda el más cercano al backend (se ejecuta último). Es la posición correcta: ni `authInterceptor` ni `errorNormalizerInterceptor` ni `refreshInterceptor` necesitan la URL absoluta, solo el `fetch` final la necesita — y así ninguno de los interceptores compartidos con el cliente tuvo que tocarse.
+- **`PageResponseDto<T>` + `toPage()` genéricos desde el primer módulo de negocio**: el listado de Sucursales es el primero de varios (Productos, Proveedores, Categorías... vendrán en fases siguientes) y todos comparten la misma forma de paginación (`PageResponse` en APIDOC.json). Generalizar ahora evita reescribir el mismo mapeo en cada feature.
+- **Guard de ruta (`roleGuard([Role.Admin])`) en alta/edición, listado sin guard de rol**: el propio APIDOC.json distingue explícitamente que la consulta de sucursales "no se limita a la sucursal propia del usuario, a diferencia de las operaciones de escritura" — es una regla de negocio documentada, no una elección arbitraria de UI.
+- **Tabla responsiva sin JavaScript ni dos plantillas**: un único `<table>` con `data-label` en cada `<td>`; por debajo de `md` se fuerza `display:block` en filas/celdas y el pseudo-elemento `::before` pinta la etiqueta desde el atributo. Evita mantener una vista de tarjetas y una de tabla por separado (menos superficie de bugs, un solo lugar para lógica de negocio en el template).
+- **Shell como ruta padre con hijos, no como componente envuelto manualmente en cada página**: mueve el `authGuard` a un solo lugar (se hereda a los hijos) y cualquier feature nueva solo necesita añadir su propia rama de rutas bajo `children`, sin volver a montar sidebar/topbar.
+- **Un caso de uso por operación en `core/application/branches`**, replicando el patrón de Auth: mantiene los componentes de presentación desacoplados de si el dato viene de HTTP, caché, etc., y da un punto único para añadir lógica futura (p. ej. invalidar una caché de sucursales tras `create`/`update`) sin tocar la UI.
+
+## Qué sigue (Fase 3 propuesta)
+
+1. Modelar el resto de entidades de `APIDOC.json` (Organización, Producto + ProductUnit, Unidad de Medida, Categoría, Proveedor, Transportista, Ruta logística, Lista de precios), reutilizando `PageResponseDto`/`toPage`/`toHttpParams` ya generalizados.
+2. Módulo de **Inventario** por sucursal (`/branches/{branchId}/inventory/*`): es el núcleo funcional de la app y depende de Producto y Sucursal ya modelados.
+3. Paneles del dashboard con datos reales (`/organizations/{organizationId}/dashboard/*`) sustituyendo el placeholder de `DashboardPage`.
+4. Componente de **tabla genérica** más allá del paginador: hoy cada listado repite su propia tabla/tarjeta; con 2-3 módulos más conviene extraer un `<app-data-table>` parametrizado por columnas.
+5. Pruebas unitarias: `ng test` sigue bloqueado en este entorno por falta de Chrome (`CHROME_BIN` no configurable aquí); pendiente para un entorno con navegador disponible.

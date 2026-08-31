@@ -1,0 +1,38 @@
+@use '../../../../styles/abstracts' as ds;
+
+.paginator {
+  @include ds.flex(column, flex-start, space-between, ds.space(2));
+
+  @include ds.respond('sm') {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.summary {
+  font-size: ds.font-size('sm');
+  color: ds.color('neutral-700');
+}
+
+.controls {
+  @include ds.flex(row, center, flex-start, ds.space(2));
+}
+
+button {
+  border: 1px solid ds.color('neutral-300');
+  background: ds.color('neutral-0');
+  border-radius: ds.radius('sm');
+  padding: ds.space(2) ds.space(3);
+  cursor: pointer;
+
+  @include ds.focus-ring;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    background: ds.color('neutral-100');
+  }
+}

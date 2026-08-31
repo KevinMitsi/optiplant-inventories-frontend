@@ -1,0 +1,21 @@
+@use '../../../../styles/abstracts' as ds;
+
+:host {
+  display: block;
+}
+
+@include ds.crud-list;
+
+.data-table {
+  @include ds.responsive-table;
+}
+
+.checkbox {
+  @include ds.flex(row, center, flex-start, ds.space(2));
+  font-size: ds.font-size('sm');
+  color: ds.color('neutral-700');
+
+  input {
+    width: auto;
+  }
+}

@@ -1,0 +1,263 @@
+// Patrones de página completos (no valores sueltos ni layout genérico, para
+// eso están `_functions.scss`/`_mixins.scss`): bloques de reglas que repiten
+// los listados CRUD de negocio (header, filtros, badge de estado, acciones
+// de fila, botones). Se centralizan aquí tras el segundo módulo (Sucursales,
+// Categorías) para no reescribir lo mismo en cada `*-list.page.scss` nuevo.
+@use 'functions';
+@use 'mixins';
+
+@mixin list-header {
+  .header {
+    @include mixins.flex(row, center, space-between, functions.space(3));
+    margin-bottom: functions.space(5);
+
+    h1 {
+      margin: 0;
+      font-size: functions.font-size('display');
+      font-weight: 700;
+      color: functions.color('neutral-900');
+    }
+  }
+}
+
+@mixin list-filters {
+  .filters {
+    @include mixins.card;
+    @include mixins.flex(column, stretch, flex-start, functions.space(3));
+    padding: functions.space(4);
+    margin-bottom: functions.space(5);
+
+    @include mixins.respond('md') {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    input,
+    select {
+      padding: functions.space(2) functions.space(3);
+      border: 1px solid functions.color('neutral-300');
+      border-radius: functions.radius('sm');
+      background: functions.color('neutral-0');
+      color: functions.color('neutral-900');
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+
+      &:focus-visible {
+        outline: none;
+        border-color: functions.color('primary');
+        box-shadow: 0 0 0 3px functions.color('primary-light');
+      }
+    }
+  }
+}
+
+@mixin form-error {
+  .form-error {
+    background: functions.color('danger-light');
+    color: functions.color('danger');
+    border-radius: functions.radius('sm');
+    padding: functions.space(3);
+    margin-bottom: functions.space(4);
+  }
+}
+
+@mixin status-badge {
+  .badge {
+    display: inline-block;
+    padding: functions.space(1) functions.space(3);
+    border-radius: functions.radius('pill');
+    font-size: functions.font-size('xs');
+    font-weight: 700;
+    background: functions.color('neutral-200');
+    color: functions.color('neutral-700');
+
+    &--active {
+      background: functions.color('success-light');
+      color: functions.color('success');
+    }
+
+    &--warning {
+      background: functions.color('warning-light');
+      color: functions.color('warning');
+    }
+
+    &--danger {
+      background: functions.color('danger-light');
+      color: functions.color('danger');
+    }
+
+    &--info {
+      background: functions.color('info-light');
+      color: functions.color('info');
+    }
+
+    &--purple {
+      background: functions.color('purple-light');
+      color: functions.color('purple');
+    }
+  }
+}
+
+@mixin row-actions {
+  .actions {
+    @include mixins.flex(row, center, flex-end, functions.space(3));
+
+    button {
+      border: 1px solid functions.color('neutral-300');
+      background: functions.color('neutral-0');
+      border-radius: functions.radius('sm');
+      padding: functions.space(1) functions.space(2);
+      cursor: pointer;
+
+      @include mixins.focus-ring;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+/// Botón pill genérico (`.button`, con variantes `--primary`/`--ghost`) usado
+/// tanto en el header de listados como en las acciones de los formularios.
+@mixin button {
+  .button {
+    display: inline-block;
+    padding: functions.space(3) functions.space(5);
+    border-radius: functions.radius('sm');
+    border: none;
+    font-weight: 700;
+    font-size: functions.font-size('sm');
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition:
+      background-color 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.1s ease;
+
+    @include mixins.focus-ring;
+
+    &--primary {
+      background: functions.color('primary');
+      color: functions.color('neutral-0');
+      box-shadow: 0 2px 8px rgba(255, 96, 0, 0.28);
+
+      &:hover {
+        background: functions.color('primary-dark');
+      }
+
+      &:active {
+        transform: translateY(1px);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
+
+    &--ghost {
+      background: functions.color('neutral-0');
+      border: 1px solid functions.color('neutral-300');
+      color: functions.color('neutral-900');
+
+      &:hover {
+        background: functions.color('neutral-100');
+        border-color: functions.color('neutral-500');
+      }
+    }
+  }
+}
+
+/// Agrupa todos los patrones de listado CRUD en una sola inclusión.
+@mixin crud-list {
+  @include list-header;
+  @include button;
+  @include list-filters;
+  @include form-error;
+  @include status-badge;
+  @include row-actions;
+}
+
+/// Formulario de alta/edición de una entidad (`.entity-form`, con label/input/
+/// hint/acciones): patrón compartido por `branch-form`, `category-form`,
+/// `carrier-form` y `supplier-form`.
+@mixin entity-form {
+  .entity-form {
+    @include mixins.card;
+    @include mixins.flex(column, stretch, flex-start, functions.space(1));
+    max-width: 34rem;
+    margin-inline: auto;
+    padding: functions.space(5);
+    border-top: 4px solid functions.color('primary');
+
+    @include mixins.respond('md') {
+      padding: functions.space(6) functions.space(7);
+    }
+  }
+
+  label {
+    font-size: functions.font-size('sm');
+    font-weight: 700;
+    color: functions.color('neutral-700');
+    margin-top: functions.space(4);
+  }
+
+  input,
+  select,
+  textarea {
+    padding: functions.space(3);
+    margin-top: functions.space(1);
+    border: 1px solid functions.color('neutral-300');
+    border-radius: functions.radius('sm');
+    background: functions.color('neutral-0');
+    color: functions.color('neutral-900');
+    font: inherit;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:disabled {
+      background: functions.color('neutral-100');
+      color: functions.color('neutral-500');
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: functions.color('primary');
+      box-shadow: 0 0 0 3px functions.color('primary-light');
+    }
+  }
+
+  .hint {
+    margin: functions.space(1) 0 0;
+    font-size: functions.font-size('xs');
+    color: functions.color('neutral-500');
+  }
+
+  .actions {
+    @include mixins.flex(row, center, flex-end, functions.space(3));
+    margin-top: functions.space(6);
+    padding-top: functions.space(5);
+    border-top: 1px solid functions.color('neutral-200');
+  }
+}
+
+/// Agrupa formulario + mensaje de error + botones en una sola inclusión.
+@mixin crud-form {
+  h1 {
+    margin: 0 0 functions.space(5);
+    font-size: functions.font-size('display');
+    font-weight: 700;
+    color: functions.color('neutral-900');
+    text-align: center;
+  }
+
+  @include entity-form;
+  @include button;
+  @include form-error;
+}

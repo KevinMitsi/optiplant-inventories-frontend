@@ -1,0 +1,156 @@
+// Mixins: patrones reutilizables que generan bloques de reglas (no valores
+// sueltos, para eso están las funciones en `_functions.scss`).
+@use 'sass:map';
+@use 'tokens';
+@use 'functions';
+
+/// Media query mobile-first. Uso: `@include respond('md') { ... }` aplica
+/// desde 768px hacia arriba. La app se diseña sin qualifier (móvil) y se
+/// añaden reglas dentro de `respond()` para pantallas mayores — nunca al
+/// revés — para garantizar la interoperabilidad desktop/móvil.
+@mixin respond($breakpoint) {
+  @media (min-width: functions.breakpoint($breakpoint)) {
+    @content;
+  }
+}
+
+/// Layout flex con los ejes más usados, evita repetir
+/// `display: flex; align-items; justify-content` en cada componente.
+@mixin flex($direction: row, $align: stretch, $justify: flex-start, $gap: null) {
+  display: flex;
+  flex-direction: $direction;
+  align-items: $align;
+  justify-content: $justify;
+  @if $gap != null {
+    gap: $gap;
+  }
+}
+
+/// Grid responsivo: columnas mínimas de `$min` de ancho, tantas como quepan.
+@mixin auto-grid($min: 16rem, $gap: functions.space(4)) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax($min, 1fr));
+  gap: $gap;
+}
+
+/// Trunca texto a una línea con ellipsis.
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/// Oculta visualmente sin quitar del árbol de accesibilidad (screen readers).
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/// Estilo de foco visible y consistente (accesibilidad de teclado).
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid functions.color('primary');
+    outline-offset: 2px;
+  }
+}
+
+/// Tarjeta base reutilizada por paneles, filas de tabla en móvil, etc.
+/// Sombra + borde juntos para que el contenedor se separe con claridad del
+/// fondo `neutral-100` de la página (ver `.claude/CLAUDE.md` § Paleta).
+@mixin card {
+  background: functions.color('neutral-0');
+  border: 1px solid functions.color('neutral-200');
+  border-radius: functions.radius('md');
+  box-shadow: functions.shadow('md');
+}
+
+/// Ancho de página centrado, usado por los contenedores de listado/formulario
+/// para que el contenido no se estire edge-to-edge en pantallas anchas.
+@mixin page-container($max: 72rem) {
+  width: 100%;
+  max-width: $max;
+  margin-inline: auto;
+}
+
+/// Tabla responsiva "mobile-first": por debajo de `$breakpoint` cada `<tr>`
+/// se reapila como tarjeta y cada `<td>` muestra su etiqueta vía el atributo
+/// `data-label` (pseudo-elemento `::before`); a partir de `$breakpoint`
+/// recupera el layout tabular normal. Un único `<table>`, sin duplicar
+/// markup ni plantilla por tamaño de pantalla. Uso:
+/// `.data-table { @include ds.responsive-table; }`.
+@mixin responsive-table($breakpoint: 'md') {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    display: none;
+
+    @include respond($breakpoint) {
+      display: table-header-group;
+    }
+  }
+
+  tr {
+    @include card;
+    display: block;
+    margin-bottom: functions.space(3);
+    padding: functions.space(3);
+
+    @include respond($breakpoint) {
+      display: table-row;
+      margin-bottom: 0;
+      padding: 0;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+      border-bottom: 1px solid functions.color('neutral-200');
+    }
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    gap: functions.space(3);
+    padding: functions.space(1) 0;
+    border: none;
+
+    &::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: functions.color('neutral-500');
+    }
+
+    @include respond($breakpoint) {
+      display: table-cell;
+      padding: functions.space(3);
+
+      &::before {
+        content: none;
+      }
+    }
+  }
+
+  th {
+    text-align: left;
+    padding: functions.space(3);
+    color: functions.color('secondary');
+    font-size: functions.font-size('xs');
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid functions.color('neutral-200');
+  }
+
+  tbody tr:hover {
+    @include respond($breakpoint) {
+      background: functions.color('neutral-100');
+    }
+  }
+}

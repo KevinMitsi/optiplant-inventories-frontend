@@ -1,0 +1,90 @@
+// Tokens de diseño: única fuente de verdad para color, espaciado, tipografía,
+// radios, sombras y breakpoints. Ningún .scss de componente debe tener un
+// valor de color/espaciado/breakpoint suelto: siempre referenciar de aquí
+// (directo o vía las funciones de `_functions.scss`).
+
+// --- Breakpoints (mobile-first: min-width) ---
+$breakpoints: (
+  'sm': 480px,
+  // móviles grandes
+  'md': 768px,
+  // tablets
+  'lg': 1024px,
+  // desktop pequeño
+  'xl': 1280px,
+  // desktop
+  'xxl': 1536px, // desktop grande
+);
+
+// --- Escala de espaciado (múltiplos de 4px) ---
+$spacing: (
+  0: 0,
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 0.75rem,
+  4: 1rem,
+  5: 1.5rem,
+  6: 2rem,
+  7: 3rem,
+  8: 4rem,
+);
+
+// --- Paleta de marca OptiPlant (ver `.claude/CLAUDE.md` § Paleta de colores) ---
+$colors: (
+  // Marca / acción principal
+  'primary': #ff6000,
+  'primary-dark': #e05300,
+  'primary-light': #ffe4d1,
+
+  // Gris oscuro grafito: sidebar, encabezados de tabla, superficies oscuras
+  'secondary': #1e232a,
+
+  // Operativos (estado de stock, traslados, análisis)
+  'info': #0284c7,
+  'info-light': #e0f2fe,
+  'success': #10b981,
+  'success-light': #d1fae5,
+  'warning': #f59e0b,
+  'warning-light': #fef3c7,
+  'danger': #ef4444,
+  'danger-light': #fee2e2,
+  'purple': #8b5cf6,
+  'purple-light': #ede9fe,
+
+  // Fondos y neutros (modo claro)
+  'neutral-900': #0f172a,
+  // texto principal
+  'neutral-700': #334155,
+  // encabezados secundarios
+  'neutral-500': #64748b,
+  // texto secundario / labels
+  'neutral-300': #cbd5e1,
+  'neutral-200': #e2e8f0,
+  // bordes / divisores
+  'neutral-100': #f8fafc,
+  // fondo principal
+  'neutral-0': #ffffff, // fondo de tarjetas/formularios/tablas
+);
+
+$radii: (
+  'sm': 0.375rem,
+  'md': 0.75rem,
+  'lg': 1rem,
+  'pill': 999px,
+);
+
+$shadows: (
+  'sm': 0 1px 3px rgba(15, 23, 42, 0.08),
+  'md': 0 4px 12px rgba(15, 23, 42, 0.08),
+  'lg': 0 16px 40px rgba(15, 23, 42, 0.12),
+);
+
+$font-sizes: (
+  'xs': 0.75rem,
+  'sm': 0.875rem,
+  'base': 1rem,
+  'lg': 1.125rem,
+  'xl': 1.25rem,
+  'xxl': 1.5rem,
+  'display': 2rem,
+);
