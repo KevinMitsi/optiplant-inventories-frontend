@@ -17,12 +17,12 @@
   @include ds.card;
   @include ds.flex(column, stretch, flex-start, ds.space(1));
   width: 100%;
-  max-width: 24rem;
-  padding: ds.space(6) ds.space(5);
-  border-top: 4px solid ds.color('primary');
+  max-width: 27rem;
+  padding: ds.space(7) ds.space(6);
+  border-top: 5px solid ds.color('primary');
 
   @include ds.respond('sm') {
-    padding: ds.space(7) ds.space(6);
+    padding: ds.space(8) ds.space(7);
   }
 }
 

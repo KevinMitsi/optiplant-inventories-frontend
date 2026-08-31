@@ -67,8 +67,11 @@
 @mixin card {
   background: functions.color('neutral-0');
   border: 1px solid functions.color('neutral-200');
-  border-radius: functions.radius('md');
+  border-radius: functions.radius('lg');
   box-shadow: functions.shadow('md');
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 /// Ancho de página centrado, usado por los contenedores de listado/formulario

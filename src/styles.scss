@@ -4,6 +4,10 @@
 // angular.json.
 @use 'abstracts' as ds;
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 *,
 *::before,
 *::after {
@@ -37,4 +41,43 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+// Transición nativa entre rutas (`withViewTransitions()` en `app.config.ts`).
+// Solo `.content` (ver `app-shell.component.scss`, `view-transition-name:
+// main-content`) fundido + leve desplazamiento vertical; el `root` (que
+// incluye sidebar + topbar) queda sin animar para que el nav no parpadee.
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+
+  ::view-transition-group(main-content) {
+    // Fondo gris (no blanco) detrás del fundido: sobre `neutral-100`
+    // casi-blanco el fade se perdía visualmente.
+    background: ds.color('neutral-200');
+  }
+
+  ::view-transition-old(main-content) {
+    animation: optiplant-fade-out 0.16s ease-out both;
+  }
+
+  ::view-transition-new(main-content) {
+    animation: optiplant-fade-in 0.22s ease-out both;
+  }
+}
+
+@keyframes optiplant-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes optiplant-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
