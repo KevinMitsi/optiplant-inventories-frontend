@@ -15,6 +15,14 @@ import { AuthRepository } from './core/domain/repositories/auth.repository';
 import { AuthHttpRepository } from './core/infrastructure/repositories/auth-http.repository';
 import { BranchRepository } from './core/domain/repositories/branch.repository';
 import { BranchHttpRepository } from './core/infrastructure/repositories/branch-http.repository';
+import { CategoryRepository } from './core/domain/repositories/category.repository';
+import { CategoryHttpRepository } from './core/infrastructure/repositories/category-http.repository';
+import { CarrierRepository } from './core/domain/repositories/carrier.repository';
+import { CarrierHttpRepository } from './core/infrastructure/repositories/carrier-http.repository';
+import { SupplierRepository } from './core/domain/repositories/supplier.repository';
+import { SupplierHttpRepository } from './core/infrastructure/repositories/supplier-http.repository';
+import { UnitOfMeasureRepository } from './core/domain/repositories/unit-of-measure.repository';
+import { UnitOfMeasureHttpRepository } from './core/infrastructure/repositories/unit-of-measure-http.repository';
 import { authInterceptor } from './core/infrastructure/http/auth.interceptor';
 import { errorNormalizerInterceptor } from './core/infrastructure/http/error-normalizer.interceptor';
 import { refreshInterceptor } from './core/infrastructure/http/refresh.interceptor';
@@ -37,6 +45,10 @@ export const appConfig: ApplicationConfig = {
     // Enlaza cada puerto de dominio con su implementación HTTP (Clean Architecture).
     { provide: AuthRepository, useClass: AuthHttpRepository },
     { provide: BranchRepository, useClass: BranchHttpRepository },
+    { provide: CategoryRepository, useClass: CategoryHttpRepository },
+    { provide: CarrierRepository, useClass: CarrierHttpRepository },
+    { provide: SupplierRepository, useClass: SupplierHttpRepository },
+    { provide: UnitOfMeasureRepository, useClass: UnitOfMeasureHttpRepository },
     // Resuelve si hay sesión válida antes de que el router active ningún guard.
     provideAppInitializer(() => firstValueFrom(inject(BootstrapSessionUseCase).execute())),
   ],

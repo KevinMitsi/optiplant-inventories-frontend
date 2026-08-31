@@ -58,67 +58,8 @@
   margin-bottom: ds.space(4);
 }
 
-// Tabla responsiva "mobile-first": en móvil se reapila como tarjetas
-// (cada <tr> es una tarjeta, cada <td> muestra su etiqueta vía
-// `data-label`); a partir de `md` recupera el layout tabular normal.
 .branch-table {
-  width: 100%;
-  border-collapse: collapse;
-
-  thead {
-    display: none;
-
-    @include ds.respond('md') {
-      display: table-header-group;
-    }
-  }
-
-  tr {
-    @include ds.card;
-    display: block;
-    margin-bottom: ds.space(3);
-    padding: ds.space(3);
-
-    @include ds.respond('md') {
-      display: table-row;
-      margin-bottom: 0;
-      padding: 0;
-      border-radius: 0;
-      box-shadow: none;
-      border: none;
-      border-bottom: 1px solid ds.color('neutral-200');
-    }
-  }
-
-  td {
-    display: flex;
-    justify-content: space-between;
-    gap: ds.space(3);
-    padding: ds.space(1) 0;
-    border: none;
-
-    &::before {
-      content: attr(data-label);
-      font-weight: 600;
-      color: ds.color('neutral-500');
-    }
-
-    @include ds.respond('md') {
-      display: table-cell;
-      padding: ds.space(3);
-
-      &::before {
-        content: none;
-      }
-    }
-  }
-
-  th {
-    text-align: left;
-    padding: ds.space(3);
-    color: ds.color('neutral-700');
-    border-bottom: 1px solid ds.color('neutral-200');
-  }
+  @include ds.responsive-table;
 }
 
 .badge {
