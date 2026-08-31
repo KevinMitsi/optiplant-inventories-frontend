@@ -22,7 +22,6 @@
 - **Cancelar oculto tras la primera recepción calculado en el frontend** (`hasAnyReceipt`), no delegado solo al backend: a diferencia de la validación de rol en `GetBranchComparisonUseCase` (Fase 8), aquí sí vale la pena evitar la llamada porque la condición ("cualquier mercancía recibida") es visible en los propios datos ya cargados, sin pedir nada extra al servidor.
 - **Filtro `productId` de `searchPurchaseOrders` no expuesto en el listado**: RF-22 lo describe como analítico ("para analizar el comportamiento de abastecimiento"), no como filtro operativo del día a día; añadir un selector de producto ahora habría sido especulativo sin una HU que lo pida explícitamente, mismo criterio que el filtro de fechas omitido en el panel (Fase 8).
 
-## Qué sigue (Fase 11 propuesta)
+## Qué sigue
 
-1. Pruebas unitarias: `ng test` sigue bloqueado en este entorno por falta de Chrome (`CHROME_BIN` no configurable aquí); pendiente para un entorno con navegador disponible.
-2. Revisar si queda algún RF/HU de APIDOC.json sin cubrir (transferencias entre sucursales, reportes adicionales) antes de dar el catálogo de features por cerrado.
+Ver [`fase-11-rutas-logisticas.md`](./fase-11-rutas-logisticas.md): se revisó el catálogo de RF/HU y quedaba sin cubrir todo el dominio de Transferencias entre sucursales (HU-27 a HU-41) más su prerrequisito, Rutas logísticas (RF-45) — ya implementado.
