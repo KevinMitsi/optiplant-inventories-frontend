@@ -121,6 +121,15 @@ export const ApiEndpoints = {
     receiveItem: (purchaseOrderId: string, itemId: string) =>
       `${environment.apiBaseUrl}/purchase-orders/${purchaseOrderId}/items/${itemId}/receipt`,
   },
+  logisticsRoutes: {
+    search: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/logistics-routes`,
+    create: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/logistics-routes`,
+    byId: (routeId: string) => `${environment.apiBaseUrl}/logistics-routes/${routeId}`,
+    activate: (routeId: string) => `${environment.apiBaseUrl}/logistics-routes/${routeId}/activation`,
+    deactivate: (routeId: string) => `${environment.apiBaseUrl}/logistics-routes/${routeId}/deactivation`,
+  },
   dashboard: {
     salesSummary: (organizationId: string) =>
       `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/sales-summary`,

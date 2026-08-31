@@ -24,6 +24,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Listas de precios', path: '/price-lists' },
   { label: 'Categorías', path: '/categories' },
   { label: 'Transportistas', path: '/carriers' },
+  { label: 'Rutas logísticas', path: '/logistics-routes' },
   { label: 'Proveedores', path: '/suppliers' },
   { label: 'Unidades de medida', path: '/units-of-measure' },
 ];
