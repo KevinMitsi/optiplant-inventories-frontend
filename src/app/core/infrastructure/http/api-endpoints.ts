@@ -103,4 +103,12 @@ export const ApiEndpoints = {
     dismiss: (alertId: string) => `${environment.apiBaseUrl}/inventory-alerts/${alertId}/dismissal`,
     resolve: (alertId: string) => `${environment.apiBaseUrl}/inventory-alerts/${alertId}/resolution`,
   },
+  dashboard: {
+    salesSummary: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/sales-summary`,
+    productRotation: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/product-rotation`,
+    branchComparison: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/branch-comparison`,
+  },
 } as const;
