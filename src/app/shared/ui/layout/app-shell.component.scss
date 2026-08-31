@@ -10,22 +10,45 @@
 
   @include ds.respond('lg') {
     display: grid;
-    grid-template-columns: 16rem 1fr;
+    grid-template-columns: 18rem 1fr;
+  }
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  border: none;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+  animation: fade-in 0.15s ease;
+
+  @include ds.respond('lg') {
+    display: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
   }
 }
 
 .sidebar {
   position: fixed;
-  inset: 0 25% 0 0;
+  inset: 0 20% 0 0;
   z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: ds.space(2);
-  padding: ds.space(4);
+  gap: ds.space(1);
+  padding: ds.space(5) ds.space(4);
   background: ds.color('secondary');
   color: ds.color('neutral-0');
   transform: translateX(-100%);
-  transition: transform 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  box-shadow: ds.shadow('lg');
 
   &--open {
     transform: translateX(0);
@@ -35,13 +58,29 @@
     position: static;
     inset: auto;
     transform: none;
+    max-width: none;
+    box-shadow: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
   }
 }
 
 .brand {
-  font-weight: 700;
-  font-size: ds.font-size('lg');
-  padding-block: ds.space(2);
+  display: flex;
+  align-items: center;
+  gap: ds.space(2);
+  font-weight: 800;
+  font-size: ds.font-size('xl');
+  letter-spacing: -0.01em;
+  padding-block: ds.space(3);
+  margin-bottom: ds.space(3);
+  color: ds.color('neutral-0');
+}
+
+.brand__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: ds.color('primary');
+  flex-shrink: 0;
 }
 
 nav {
@@ -49,22 +88,133 @@ nav {
 }
 
 nav a {
-  display: block;
-  padding: ds.space(2) ds.space(3);
-  border-radius: ds.radius('sm');
+  display: flex;
+  align-items: center;
+  gap: ds.space(3);
+  padding: ds.space(3) ds.space(3);
+  border-radius: ds.radius('md');
   color: ds.color('neutral-200');
   text-decoration: none;
+  font-size: ds.font-size('sm');
+  font-weight: 600;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
 
   &:hover {
     background: rgba(255, 255, 255, 0.08);
+    transform: translateX(2px);
   }
 
   &.active {
     background: ds.color('primary');
     color: ds.color('neutral-0');
+    box-shadow: 0 4px 14px rgba(255, 96, 0, 0.35);
   }
 
   @include ds.focus-ring;
+}
+
+.nav-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-label {
+  @include ds.truncate;
+}
+
+.nav-icon .icon-dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+// --- Categorías plegables ---
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-group__header {
+  display: flex;
+  align-items: center;
+  gap: ds.space(3);
+  width: 100%;
+  padding: ds.space(3) ds.space(3);
+  border: none;
+  border-radius: ds.radius('md');
+  background: transparent;
+  color: ds.color('neutral-200');
+  font: inherit;
+  font-size: ds.font-size('sm');
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  @include ds.focus-ring;
+
+  .nav-label {
+    flex: 1;
+  }
+}
+
+.nav-group__chevron {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.2s ease;
+}
+
+.nav-group--open .nav-group__chevron {
+  transform: rotate(180deg);
+}
+
+// Truco grid-template-rows 0fr→1fr: anima alto real sin conocerlo de
+// antemano y sin JS, a diferencia de max-height.
+.nav-group__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.2s ease;
+}
+
+.nav-group--open .nav-group__panel {
+  grid-template-rows: 1fr;
+}
+
+.nav-group__items {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: ds.space(1);
+  padding-block: ds.space(1);
+
+  a {
+    padding-left: ds.space(7);
+    font-size: ds.font-size('sm');
+  }
+
+  .nav-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
 }
 
 .main {
@@ -72,59 +222,168 @@ nav a {
 }
 
 .topbar {
-  @include ds.flex(row, center, space-between, ds.space(3));
-  padding: ds.space(3) ds.space(4);
+  @include ds.flex(row, center, space-between, ds.space(4));
+  padding: ds.space(4) ds.space(5);
   background: ds.color('neutral-0');
   border-bottom: 1px solid ds.color('neutral-200');
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: ds.shadow('sm');
 
   @include ds.respond('lg') {
-    justify-content: flex-end;
+    padding: ds.space(5) ds.space(8);
   }
 }
 
-.nav-toggle {
-  border: 1px solid ds.color('neutral-300');
-  background: ds.color('neutral-0');
-  border-radius: ds.radius('sm');
-  padding: ds.space(1) ds.space(2);
-  cursor: pointer;
+.topbar__spacer {
+  flex: 1;
 
   @include ds.respond('lg') {
     display: none;
   }
 }
 
-.user-chip {
-  @include ds.truncate;
-  flex: 1;
-  font-size: ds.font-size('sm');
-  color: ds.color('neutral-700');
-
-  @include ds.respond('lg') {
-    flex: none;
-  }
-}
-
-.logout {
-  border: 1px solid ds.color('neutral-300');
-  background: transparent;
-  color: ds.color('neutral-900');
-  padding: ds.space(2) ds.space(3);
-  border-radius: ds.radius('sm');
+.nav-toggle {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1.5px solid ds.color('neutral-200');
+  background: ds.color('neutral-0');
+  border-radius: ds.radius('md');
   cursor: pointer;
-
-  @include ds.focus-ring;
+  transition: background-color 0.15s ease;
 
   &:hover {
     background: ds.color('neutral-100');
   }
+
+  @include ds.focus-ring;
+
+  @include ds.respond('lg') {
+    display: none;
+  }
+}
+
+.nav-toggle__icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: none;
+  stroke: ds.color('neutral-900');
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: ds.space(3);
+  min-width: 0;
+}
+
+.user-chip__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border-radius: ds.radius('pill');
+  background: ds.color('primary-light');
+  color: ds.color('primary-dark');
+  font-weight: 800;
+  font-size: ds.font-size('sm');
+}
+
+.user-chip__text {
+  display: none;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+
+  @include ds.respond('sm') {
+    display: flex;
+  }
+}
+
+.user-chip__name {
+  @include ds.truncate;
+  font-weight: 700;
+  font-size: ds.font-size('sm');
+  color: ds.color('neutral-900');
+}
+
+.user-chip__role {
+  display: flex;
+  align-items: center;
+  gap: ds.space(1);
+  font-size: ds.font-size('xs');
+  font-weight: 600;
+  color: ds.color('info');
+}
+
+.user-chip__role-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.logout {
+  display: flex;
+  align-items: center;
+  gap: ds.space(2);
+  flex-shrink: 0;
+  border: 1.5px solid ds.color('neutral-200');
+  background: ds.color('neutral-0');
+  color: ds.color('danger');
+  font-weight: 700;
+  font-size: ds.font-size('sm');
+  padding: ds.space(3) ds.space(4);
+  border-radius: ds.radius('md');
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+
+  @include ds.focus-ring;
+
+  &:hover {
+    background: ds.color('danger-light');
+    border-color: ds.color('danger');
+  }
+
+  span {
+    display: none;
+
+    @include ds.respond('md') {
+      display: inline;
+    }
+  }
+}
+
+.logout__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .content {
-  @include ds.page-container(80rem);
-  padding: ds.space(4);
+  @include ds.page-container(84rem);
+  padding: ds.space(5);
+  // Aísla el fundido de ruta (ver `styles.scss`) a solo esta zona: sidebar
+  // y topbar quedan fuera del snapshot `root` y no parpadean al navegar.
+  view-transition-name: main-content;
 
   @include ds.respond('lg') {
-    padding: ds.space(6) ds.space(8);
+    padding: ds.space(7) ds.space(8);
   }
 }

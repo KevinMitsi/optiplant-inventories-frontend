@@ -6,7 +6,7 @@ import {
   inject,
 } from '@angular/core';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withViewTransitions } from '@angular/router';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
 
@@ -52,7 +52,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes),
+    // Transición nativa entre pantallas (fade + slight slide, ver
+    // `::view-transition-*` en `styles.scss`) en vez de saltos secos de página.
+    provideRouter(routes, withViewTransitions()),
     provideClientHydration(withEventReplay()),
     provideHttpClient(
       withFetch(),
