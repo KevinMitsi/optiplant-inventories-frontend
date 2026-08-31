@@ -69,4 +69,16 @@ export const ApiEndpoints = {
       `${environment.apiBaseUrl}/products/${productId}/units/${productUnitId}/deactivation`,
     baseUnit: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/base-unit`,
   },
+  priceLists: {
+    search: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/price-lists`,
+    create: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/price-lists`,
+    byId: (priceListId: string) => `${environment.apiBaseUrl}/price-lists/${priceListId}`,
+    activate: (priceListId: string) => `${environment.apiBaseUrl}/price-lists/${priceListId}/activation`,
+    deactivate: (priceListId: string) =>
+      `${environment.apiBaseUrl}/price-lists/${priceListId}/deactivation`,
+    productPrices: (priceListId: string) =>
+      `${environment.apiBaseUrl}/price-lists/${priceListId}/product-prices`,
+  },
 } as const;

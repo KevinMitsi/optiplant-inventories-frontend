@@ -25,6 +25,8 @@ import { UnitOfMeasureRepository } from './core/domain/repositories/unit-of-meas
 import { UnitOfMeasureHttpRepository } from './core/infrastructure/repositories/unit-of-measure-http.repository';
 import { ProductRepository } from './core/domain/repositories/product.repository';
 import { ProductHttpRepository } from './core/infrastructure/repositories/product-http.repository';
+import { PriceListRepository } from './core/domain/repositories/price-list.repository';
+import { PriceListHttpRepository } from './core/infrastructure/repositories/price-list-http.repository';
 import { authInterceptor } from './core/infrastructure/http/auth.interceptor';
 import { errorNormalizerInterceptor } from './core/infrastructure/http/error-normalizer.interceptor';
 import { refreshInterceptor } from './core/infrastructure/http/refresh.interceptor';
@@ -52,6 +54,7 @@ export const appConfig: ApplicationConfig = {
     { provide: SupplierRepository, useClass: SupplierHttpRepository },
     { provide: UnitOfMeasureRepository, useClass: UnitOfMeasureHttpRepository },
     { provide: ProductRepository, useClass: ProductHttpRepository },
+    { provide: PriceListRepository, useClass: PriceListHttpRepository },
     // Resuelve si hay sesión válida antes de que el router active ningún guard.
     provideAppInitializer(() => firstValueFrom(inject(BootstrapSessionUseCase).execute())),
   ],
