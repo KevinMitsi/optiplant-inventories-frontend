@@ -11,7 +11,24 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1>Panel</h1>
-    <p>Fase 2: gestión de sucursales disponible en el menú.</p>
+    <p class="hint">Selecciona un módulo del menú para gestionar tu inventario.</p>
+  `,
+  styles: `
+    @use 'abstracts' as ds;
+
+    :host {
+      display: block;
+    }
+    h1 {
+      margin: 0 0 ds.space(2);
+      font-size: ds.font-size('display');
+      font-weight: 700;
+      color: ds.color('neutral-900');
+    }
+    .hint {
+      margin: 0;
+      color: ds.color('neutral-500');
+    }
   `,
 })
 export class DashboardPage {}

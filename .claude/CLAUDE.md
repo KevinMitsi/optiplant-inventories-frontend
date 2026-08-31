@@ -48,6 +48,31 @@ YOU MUST ALWAYS USE REACTIVEFORMS for creating forms
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
 
+## Paleta de colores
+
+Fuente de verdad: `src/styles/abstracts/_tokens.scss` (mapa `$colors`, consumido vía `ds.color('clave')`). Ningún componente debe usar un HEX suelto — siempre referenciar por clave.
+
+**Primarios y de marca**
+- Primary / Accent: `#FF6000` (clave `primary`) — botones principales, pestañas activas, resaltado de elementos clave, indicadores de stock crítico o alertas menores.
+- Primary Hover/Active: `#E05300` (clave `primary-dark`) — estados hover/active.
+- Secondary / Dark Neutral: `#1E232A` (clave `secondary`) — sidebar/navegación lateral, encabezados de tabla.
+
+**Fondos y neutros (modo claro)**
+- Main Background: `#F8FAFC` (clave `neutral-100`).
+- Card/Container Background: `#FFFFFF` (clave `neutral-0`) — tarjetas, tablas, formularios, paneles.
+- Bordes/Divisores: `#E2E8F0` (clave `neutral-200`).
+- Texto Principal: `#0F172A` (clave `neutral-900`).
+- Texto Secundario: `#64748B` (clave `neutral-500`) — labels, SKUs, fechas de actualización.
+
+**Operativos (inventario y multisucursal)**
+- Azul Profesional/Corporativo: `#0284C7` (clave `info`) — traslados entre sucursales, sucursal actual, reportes, botones secundarios.
+- Verde Éxito/Stock Óptimo: `#10B981` (clave `success`) — stock disponible, transferencias completadas, conciliaciones aprobadas, valores positivos.
+- Amarillo/Ámbar Alerta: `#F59E0B` (clave `warning`) — stock en punto de reorden, órdenes pendientes de recepción, envíos en tránsito.
+- Rojo Crítico/Error: `#EF4444` (clave `danger`) — sin stock, discrepancias en conteos físicos, cancelaciones.
+- Morado/Púrpura (Análisis): `#8B5CF6` (clave `purple`) — etiquetas de categorías especiales, KPIs de valorización, analítica avanzada.
+
+Cada color operativo tiene su variante `-light` (`info-light`, `success-light`, `warning-light`, `danger-light`, `purple-light`) para fondos de badges/alertas de bajo contraste.
+
 ## Architecture
 
 src/

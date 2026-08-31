@@ -22,7 +22,7 @@
   flex-direction: column;
   gap: ds.space(2);
   padding: ds.space(4);
-  background: ds.color('neutral-900');
+  background: ds.color('secondary');
   color: ds.color('neutral-0');
   transform: translateX(-100%);
   transition: transform 0.2s ease;
@@ -121,9 +121,10 @@ nav a {
 }
 
 .content {
+  @include ds.page-container(80rem);
   padding: ds.space(4);
 
   @include ds.respond('lg') {
-    padding: ds.space(6);
+    padding: ds.space(6) ds.space(8);
   }
 }

@@ -62,11 +62,21 @@
 }
 
 /// Tarjeta base reutilizada por paneles, filas de tabla en móvil, etc.
+/// Sombra + borde juntos para que el contenedor se separe con claridad del
+/// fondo `neutral-100` de la página (ver `.claude/CLAUDE.md` § Paleta).
 @mixin card {
   background: functions.color('neutral-0');
   border: 1px solid functions.color('neutral-200');
   border-radius: functions.radius('md');
-  box-shadow: functions.shadow('sm');
+  box-shadow: functions.shadow('md');
+}
+
+/// Ancho de página centrado, usado por los contenedores de listado/formulario
+/// para que el contenido no se estire edge-to-edge en pantallas anchas.
+@mixin page-container($max: 72rem) {
+  width: 100%;
+  max-width: $max;
+  margin-inline: auto;
 }
 
 /// Tabla responsiva "mobile-first": por debajo de `$breakpoint` cada `<tr>`
@@ -130,7 +140,17 @@
   th {
     text-align: left;
     padding: functions.space(3);
-    color: functions.color('neutral-700');
-    border-bottom: 1px solid functions.color('neutral-200');
+    color: functions.color('secondary');
+    font-size: functions.font-size('xs');
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid functions.color('neutral-200');
+  }
+
+  tbody tr:hover {
+    @include respond($breakpoint) {
+      background: functions.color('neutral-100');
+    }
   }
 }
