@@ -1,0 +1,11 @@
+@use '../../../../styles/abstracts' as ds;
+
+:host {
+  display: block;
+}
+
+@include ds.crud-list;
+
+.data-table {
+  @include ds.responsive-table;
+}

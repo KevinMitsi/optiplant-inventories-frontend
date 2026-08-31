@@ -49,6 +49,26 @@ export const routes: Routes = [
         path: 'products',
         loadChildren: () => import('./features/products/products.routes').then((m) => m.PRODUCTS_ROUTES),
       },
+      {
+        path: 'price-lists',
+        loadChildren: () => import('./features/price-lists/price-lists.routes').then((m) => m.PRICE_LISTS_ROUTES),
+      },
+      {
+        path: 'inventory',
+        loadChildren: () => import('./features/inventory/inventory.routes').then((m) => m.INVENTORY_ROUTES),
+      },
+      {
+        path: 'inventory-adjustments',
+        loadChildren: () =>
+          import('./features/inventory-adjustments/inventory-adjustments.routes').then(
+            (m) => m.INVENTORY_ADJUSTMENTS_ROUTES,
+          ),
+      },
+      {
+        path: 'inventory-alerts',
+        loadChildren: () =>
+          import('./features/inventory-alerts/inventory-alerts.routes').then((m) => m.INVENTORY_ALERTS_ROUTES),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

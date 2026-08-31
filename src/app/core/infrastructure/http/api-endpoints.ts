@@ -69,4 +69,46 @@ export const ApiEndpoints = {
       `${environment.apiBaseUrl}/products/${productId}/units/${productUnitId}/deactivation`,
     baseUnit: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/base-unit`,
   },
+  priceLists: {
+    search: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/price-lists`,
+    create: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/price-lists`,
+    byId: (priceListId: string) => `${environment.apiBaseUrl}/price-lists/${priceListId}`,
+    activate: (priceListId: string) => `${environment.apiBaseUrl}/price-lists/${priceListId}/activation`,
+    deactivate: (priceListId: string) =>
+      `${environment.apiBaseUrl}/price-lists/${priceListId}/deactivation`,
+    productPrices: (priceListId: string) =>
+      `${environment.apiBaseUrl}/price-lists/${priceListId}/product-prices`,
+  },
+  inventory: {
+    search: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/inventory`,
+    byProduct: (branchId: string, productId: string) =>
+      `${environment.apiBaseUrl}/branches/${branchId}/inventory/${productId}`,
+    minimumStock: (branchId: string, productId: string) =>
+      `${environment.apiBaseUrl}/branches/${branchId}/inventory/${productId}/minimum-stock`,
+    movements: (branchId: string, productId: string) =>
+      `${environment.apiBaseUrl}/branches/${branchId}/inventory/${productId}/movements`,
+    entries: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/inventory/entries`,
+    exits: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/inventory/exits`,
+  },
+  inventoryAdjustments: {
+    create: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/inventory-adjustments`,
+    byId: (adjustmentId: string) => `${environment.apiBaseUrl}/inventory-adjustments/${adjustmentId}`,
+    approve: (adjustmentId: string) =>
+      `${environment.apiBaseUrl}/inventory-adjustments/${adjustmentId}/approval`,
+  },
+  inventoryAlerts: {
+    search: () => `${environment.apiBaseUrl}/inventory-alerts`,
+    dismiss: (alertId: string) => `${environment.apiBaseUrl}/inventory-alerts/${alertId}/dismissal`,
+    resolve: (alertId: string) => `${environment.apiBaseUrl}/inventory-alerts/${alertId}/resolution`,
+  },
+  dashboard: {
+    salesSummary: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/sales-summary`,
+    productRotation: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/product-rotation`,
+    branchComparison: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/branch-comparison`,
+  },
 } as const;

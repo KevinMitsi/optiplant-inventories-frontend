@@ -1,0 +1,38 @@
+@use '../../../styles/abstracts' as ds;
+
+:host {
+  display: block;
+}
+
+h1 {
+  margin: 0 0 ds.space(3);
+  font-size: ds.font-size('display');
+  font-weight: 700;
+  color: ds.color('neutral-900');
+}
+
+.filters {
+  margin-bottom: ds.space(4);
+}
+
+.panel {
+  background: ds.color('neutral-0');
+  border: 1px solid ds.color('neutral-200');
+  border-radius: ds.radius('md');
+  padding: ds.space(4);
+  margin-bottom: ds.space(4);
+
+  h2 {
+    margin: 0 0 ds.space(3);
+    font-size: ds.font-size('lg');
+    color: ds.color('neutral-900');
+  }
+}
+
+.data-table {
+  @include ds.responsive-table;
+}
+
+.form-error {
+  color: ds.color('danger');
+}
