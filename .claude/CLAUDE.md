@@ -45,3 +45,14 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## SCSS Best Practices
+
+- Use `@use`/`@forward` (module system), never legacy `@import`
+- Centralize design tokens (colors, spacing, breakpoints, radii, shadows) as SCSS variables/maps in `styles/abstracts/_tokens.scss`
+- Write reusable **mixins** for repeated patterns: responsive breakpoints (`@mixin respond($breakpoint)`), flex/grid layouts, visually-hidden, truncation
+- Write **functions** for computed values (e.g. spacing scale lookup, color contrast helper), not mixins, when a value is returned
+- Mobile-first: base styles unqualified, override with `min-width` media queries inside breakpoint mixins — ensures desktop/mobile interoperability
+- No hardcoded colors/spacing/breakpoints in component `.scss` files — always reference tokens/functions
+- Keep component styles scoped to the component; shared patterns go in `styles/abstracts` (`_mixins.scss`, `_functions.scss`, `_tokens.scss`) and are `@use`d where needed
+- Avoid deep selector nesting (max 3 levels) to keep specificity low and output CSS small

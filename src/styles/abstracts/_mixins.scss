@@ -1,0 +1,70 @@
+// Mixins: patrones reutilizables que generan bloques de reglas (no valores
+// sueltos, para eso están las funciones en `_functions.scss`).
+@use 'sass:map';
+@use 'tokens';
+@use 'functions';
+
+/// Media query mobile-first. Uso: `@include respond('md') { ... }` aplica
+/// desde 768px hacia arriba. La app se diseña sin qualifier (móvil) y se
+/// añaden reglas dentro de `respond()` para pantallas mayores — nunca al
+/// revés — para garantizar la interoperabilidad desktop/móvil.
+@mixin respond($breakpoint) {
+  @media (min-width: functions.breakpoint($breakpoint)) {
+    @content;
+  }
+}
+
+/// Layout flex con los ejes más usados, evita repetir
+/// `display: flex; align-items; justify-content` en cada componente.
+@mixin flex($direction: row, $align: stretch, $justify: flex-start, $gap: null) {
+  display: flex;
+  flex-direction: $direction;
+  align-items: $align;
+  justify-content: $justify;
+  @if $gap != null {
+    gap: $gap;
+  }
+}
+
+/// Grid responsivo: columnas mínimas de `$min` de ancho, tantas como quepan.
+@mixin auto-grid($min: 16rem, $gap: functions.space(4)) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax($min, 1fr));
+  gap: $gap;
+}
+
+/// Trunca texto a una línea con ellipsis.
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/// Oculta visualmente sin quitar del árbol de accesibilidad (screen readers).
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/// Estilo de foco visible y consistente (accesibilidad de teclado).
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid functions.color('primary');
+    outline-offset: 2px;
+  }
+}
+
+/// Tarjeta base reutilizada por paneles, filas de tabla en móvil, etc.
+@mixin card {
+  background: functions.color('neutral-0');
+  border: 1px solid functions.color('neutral-200');
+  border-radius: functions.radius('md');
+  box-shadow: functions.shadow('sm');
+}

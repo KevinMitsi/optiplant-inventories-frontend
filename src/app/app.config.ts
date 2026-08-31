@@ -13,6 +13,8 @@ import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { AuthRepository } from './core/domain/repositories/auth.repository';
 import { AuthHttpRepository } from './core/infrastructure/repositories/auth-http.repository';
+import { BranchRepository } from './core/domain/repositories/branch.repository';
+import { BranchHttpRepository } from './core/infrastructure/repositories/branch-http.repository';
 import { authInterceptor } from './core/infrastructure/http/auth.interceptor';
 import { errorNormalizerInterceptor } from './core/infrastructure/http/error-normalizer.interceptor';
 import { refreshInterceptor } from './core/infrastructure/http/refresh.interceptor';
@@ -32,8 +34,9 @@ export const appConfig: ApplicationConfig = {
       // error-normalizer convierta lo que quede a `ApiError`).
       withInterceptors([authInterceptor, errorNormalizerInterceptor, refreshInterceptor]),
     ),
-    // Enlaza el puerto de dominio con su implementación HTTP (Clean Architecture).
+    // Enlaza cada puerto de dominio con su implementación HTTP (Clean Architecture).
     { provide: AuthRepository, useClass: AuthHttpRepository },
+    { provide: BranchRepository, useClass: BranchHttpRepository },
     // Resuelve si hay sesión válida antes de que el router active ningún guard.
     provideAppInitializer(() => firstValueFrom(inject(BootstrapSessionUseCase).execute())),
   ],

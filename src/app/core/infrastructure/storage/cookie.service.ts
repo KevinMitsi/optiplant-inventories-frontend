@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, REQUEST, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 export interface CookieOptions {
@@ -10,26 +10,32 @@ export interface CookieOptions {
 }
 
 /**
- * Acceso a `document.cookie` seguro para SSR: en el servidor no existe
- * `document`, así que toda operación se vuelve un no-op fuera del navegador
- * (comprobado con `isPlatformBrowser`, tal como recomienda Angular para SSR).
+ * Acceso a cookies seguro para SSR.
  *
- * El backend devuelve los tokens en el cuerpo JSON de la respuesta (no en
- * cabeceras `Set-Cookie`), así que es el propio cliente quien debe
- * persistirlos. Por eso son cookies legibles por JavaScript y no `HttpOnly`;
- * se mitiga el riesgo de XSS marcándolas `Secure` fuera de `localhost` y
- * `SameSite=Strict` por defecto.
+ * En el navegador opera sobre `document.cookie`. En el servidor no existe
+ * `document`, pero sí la petición Express entrante: Angular la expone a
+ * través del token `REQUEST` (`@angular/core`, disponible durante el render
+ * SSR). `get()` la lee de la cabecera `Cookie` de esa petición, así que el
+ * primer render de una ruta protegida ve la sesión real del visitante en vez
+ * de partir siempre de `anonymous` (limitación documentada en la Fase 1).
+ *
+ * `set()`/`delete()` siguen siendo no-op en el servidor: escribir cookies
+ * ahí exigiría reenviarlas como `Set-Cookie` en la respuesta HTTP, y hoy solo
+ * se necesita lectura (login/refresh son acciones de cliente, después de la
+ * hidratación).
  */
 @Injectable({ providedIn: 'root' })
 export class CookieService {
   private readonly document = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly request = inject(REQUEST, { optional: true });
 
   get(name: string): string | null {
-    if (!this.isBrowser) {
+    const header = this.isBrowser ? this.document.cookie : (this.request?.headers.get('cookie') ?? '');
+    if (!header) {
       return null;
     }
-    const match = this.document.cookie
+    const match = header
       .split('; ')
       .find((row) => row.startsWith(`${encodeURIComponent(name)}=`));
     return match ? decodeURIComponent(match.split('=').slice(1).join('=')) : null;

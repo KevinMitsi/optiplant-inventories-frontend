@@ -1,1 +1,40 @@
-/* You can add global styles to this file, and also import other style files */
+// Estilos globales. Los tokens/funciones/mixins viven en `styles/abstracts`
+// (ver `.claude/CLAUDE.md` § SCSS Best Practices); los componentes los
+// consumen con `@use 'abstracts' as ds;` gracias a `includePaths` en
+// angular.json.
+@use 'abstracts' as ds;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: ds.font-size('base');
+  color: ds.color('neutral-900');
+  background: ds.color('neutral-100');
+}
+
+a {
+  color: ds.color('primary');
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

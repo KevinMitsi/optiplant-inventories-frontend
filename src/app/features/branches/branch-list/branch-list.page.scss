@@ -1,0 +1,155 @@
+@use '../../../../styles/abstracts' as ds;
+
+:host {
+  display: block;
+}
+
+.header {
+  @include ds.flex(row, center, space-between, ds.space(3));
+  margin-bottom: ds.space(4);
+
+  h1 {
+    margin: 0;
+    font-size: ds.font-size('xxl');
+  }
+}
+
+.button {
+  display: inline-block;
+  padding: ds.space(2) ds.space(4);
+  border-radius: ds.radius('sm');
+  text-decoration: none;
+  font-weight: 600;
+
+  @include ds.focus-ring;
+
+  &--primary {
+    background: ds.color('primary');
+    color: ds.color('neutral-0');
+
+    &:hover {
+      background: ds.color('primary-dark');
+    }
+  }
+}
+
+.filters {
+  @include ds.flex(column, stretch, flex-start, ds.space(2));
+  margin-bottom: ds.space(4);
+
+  @include ds.respond('md') {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  input,
+  select {
+    padding: ds.space(2) ds.space(3);
+    border: 1px solid ds.color('neutral-300');
+    border-radius: ds.radius('sm');
+  }
+}
+
+.form-error {
+  background: ds.color('danger-light');
+  color: ds.color('danger');
+  border-radius: ds.radius('sm');
+  padding: ds.space(3);
+  margin-bottom: ds.space(4);
+}
+
+// Tabla responsiva "mobile-first": en móvil se reapila como tarjetas
+// (cada <tr> es una tarjeta, cada <td> muestra su etiqueta vía
+// `data-label`); a partir de `md` recupera el layout tabular normal.
+.branch-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    display: none;
+
+    @include ds.respond('md') {
+      display: table-header-group;
+    }
+  }
+
+  tr {
+    @include ds.card;
+    display: block;
+    margin-bottom: ds.space(3);
+    padding: ds.space(3);
+
+    @include ds.respond('md') {
+      display: table-row;
+      margin-bottom: 0;
+      padding: 0;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+      border-bottom: 1px solid ds.color('neutral-200');
+    }
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    gap: ds.space(3);
+    padding: ds.space(1) 0;
+    border: none;
+
+    &::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: ds.color('neutral-500');
+    }
+
+    @include ds.respond('md') {
+      display: table-cell;
+      padding: ds.space(3);
+
+      &::before {
+        content: none;
+      }
+    }
+  }
+
+  th {
+    text-align: left;
+    padding: ds.space(3);
+    color: ds.color('neutral-700');
+    border-bottom: 1px solid ds.color('neutral-200');
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: ds.space(1) ds.space(2);
+  border-radius: ds.radius('pill');
+  font-size: ds.font-size('xs');
+  background: ds.color('neutral-200');
+  color: ds.color('neutral-700');
+
+  &--active {
+    background: ds.color('success-light');
+    color: ds.color('success');
+  }
+}
+
+.actions {
+  @include ds.flex(row, center, flex-end, ds.space(3));
+
+  button {
+    border: 1px solid ds.color('neutral-300');
+    background: ds.color('neutral-0');
+    border-radius: ds.radius('sm');
+    padding: ds.space(1) ds.space(2);
+    cursor: pointer;
+
+    @include ds.focus-ring;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

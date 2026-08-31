@@ -1,0 +1,6 @@
+// Punto de entrada único para componentes: `@use '../../../styles/abstracts' as ds;`
+// (o la ruta relativa que corresponda) y luego `ds.color('primary')`,
+// `ds.space(4)`, `@include ds.respond('md') { ... }`.
+@forward 'abstracts/tokens';
+@forward 'abstracts/functions';
+@forward 'abstracts/mixins';

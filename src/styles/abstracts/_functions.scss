@@ -1,0 +1,53 @@
+// Funciones puras: reciben una clave de token y devuelven un valor CSS. A
+// diferencia de un mixin, siempre se usan donde SCSS espera un valor
+// (`padding: space(4)`), nunca como bloque de reglas.
+@use 'sass:map';
+@use 'tokens';
+
+/// Espaciado de la escala `$spacing` (múltiplos de 4px).
+@function space($key) {
+  @if not map.has-key(tokens.$spacing, $key) {
+    @error 'space(): clave "#{$key}" no existe en $spacing.';
+  }
+  @return map.get(tokens.$spacing, $key);
+}
+
+/// Color de la paleta `$colors`.
+@function color($key) {
+  @if not map.has-key(tokens.$colors, $key) {
+    @error 'color(): clave "#{$key}" no existe en $colors.';
+  }
+  @return map.get(tokens.$colors, $key);
+}
+
+/// Radio de borde de `$radii`.
+@function radius($key) {
+  @if not map.has-key(tokens.$radii, $key) {
+    @error 'radius(): clave "#{$key}" no existe en $radii.';
+  }
+  @return map.get(tokens.$radii, $key);
+}
+
+/// Sombra de `$shadows`.
+@function shadow($key) {
+  @if not map.has-key(tokens.$shadows, $key) {
+    @error 'shadow(): clave "#{$key}" no existe en $shadows.';
+  }
+  @return map.get(tokens.$shadows, $key);
+}
+
+/// Tamaño de fuente de `$font-sizes`.
+@function font-size($key) {
+  @if not map.has-key(tokens.$font-sizes, $key) {
+    @error 'font-size(): clave "#{$key}" no existe en $font-sizes.';
+  }
+  @return map.get(tokens.$font-sizes, $key);
+}
+
+/// Valor en píxeles de un breakpoint (usado por el mixin `respond`).
+@function breakpoint($key) {
+  @if not map.has-key(tokens.$breakpoints, $key) {
+    @error 'breakpoint(): clave "#{$key}" no existe en $breakpoints.';
+  }
+  @return map.get(tokens.$breakpoints, $key);
+}
