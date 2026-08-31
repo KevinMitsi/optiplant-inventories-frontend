@@ -69,6 +69,10 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/inventory-alerts/inventory-alerts.routes').then((m) => m.INVENTORY_ALERTS_ROUTES),
       },
+      {
+        path: 'sales',
+        loadChildren: () => import('./features/sales/sales.routes').then((m) => m.SALES_ROUTES),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

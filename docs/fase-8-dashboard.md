@@ -20,8 +20,6 @@
 - **DTOs separados de los modelos de dominio pese a tener los mismos campos**: se mantiene la misma capa de infraestructura que el resto del proyecto (Clean Architecture) en vez de hacer una excepción solo porque el mapeo es 1:1 hoy — si el backend agrega un campo nuevo algún día, el cambio queda contenido en `dashboard.dto.ts`/`dashboard.mapper.ts`.
 - **`GetBranchComparisonUseCase` no valida el rol en el frontend**: el backend ya devuelve 403 si un no-ADMIN lo intenta (RN-12); el frontend solo evita la llamada innecesaria ocultando la sección, mismo criterio que ya usan `roleGuard`/las comprobaciones de `isAdmin()` en otras páginas de este proyecto.
 
-## Qué sigue (Fase 9 propuesta)
+## Qué sigue
 
-1. Módulo de Ventas (`Ventas`, tag de APIDOC.json): creación de venta en borrador (HU-22), confirmación y cancelación, con su propio descuento de stock vía `SALE_OUT` (RN-03).
-2. Módulo de Compras (`Órdenes de compra a proveedores`): borrador (HU-17/HU-18), confirmación y recepción (HU-19/HU-20).
-3. Pruebas unitarias: `ng test` sigue bloqueado en este entorno por falta de Chrome (`CHROME_BIN` no configurable aquí); pendiente para un entorno con navegador disponible.
+Ver [`fase-9-ventas.md`](./fase-9-ventas.md): módulo de Ventas (HU-22, RN-03) ya implementado; queda Compras y las pruebas unitarias bloqueadas por falta de Chrome.
