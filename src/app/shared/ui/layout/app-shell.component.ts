@@ -16,6 +16,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Panel', path: '/dashboard' },
   { label: 'Ventas', path: '/sales' },
   { label: 'Órdenes de compra', path: '/purchase-orders' },
+  { label: 'Transferencias', path: '/transfers' },
   { label: 'Inventario', path: '/inventory' },
   { label: 'Ajustes de inventario', path: '/inventory-adjustments' },
   { label: 'Alertas de inventario', path: '/inventory-alerts' },

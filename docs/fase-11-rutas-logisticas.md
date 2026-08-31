@@ -18,6 +18,6 @@
 - **Sin filtro de texto/ordenación en el listado**: `searchLogisticsRoutes` en APIDOC.json no documenta `text` ni `sortBy` (a diferencia de `CarrierQuery`), así que no se inventó ninguno; solo se exponen los filtros reales (origen, destino, estado).
 - **Selects de sucursal cargados una vez con `size: 100`**: no hay paginación de sucursales en este selector porque el número esperado de sucursales por organización es bajo, mismo criterio usado para el filtro de sucursales en `InventoryListPage`.
 
-## Qué sigue (Fase 12 propuesta)
+## Qué sigue
 
-Ver `Transferencias` (HU-27 a HU-41, RF-46): módulo grande con ciclo de vida completo — solicitud, aprobación (con ajuste de cantidades), preparación, asignación de logística (usa `LogisticsRoute` de esta fase), despacho (`TRANSFER_OUT`), recepción con incidencias por faltante (`TRANSFER_IN` + `TransferIssue`), resolución de incidencias y cancelación (solo antes de despachar). Pendiente también: pruebas unitarias (bloqueadas por falta de Chrome en este entorno).
+Ver [`fase-12-transferencias.md`](./fase-12-transferencias.md): módulo grande con ciclo de vida completo — solicitud, aprobación (con ajuste de cantidades), preparación, asignación de logística (usa `LogisticsRoute` de esta fase), despacho (`TRANSFER_OUT`), recepción con incidencias por faltante (`TRANSFER_IN` + `TransferIssue`), resolución de incidencias y cancelación (solo antes de despachar) — ya implementado.

@@ -130,6 +130,21 @@ export const ApiEndpoints = {
     activate: (routeId: string) => `${environment.apiBaseUrl}/logistics-routes/${routeId}/activation`,
     deactivate: (routeId: string) => `${environment.apiBaseUrl}/logistics-routes/${routeId}/deactivation`,
   },
+  transfers: {
+    search: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/transfers`,
+    create: (originBranchId: string) => `${environment.apiBaseUrl}/branches/${originBranchId}/transfers`,
+    byId: (transferId: string) => `${environment.apiBaseUrl}/transfers/${transferId}`,
+    approve: (transferId: string) => `${environment.apiBaseUrl}/transfers/${transferId}/approval`,
+    startPreparation: (transferId: string) => `${environment.apiBaseUrl}/transfers/${transferId}/preparation`,
+    assignLogistics: (transferId: string) =>
+      `${environment.apiBaseUrl}/transfers/${transferId}/logistics-assignment`,
+    dispatch: (transferId: string) => `${environment.apiBaseUrl}/transfers/${transferId}/dispatch`,
+    receive: (transferId: string) => `${environment.apiBaseUrl}/transfers/${transferId}/reception`,
+    cancel: (transferId: string) => `${environment.apiBaseUrl}/transfers/${transferId}/cancellation`,
+    issues: (transferId: string) => `${environment.apiBaseUrl}/transfers/${transferId}/issues`,
+    resolveIssue: (transferId: string, issueId: string) =>
+      `${environment.apiBaseUrl}/transfers/${transferId}/issues/${issueId}/resolution`,
+  },
   dashboard: {
     salesSummary: (organizationId: string) =>
       `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/sales-summary`,

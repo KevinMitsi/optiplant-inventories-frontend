@@ -39,6 +39,8 @@ import { PurchaseOrderRepository } from './core/domain/repositories/purchase-ord
 import { PurchaseOrderHttpRepository } from './core/infrastructure/repositories/purchase-order-http.repository';
 import { LogisticsRouteRepository } from './core/domain/repositories/logistics-route.repository';
 import { LogisticsRouteHttpRepository } from './core/infrastructure/repositories/logistics-route-http.repository';
+import { TransferRepository } from './core/domain/repositories/transfer.repository';
+import { TransferHttpRepository } from './core/infrastructure/repositories/transfer-http.repository';
 import { DashboardRepository } from './core/domain/repositories/dashboard.repository';
 import { DashboardHttpRepository } from './core/infrastructure/repositories/dashboard-http.repository';
 import { authInterceptor } from './core/infrastructure/http/auth.interceptor';
@@ -75,6 +77,7 @@ export const appConfig: ApplicationConfig = {
     { provide: SaleRepository, useClass: SaleHttpRepository },
     { provide: PurchaseOrderRepository, useClass: PurchaseOrderHttpRepository },
     { provide: LogisticsRouteRepository, useClass: LogisticsRouteHttpRepository },
+    { provide: TransferRepository, useClass: TransferHttpRepository },
     { provide: DashboardRepository, useClass: DashboardHttpRepository },
     // Resuelve si hay sesión válida antes de que el router active ningún guard.
     provideAppInitializer(() => firstValueFrom(inject(BootstrapSessionUseCase).execute())),
