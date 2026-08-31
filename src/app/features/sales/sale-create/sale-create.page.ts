@@ -42,9 +42,17 @@ interface SaleForm {
     <form class="entity-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <label for="saleNumber">Número</label>
       <input id="saleNumber" formControlName="saleNumber" placeholder="V-2026-0001" />
+      @if (form.controls.saleNumber.invalid && form.controls.saleNumber.touched) {
+        <p class="field-error" role="alert">
+          {{ form.controls.saleNumber.hasError('required') ? 'El número es obligatorio.' : 'Máximo 40 caracteres.' }}
+        </p>
+      }
 
       <label for="saleDate">Fecha</label>
       <input id="saleDate" type="date" formControlName="saleDate" />
+      @if (form.controls.saleDate.invalid && form.controls.saleDate.touched) {
+        <p class="field-error" role="alert">La fecha es obligatoria.</p>
+      }
 
       <label for="priceListId">Lista de precios (opcional)</label>
       <select id="priceListId" formControlName="priceListId">
@@ -68,6 +76,9 @@ interface SaleForm {
               <option [value]="product.id">{{ product.sku }} — {{ product.name }}</option>
             }
           </select>
+          @if (item.controls.productId.invalid && item.controls.productId.touched) {
+            <p class="field-error" role="alert">Selecciona un producto.</p>
+          }
 
           <label [for]="'productUnitId-' + $index">Presentación</label>
           <select [id]="'productUnitId-' + $index" [formControl]="item.controls.productUnitId">
@@ -76,12 +87,25 @@ interface SaleForm {
               <option [value]="unit.id">{{ unit.unit.symbol }} — {{ unit.unit.name }}</option>
             }
           </select>
+          @if (item.controls.productUnitId.invalid && item.controls.productUnitId.touched) {
+            <p class="field-error" role="alert">Selecciona una presentación.</p>
+          }
 
           <label [for]="'quantity-' + $index">Cantidad</label>
           <input [id]="'quantity-' + $index" type="number" [formControl]="item.controls.quantity" step="any" min="0" />
+          @if (item.controls.quantity.invalid && item.controls.quantity.touched) {
+            <p class="field-error" role="alert">
+              {{
+                item.controls.quantity.hasError('required') ? 'La cantidad es obligatoria.' : 'Debe ser mayor que 0.'
+              }}
+            </p>
+          }
 
           <label [for]="'unitPrice-' + $index">Precio unitario manual (opcional)</label>
           <input [id]="'unitPrice-' + $index" type="number" [formControl]="item.controls.unitPrice" step="any" min="0" />
+          @if (item.controls.unitPrice.invalid && item.controls.unitPrice.touched) {
+            <p class="field-error" role="alert">No puede ser negativo.</p>
+          }
 
           <label [for]="'discountPercentage-' + $index">Descuento % (opcional)</label>
           <input
@@ -92,6 +116,9 @@ interface SaleForm {
             min="0"
             max="100"
           />
+          @if (item.controls.discountPercentage.invalid && item.controls.discountPercentage.touched) {
+            <p class="field-error" role="alert">Debe estar entre 0 y 100.</p>
+          }
 
           @if (form.controls.items.length > 1) {
             <button type="button" class="button button--ghost" (click)="removeItem($index)">Quitar línea</button>
@@ -102,6 +129,10 @@ interface SaleForm {
 
       @if (errorMessage(); as message) {
         <p class="form-error" role="alert">{{ message }}</p>
+      }
+
+      @if (form.invalid && form.touched) {
+        <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
       }
 
       <div class="actions">

@@ -43,13 +43,13 @@ export class BranchHttpRepository extends BranchRepository {
 
   override activate(branchId: string): Observable<Branch> {
     return this.http
-      .post<BranchResponseDto>(ApiEndpoints.branches.activate(branchId), {})
+      .patch<BranchResponseDto>(ApiEndpoints.branches.activate(branchId), {})
       .pipe(map(toBranch));
   }
 
   override deactivate(branchId: string): Observable<Branch> {
     return this.http
-      .post<BranchResponseDto>(ApiEndpoints.branches.deactivate(branchId), {})
+      .patch<BranchResponseDto>(ApiEndpoints.branches.deactivate(branchId), {})
       .pipe(map(toBranch));
   }
 }

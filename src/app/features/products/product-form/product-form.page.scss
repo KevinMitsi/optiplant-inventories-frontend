@@ -10,7 +10,7 @@
 @include ds.list-filters;
 
 .units-section {
-  max-width: 48rem;
+  max-width: 64rem;
   margin: ds.space(6) auto 0;
 
   h2 {
@@ -23,4 +23,140 @@
 
 .data-table {
   @include ds.responsive-table;
+
+  td {
+    min-width: 0;
+  }
+
+  input[type='number'] {
+    width: 100%;
+    min-width: 0;
+    max-width: 10rem;
+    box-sizing: border-box;
+  }
+
+  // El contenido de "Acciones" cambia según el estado (editar factor, fijar
+  // base, normal): sin ancho/alto fijos la tabla se comprime o expande de
+  // golpe al alternar. `table-layout: fixed` + columnas repartidas y un
+  // alto mínimo en la celda mantienen la fila estable entre estados.
+  @include ds.respond('md') {
+    table-layout: fixed;
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 26%;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 16%;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 12%;
+    }
+
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 12%;
+    }
+
+    th:nth-child(5),
+    td:nth-child(5) {
+      width: 34%;
+    }
+  }
+
+  .actions {
+    min-height: 2.75rem;
+    flex-wrap: wrap;
+    gap: ds.space(2);
+
+    > * + * {
+      margin-left: 0;
+    }
+
+    button {
+      padding: ds.space(1) ds.space(3);
+      font-size: ds.font-size('xs');
+      box-shadow: none;
+
+      &:hover:not(:disabled) {
+        box-shadow: none;
+      }
+    }
+  }
+}
+
+// Diálogo flotante para "Fijar como base" y para los errores de acciones de
+// presentaciones: mismo patrón visual que `app-confirm-dialog` (fondo
+// semitransparente + tarjeta centrada), para que el usuario los vea encima
+// de la tabla en vez de que el contenido se inserte/desaparezca dentro de
+// ella (lo que antes hacía "saltar" el layout).
+.units-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: ds.space(4);
+  z-index: 1000;
+}
+
+.units-modal {
+  @include ds.card;
+  width: 100%;
+  max-width: 28rem;
+  padding: ds.space(6);
+  border-top: 5px solid ds.color('primary');
+
+  &--error {
+    border-top-color: ds.color('danger');
+  }
+
+  h3 {
+    margin: 0 0 ds.space(3);
+    font-size: ds.font-size('lg');
+    font-weight: 700;
+    color: ds.color('neutral-900');
+  }
+
+  p {
+    margin: 0 0 ds.space(3);
+    color: ds.color('neutral-700');
+  }
+
+  label {
+    margin-top: ds.space(2);
+  }
+
+  input {
+    margin-bottom: ds.space(2);
+  }
+
+  &__actions {
+    @include ds.flex(row, center, flex-end, ds.space(3));
+    margin-top: ds.space(5);
+  }
+}
+
+.units-section .filters {
+  @include ds.respond('md') {
+    > select {
+      flex: 1 1 12rem;
+    }
+
+    // El input de factor lleva placeholder largo ("Factor (unidades base
+    // por presentación)"): con flex:1 parejo al resto queda tan angosto
+    // que el texto no cabe y se ve cortado. Le damos más espacio propio.
+    > input[type='number'] {
+      flex: 2 1 18rem;
+    }
+
+    > button {
+      flex: 0 0 auto;
+    }
+  }
 }

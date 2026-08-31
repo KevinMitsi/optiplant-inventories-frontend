@@ -11,6 +11,7 @@ import { SortDirection } from '../../../core/domain/models/page-query.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { Role } from '../../../core/domain/enums/role.enum';
 import { PaginatorComponent } from '../../../shared/ui/table/paginator.component';
+import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog/confirm-dialog.component';
 
 interface CarrierFilters {
   text: FormControl<string>;
@@ -32,7 +33,7 @@ const EMPTY_PAGE: Page<Carrier> = {
 /** Listado paginado de transportistas, mismo patrón que `BranchListPage`. */
 @Component({
   selector: 'app-carrier-list-page',
-  imports: [ReactiveFormsModule, RouterLink, PaginatorComponent],
+  imports: [ReactiveFormsModule, RouterLink, PaginatorComponent, ConfirmDialogComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="header">
@@ -114,6 +115,17 @@ const EMPTY_PAGE: Page<Carrier> = {
       [hasNext]="result().hasNext"
       (pageChange)="goToPage($event)"
     />
+
+    <app-confirm-dialog
+      [open]="!!carrierToDeactivate()"
+      title="Dar de baja transportista"
+      [message]="
+        '¿Seguro que deseas dar de baja a ' + (carrierToDeactivate()?.name ?? '') + '? Podrás reactivarlo luego.'
+      "
+      confirmLabel="Dar de baja"
+      (confirm)="confirmDeactivate()"
+      (cancel)="carrierToDeactivate.set(null)"
+    />
   `,
   styleUrl: './carrier-list.page.scss',
 })
@@ -127,6 +139,7 @@ export class CarrierListPage {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly result = signal<Page<Carrier>>(EMPTY_PAGE);
   protected readonly togglingId = signal<string | null>(null);
+  protected readonly carrierToDeactivate = signal<Carrier | null>(null);
 
   protected readonly filters = new FormGroup<CarrierFilters>({
     text: new FormControl('', { nonNullable: true }),
@@ -153,9 +166,27 @@ export class CarrierListPage {
   }
 
   protected toggleStatus(carrier: Carrier): void {
+    if (carrier.active) {
+      // Dar de baja es la operación sensible: pide confirmación antes de ejecutarla.
+      this.carrierToDeactivate.set(carrier);
+      return;
+    }
+    this.applyStatusChange(carrier, true);
+  }
+
+  protected confirmDeactivate(): void {
+    const carrier = this.carrierToDeactivate();
+    if (!carrier) {
+      return;
+    }
+    this.carrierToDeactivate.set(null);
+    this.applyStatusChange(carrier, false);
+  }
+
+  private applyStatusChange(carrier: Carrier, active: boolean): void {
     this.togglingId.set(carrier.id);
     this.setCarrierStatusUseCase
-      .execute(carrier.id, !carrier.active)
+      .execute(carrier.id, active)
       .pipe(finalize(() => this.togglingId.set(null)))
       .subscribe({
         next: () => this.search(),

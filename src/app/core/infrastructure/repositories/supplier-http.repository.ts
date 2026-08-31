@@ -43,13 +43,13 @@ export class SupplierHttpRepository extends SupplierRepository {
 
   override activate(supplierId: string): Observable<Supplier> {
     return this.http
-      .post<SupplierResponseDto>(ApiEndpoints.suppliers.activate(supplierId), {})
+      .patch<SupplierResponseDto>(ApiEndpoints.suppliers.activate(supplierId), {})
       .pipe(map(toSupplier));
   }
 
   override deactivate(supplierId: string): Observable<Supplier> {
     return this.http
-      .post<SupplierResponseDto>(ApiEndpoints.suppliers.deactivate(supplierId), {})
+      .patch<SupplierResponseDto>(ApiEndpoints.suppliers.deactivate(supplierId), {})
       .pipe(map(toSupplier));
   }
 }

@@ -11,6 +11,7 @@ import { SortDirection } from '../../../core/domain/models/page-query.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { Role } from '../../../core/domain/enums/role.enum';
 import { PaginatorComponent } from '../../../shared/ui/table/paginator.component';
+import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog/confirm-dialog.component';
 import { ColombiaLocationDirectoryService } from '../../../shared/data/colombia-location-directory.service';
 
 interface BranchFilters {
@@ -39,7 +40,7 @@ const EMPTY_PAGE: Page<Branch> = {
  */
 @Component({
   selector: 'app-branch-list-page',
-  imports: [ReactiveFormsModule, RouterLink, PaginatorComponent],
+  imports: [ReactiveFormsModule, RouterLink, PaginatorComponent, ConfirmDialogComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="header">
@@ -134,6 +135,17 @@ const EMPTY_PAGE: Page<Branch> = {
       [hasNext]="result().hasNext"
       (pageChange)="goToPage($event)"
     />
+
+    <app-confirm-dialog
+      [open]="!!branchToDeactivate()"
+      title="Dar de baja sucursal"
+      [message]="
+        '¿Seguro que deseas dar de baja la sucursal ' + (branchToDeactivate()?.name ?? '') + '? Podrás reactivarla luego.'
+      "
+      confirmLabel="Dar de baja"
+      (confirm)="confirmDeactivate()"
+      (cancel)="branchToDeactivate.set(null)"
+    />
   `,
   styleUrl: './branch-list.page.scss',
 })
@@ -148,6 +160,7 @@ export class BranchListPage {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly result = signal<Page<Branch>>(EMPTY_PAGE);
   protected readonly togglingId = signal<string | null>(null);
+  protected readonly branchToDeactivate = signal<Branch | null>(null);
 
   protected readonly filters = new FormGroup<BranchFilters>({
     text: new FormControl('', { nonNullable: true }),
@@ -189,9 +202,27 @@ export class BranchListPage {
   }
 
   protected toggleStatus(branch: Branch): void {
+    if (branch.active) {
+      // Dar de baja es la operación sensible: pide confirmación antes de ejecutarla.
+      this.branchToDeactivate.set(branch);
+      return;
+    }
+    this.applyStatusChange(branch, true);
+  }
+
+  protected confirmDeactivate(): void {
+    const branch = this.branchToDeactivate();
+    if (!branch) {
+      return;
+    }
+    this.branchToDeactivate.set(null);
+    this.applyStatusChange(branch, false);
+  }
+
+  private applyStatusChange(branch: Branch, active: boolean): void {
     this.togglingId.set(branch.id);
     this.setBranchStatusUseCase
-      .execute(branch.id, !branch.active)
+      .execute(branch.id, active)
       .pipe(finalize(() => this.togglingId.set(null)))
       .subscribe({
         next: () => this.search(),
