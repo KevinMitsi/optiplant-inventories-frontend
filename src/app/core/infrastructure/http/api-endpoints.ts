@@ -81,4 +81,15 @@ export const ApiEndpoints = {
     productPrices: (priceListId: string) =>
       `${environment.apiBaseUrl}/price-lists/${priceListId}/product-prices`,
   },
+  inventory: {
+    search: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/inventory`,
+    byProduct: (branchId: string, productId: string) =>
+      `${environment.apiBaseUrl}/branches/${branchId}/inventory/${productId}`,
+    minimumStock: (branchId: string, productId: string) =>
+      `${environment.apiBaseUrl}/branches/${branchId}/inventory/${productId}/minimum-stock`,
+    movements: (branchId: string, productId: string) =>
+      `${environment.apiBaseUrl}/branches/${branchId}/inventory/${productId}/movements`,
+    entries: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/inventory/entries`,
+    exits: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/inventory/exits`,
+  },
 } as const;

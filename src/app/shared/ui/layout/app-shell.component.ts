@@ -14,6 +14,7 @@ interface NavItem {
 
 const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Panel', path: '/dashboard' },
+  { label: 'Inventario', path: '/inventory' },
   { label: 'Sucursales', path: '/branches' },
   { label: 'Productos', path: '/products' },
   { label: 'Listas de precios', path: '/price-lists' },
