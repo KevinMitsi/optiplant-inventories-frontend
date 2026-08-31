@@ -1,0 +1,112 @@
+@use '../../../../styles/abstracts' as ds;
+
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.login-screen {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: ds.color('neutral-100');
+  padding: ds.space(4);
+}
+
+.login-card {
+  @include ds.card;
+  @include ds.flex(column, stretch, flex-start, ds.space(1));
+  width: 100%;
+  max-width: 24rem;
+  padding: ds.space(6) ds.space(5);
+  border-top: 4px solid ds.color('primary');
+
+  @include ds.respond('sm') {
+    padding: ds.space(7) ds.space(6);
+  }
+}
+
+.brand {
+  margin: 0;
+  font-size: ds.font-size('xxl');
+  font-weight: 800;
+  color: ds.color('primary');
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 0 0 ds.space(5);
+  color: ds.color('neutral-500');
+  font-size: ds.font-size('sm');
+}
+
+label {
+  font-size: ds.font-size('sm');
+  font-weight: 700;
+  color: ds.color('neutral-700');
+  margin-top: ds.space(4);
+}
+
+input {
+  padding: ds.space(3);
+  margin-top: ds.space(1);
+  border: 1px solid ds.color('neutral-300');
+  border-radius: ds.radius('sm');
+  font-size: ds.font-size('base');
+  background: ds.color('neutral-0');
+  color: ds.color('neutral-900');
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:focus-visible {
+    outline: none;
+    border-color: ds.color('primary');
+    box-shadow: 0 0 0 3px ds.color('primary-light');
+  }
+
+  &.invalid {
+    border-color: ds.color('danger');
+  }
+}
+
+.field-error {
+  color: ds.color('danger');
+  font-size: ds.font-size('xs');
+  margin-top: ds.space(1);
+}
+
+.form-error {
+  background: ds.color('danger-light');
+  color: ds.color('danger');
+  border-radius: ds.radius('sm');
+  padding: ds.space(3);
+  font-size: ds.font-size('sm');
+  margin-top: ds.space(4);
+}
+
+button {
+  margin-top: ds.space(5);
+  padding: ds.space(3);
+  border: none;
+  border-radius: ds.radius('sm');
+  background: ds.color('primary');
+  color: ds.color('neutral-0');
+  font-weight: 700;
+  font-size: ds.font-size('base');
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 96, 0, 0.28);
+  transition: background-color 0.15s ease;
+
+  @include ds.focus-ring;
+
+  &:hover:not(:disabled) {
+    background: ds.color('primary-dark');
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}

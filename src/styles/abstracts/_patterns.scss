@@ -9,19 +9,23 @@
 @mixin list-header {
   .header {
     @include mixins.flex(row, center, space-between, functions.space(3));
-    margin-bottom: functions.space(4);
+    margin-bottom: functions.space(5);
 
     h1 {
       margin: 0;
-      font-size: functions.font-size('xxl');
+      font-size: functions.font-size('display');
+      font-weight: 700;
+      color: functions.color('neutral-900');
     }
   }
 }
 
 @mixin list-filters {
   .filters {
-    @include mixins.flex(column, stretch, flex-start, functions.space(2));
-    margin-bottom: functions.space(4);
+    @include mixins.card;
+    @include mixins.flex(column, stretch, flex-start, functions.space(3));
+    padding: functions.space(4);
+    margin-bottom: functions.space(5);
 
     @include mixins.respond('md') {
       flex-direction: row;
@@ -33,6 +37,17 @@
       padding: functions.space(2) functions.space(3);
       border: 1px solid functions.color('neutral-300');
       border-radius: functions.radius('sm');
+      background: functions.color('neutral-0');
+      color: functions.color('neutral-900');
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+
+      &:focus-visible {
+        outline: none;
+        border-color: functions.color('primary');
+        box-shadow: 0 0 0 3px functions.color('primary-light');
+      }
     }
   }
 }
@@ -50,15 +65,36 @@
 @mixin status-badge {
   .badge {
     display: inline-block;
-    padding: functions.space(1) functions.space(2);
+    padding: functions.space(1) functions.space(3);
     border-radius: functions.radius('pill');
     font-size: functions.font-size('xs');
+    font-weight: 700;
     background: functions.color('neutral-200');
     color: functions.color('neutral-700');
 
     &--active {
       background: functions.color('success-light');
       color: functions.color('success');
+    }
+
+    &--warning {
+      background: functions.color('warning-light');
+      color: functions.color('warning');
+    }
+
+    &--danger {
+      background: functions.color('danger-light');
+      color: functions.color('danger');
+    }
+
+    &--info {
+      background: functions.color('info-light');
+      color: functions.color('info');
+    }
+
+    &--purple {
+      background: functions.color('purple-light');
+      color: functions.color('purple');
     }
   }
 }
@@ -89,37 +125,49 @@
 @mixin button {
   .button {
     display: inline-block;
-    padding: functions.space(2) functions.space(4);
+    padding: functions.space(3) functions.space(5);
     border-radius: functions.radius('sm');
     border: none;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: functions.font-size('sm');
     cursor: pointer;
     text-decoration: none;
     text-align: center;
+    transition:
+      background-color 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.1s ease;
 
     @include mixins.focus-ring;
 
     &--primary {
       background: functions.color('primary');
       color: functions.color('neutral-0');
+      box-shadow: 0 2px 8px rgba(255, 96, 0, 0.28);
 
       &:hover {
         background: functions.color('primary-dark');
       }
 
+      &:active {
+        transform: translateY(1px);
+      }
+
       &:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+        box-shadow: none;
       }
     }
 
     &--ghost {
-      background: transparent;
+      background: functions.color('neutral-0');
       border: 1px solid functions.color('neutral-300');
       color: functions.color('neutral-900');
 
       &:hover {
         background: functions.color('neutral-100');
+        border-color: functions.color('neutral-500');
       }
     }
   }
@@ -142,50 +190,68 @@
   .entity-form {
     @include mixins.card;
     @include mixins.flex(column, stretch, flex-start, functions.space(1));
-    max-width: 32rem;
+    max-width: 34rem;
+    margin-inline: auto;
     padding: functions.space(5);
+    border-top: 4px solid functions.color('primary');
 
     @include mixins.respond('md') {
-      padding: functions.space(6);
+      padding: functions.space(6) functions.space(7);
     }
   }
 
   label {
     font-size: functions.font-size('sm');
-    font-weight: 600;
-    margin-top: functions.space(3);
+    font-weight: 700;
+    color: functions.color('neutral-700');
+    margin-top: functions.space(4);
   }
 
   input {
-    padding: functions.space(2) functions.space(3);
+    padding: functions.space(3);
+    margin-top: functions.space(1);
     border: 1px solid functions.color('neutral-300');
     border-radius: functions.radius('sm');
+    background: functions.color('neutral-0');
+    color: functions.color('neutral-900');
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
 
     &:disabled {
       background: functions.color('neutral-100');
       color: functions.color('neutral-500');
     }
 
-    @include mixins.focus-ring;
+    &:focus-visible {
+      outline: none;
+      border-color: functions.color('primary');
+      box-shadow: 0 0 0 3px functions.color('primary-light');
+    }
   }
 
   .hint {
-    margin: 0;
+    margin: functions.space(1) 0 0;
     font-size: functions.font-size('xs');
     color: functions.color('neutral-500');
   }
 
   .actions {
     @include mixins.flex(row, center, flex-end, functions.space(3));
-    margin-top: functions.space(5);
+    margin-top: functions.space(6);
+    padding-top: functions.space(5);
+    border-top: 1px solid functions.color('neutral-200');
   }
 }
 
 /// Agrupa formulario + mensaje de error + botones en una sola inclusión.
 @mixin crud-form {
   h1 {
-    margin: 0 0 functions.space(4);
-    font-size: functions.font-size('xxl');
+    margin: 0 0 functions.space(5);
+    font-size: functions.font-size('display');
+    font-weight: 700;
+    color: functions.color('neutral-900');
+    text-align: center;
   }
 
   @include entity-form;
