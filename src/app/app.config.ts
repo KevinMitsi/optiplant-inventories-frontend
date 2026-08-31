@@ -29,6 +29,10 @@ import { PriceListRepository } from './core/domain/repositories/price-list.repos
 import { PriceListHttpRepository } from './core/infrastructure/repositories/price-list-http.repository';
 import { InventoryRepository } from './core/domain/repositories/inventory.repository';
 import { InventoryHttpRepository } from './core/infrastructure/repositories/inventory-http.repository';
+import { InventoryAdjustmentRepository } from './core/domain/repositories/inventory-adjustment.repository';
+import { InventoryAdjustmentHttpRepository } from './core/infrastructure/repositories/inventory-adjustment-http.repository';
+import { InventoryAlertRepository } from './core/domain/repositories/inventory-alert.repository';
+import { InventoryAlertHttpRepository } from './core/infrastructure/repositories/inventory-alert-http.repository';
 import { authInterceptor } from './core/infrastructure/http/auth.interceptor';
 import { errorNormalizerInterceptor } from './core/infrastructure/http/error-normalizer.interceptor';
 import { refreshInterceptor } from './core/infrastructure/http/refresh.interceptor';
@@ -58,6 +62,8 @@ export const appConfig: ApplicationConfig = {
     { provide: ProductRepository, useClass: ProductHttpRepository },
     { provide: PriceListRepository, useClass: PriceListHttpRepository },
     { provide: InventoryRepository, useClass: InventoryHttpRepository },
+    { provide: InventoryAdjustmentRepository, useClass: InventoryAdjustmentHttpRepository },
+    { provide: InventoryAlertRepository, useClass: InventoryAlertHttpRepository },
     // Resuelve si hay sesión válida antes de que el router active ningún guard.
     provideAppInitializer(() => firstValueFrom(inject(BootstrapSessionUseCase).execute())),
   ],

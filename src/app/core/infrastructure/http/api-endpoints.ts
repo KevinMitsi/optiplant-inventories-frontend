@@ -92,4 +92,15 @@ export const ApiEndpoints = {
     entries: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/inventory/entries`,
     exits: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/inventory/exits`,
   },
+  inventoryAdjustments: {
+    create: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/inventory-adjustments`,
+    byId: (adjustmentId: string) => `${environment.apiBaseUrl}/inventory-adjustments/${adjustmentId}`,
+    approve: (adjustmentId: string) =>
+      `${environment.apiBaseUrl}/inventory-adjustments/${adjustmentId}/approval`,
+  },
+  inventoryAlerts: {
+    search: () => `${environment.apiBaseUrl}/inventory-alerts`,
+    dismiss: (alertId: string) => `${environment.apiBaseUrl}/inventory-alerts/${alertId}/dismissal`,
+    resolve: (alertId: string) => `${environment.apiBaseUrl}/inventory-alerts/${alertId}/resolution`,
+  },
 } as const;
