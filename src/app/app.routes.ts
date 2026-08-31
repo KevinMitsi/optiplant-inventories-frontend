@@ -83,6 +83,10 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/logistics-routes/logistics-routes.routes').then((m) => m.LOGISTICS_ROUTES_ROUTES),
       },
+      {
+        path: 'transfers',
+        loadChildren: () => import('./features/transfers/transfers.routes').then((m) => m.TRANSFERS_ROUTES),
+      },
     ],
   },
   { path: '**', redirectTo: '' },
