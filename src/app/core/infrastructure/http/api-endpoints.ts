@@ -103,6 +103,13 @@ export const ApiEndpoints = {
     dismiss: (alertId: string) => `${environment.apiBaseUrl}/inventory-alerts/${alertId}/dismissal`,
     resolve: (alertId: string) => `${environment.apiBaseUrl}/inventory-alerts/${alertId}/resolution`,
   },
+  sales: {
+    search: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/sales`,
+    create: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/sales`,
+    byId: (saleId: string) => `${environment.apiBaseUrl}/sales/${saleId}`,
+    confirm: (saleId: string) => `${environment.apiBaseUrl}/sales/${saleId}/confirmation`,
+    cancel: (saleId: string) => `${environment.apiBaseUrl}/sales/${saleId}/cancellation`,
+  },
   dashboard: {
     salesSummary: (organizationId: string) =>
       `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/sales-summary`,

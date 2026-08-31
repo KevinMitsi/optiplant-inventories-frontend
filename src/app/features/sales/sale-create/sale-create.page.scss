@@ -1,0 +1,21 @@
+@use '../../../../styles/abstracts' as ds;
+
+:host {
+  display: block;
+}
+
+@include ds.crud-form;
+
+.item-row {
+  @include ds.flex(column, stretch, flex-start, ds.space(2));
+  border: 1px solid ds.color('neutral-200');
+  border-radius: ds.radius('md');
+  padding: ds.space(3);
+  margin-bottom: ds.space(3);
+
+  legend {
+    font-size: ds.font-size('sm');
+    color: ds.color('neutral-500');
+    padding: 0 ds.space(1);
+  }
+}

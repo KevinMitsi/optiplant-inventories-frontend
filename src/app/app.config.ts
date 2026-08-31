@@ -33,6 +33,8 @@ import { InventoryAdjustmentRepository } from './core/domain/repositories/invent
 import { InventoryAdjustmentHttpRepository } from './core/infrastructure/repositories/inventory-adjustment-http.repository';
 import { InventoryAlertRepository } from './core/domain/repositories/inventory-alert.repository';
 import { InventoryAlertHttpRepository } from './core/infrastructure/repositories/inventory-alert-http.repository';
+import { SaleRepository } from './core/domain/repositories/sale.repository';
+import { SaleHttpRepository } from './core/infrastructure/repositories/sale-http.repository';
 import { DashboardRepository } from './core/domain/repositories/dashboard.repository';
 import { DashboardHttpRepository } from './core/infrastructure/repositories/dashboard-http.repository';
 import { authInterceptor } from './core/infrastructure/http/auth.interceptor';
@@ -66,6 +68,7 @@ export const appConfig: ApplicationConfig = {
     { provide: InventoryRepository, useClass: InventoryHttpRepository },
     { provide: InventoryAdjustmentRepository, useClass: InventoryAdjustmentHttpRepository },
     { provide: InventoryAlertRepository, useClass: InventoryAlertHttpRepository },
+    { provide: SaleRepository, useClass: SaleHttpRepository },
     { provide: DashboardRepository, useClass: DashboardHttpRepository },
     // Resuelve si hay sesión válida antes de que el router active ningún guard.
     provideAppInitializer(() => firstValueFrom(inject(BootstrapSessionUseCase).execute())),
