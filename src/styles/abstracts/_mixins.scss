@@ -133,6 +133,7 @@
     @include respond($breakpoint) {
       display: table-cell;
       padding: functions.space(3);
+      text-align: center;
 
       &::before {
         content: none;
@@ -141,7 +142,7 @@
   }
 
   th {
-    text-align: left;
+    text-align: center;
     padding: functions.space(3);
     color: functions.color('secondary');
     font-size: functions.font-size('xs');

@@ -11,6 +11,7 @@ import { SortDirection } from '../../../core/domain/models/page-query.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { Role } from '../../../core/domain/enums/role.enum';
 import { PaginatorComponent } from '../../../shared/ui/table/paginator.component';
+import { ColombiaLocationDirectoryService } from '../../../shared/data/colombia-location-directory.service';
 
 interface BranchFilters {
   text: FormControl<string>;
@@ -50,13 +51,27 @@ const EMPTY_PAGE: Page<Branch> = {
 
     <form class="filters" [formGroup]="filters">
       <input type="search" formControlName="text" placeholder="Buscar por código o nombre…" />
-      <input type="text" formControlName="city" placeholder="Ciudad" />
+      <select [formControl]="departmentControl" (change)="onDepartmentChange()">
+        <option value="">Todos los departamentos</option>
+        @for (department of departments(); track department.code) {
+          <option [value]="department.code">{{ department.name }}</option>
+        }
+      </select>
+      <select formControlName="city">
+        <option value="">Todas las ciudades</option>
+        @for (municipality of cities(); track municipality.code) {
+          <option [value]="municipality.name">{{ municipality.name }}</option>
+        }
+      </select>
       <select formControlName="active">
         <option value="">Todas</option>
         <option value="true">Activas</option>
         <option value="false">Inactivas</option>
       </select>
     </form>
+    @if (locationDirectory.error(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
 
     @if (errorMessage(); as message) {
       <p class="form-error" role="alert">{{ message }}</p>
@@ -70,7 +85,7 @@ const EMPTY_PAGE: Page<Branch> = {
           <th>Ciudad</th>
           <th>Estado</th>
           @if (isAdmin()) {
-            <th></th>
+            <th>Acciones</th>
           }
         </tr>
       </thead>
@@ -126,6 +141,7 @@ export class BranchListPage {
   private readonly searchBranchesUseCase = inject(SearchBranchesUseCase);
   private readonly setBranchStatusUseCase = inject(SetBranchStatusUseCase);
   private readonly authStore = inject(AuthStore);
+  protected readonly locationDirectory = inject(ColombiaLocationDirectoryService);
 
   protected readonly isAdmin = computed(() => this.authStore.role() === Role.Admin);
   protected readonly loading = signal(true);
@@ -139,11 +155,20 @@ export class BranchListPage {
     active: new FormControl('', { nonNullable: true }),
   });
 
+  /** Departamento es solo filtro de UI para acotar el select de ciudad — mismo patrón que branch-form. */
+  protected readonly departmentControl = new FormControl('', { nonNullable: true });
+  private readonly selectedDepartmentCode = signal('');
+  protected readonly departments = this.locationDirectory.departments;
+  protected readonly cities = computed(() =>
+    this.locationDirectory.municipalitiesForDepartment(this.selectedDepartmentCode()),
+  );
+
   private page = 0;
   private readonly sortBy: BranchSortField = 'code';
   private readonly sortDirection: SortDirection = 'ASC';
 
   constructor() {
+    this.locationDirectory.ensureLoaded();
     this.search();
     this.filters.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
@@ -151,6 +176,11 @@ export class BranchListPage {
         this.page = 0;
         this.search();
       });
+  }
+
+  protected onDepartmentChange(): void {
+    this.selectedDepartmentCode.set(this.departmentControl.value);
+    this.filters.controls.city.setValue('');
   }
 
   protected goToPage(nextPage: number): void {
