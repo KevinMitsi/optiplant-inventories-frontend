@@ -23,6 +23,8 @@ import { SupplierRepository } from './core/domain/repositories/supplier.reposito
 import { SupplierHttpRepository } from './core/infrastructure/repositories/supplier-http.repository';
 import { UnitOfMeasureRepository } from './core/domain/repositories/unit-of-measure.repository';
 import { UnitOfMeasureHttpRepository } from './core/infrastructure/repositories/unit-of-measure-http.repository';
+import { ProductRepository } from './core/domain/repositories/product.repository';
+import { ProductHttpRepository } from './core/infrastructure/repositories/product-http.repository';
 import { authInterceptor } from './core/infrastructure/http/auth.interceptor';
 import { errorNormalizerInterceptor } from './core/infrastructure/http/error-normalizer.interceptor';
 import { refreshInterceptor } from './core/infrastructure/http/refresh.interceptor';
@@ -49,6 +51,7 @@ export const appConfig: ApplicationConfig = {
     { provide: CarrierRepository, useClass: CarrierHttpRepository },
     { provide: SupplierRepository, useClass: SupplierHttpRepository },
     { provide: UnitOfMeasureRepository, useClass: UnitOfMeasureHttpRepository },
+    { provide: ProductRepository, useClass: ProductHttpRepository },
     // Resuelve si hay sesión válida antes de que el router active ningún guard.
     provideAppInitializer(() => firstValueFrom(inject(BootstrapSessionUseCase).execute())),
   ],

@@ -45,6 +45,10 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/units-of-measure/units-of-measure.routes').then((m) => m.UNITS_OF_MEASURE_ROUTES),
       },
+      {
+        path: 'products',
+        loadChildren: () => import('./features/products/products.routes').then((m) => m.PRODUCTS_ROUTES),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

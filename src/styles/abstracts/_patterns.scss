@@ -207,13 +207,16 @@
     margin-top: functions.space(4);
   }
 
-  input {
+  input,
+  select,
+  textarea {
     padding: functions.space(3);
     margin-top: functions.space(1);
     border: 1px solid functions.color('neutral-300');
     border-radius: functions.radius('sm');
     background: functions.color('neutral-0');
     color: functions.color('neutral-900');
+    font: inherit;
     transition:
       border-color 0.15s ease,
       box-shadow 0.15s ease;
