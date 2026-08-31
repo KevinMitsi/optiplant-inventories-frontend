@@ -1,6 +1,8 @@
 You are an expert in TypeScript, Angular, and scalable web application development. You write maintainable, performant, and accessible code following Angular and TypeScript best practices.
 
-## TypeScript Best Practices
+YOU MUST ALWAYS USE REACTIVEFORMS for creating forms
+
+## TypeScript Best Practices  
 
 - Use strict type checking
 - Prefer type inference when the type is obvious
@@ -46,13 +48,23 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
 
-## SCSS Best Practices
+## Architecture
 
-- Use `@use`/`@forward` (module system), never legacy `@import`
-- Centralize design tokens (colors, spacing, breakpoints, radii, shadows) as SCSS variables/maps in `styles/abstracts/_tokens.scss`
-- Write reusable **mixins** for repeated patterns: responsive breakpoints (`@mixin respond($breakpoint)`), flex/grid layouts, visually-hidden, truncation
-- Write **functions** for computed values (e.g. spacing scale lookup, color contrast helper), not mixins, when a value is returned
-- Mobile-first: base styles unqualified, override with `min-width` media queries inside breakpoint mixins — ensures desktop/mobile interoperability
-- No hardcoded colors/spacing/breakpoints in component `.scss` files — always reference tokens/functions
-- Keep component styles scoped to the component; shared patterns go in `styles/abstracts` (`_mixins.scss`, `_functions.scss`, `_tokens.scss`) and are `@use`d where needed
-- Avoid deep selector nesting (max 3 levels) to keep specificity low and output CSS small
+src/
+├── app/
+│   ├── core/                  # Singleton globales de la app (interceptores, guards, layouts base)
+│   ├── shared/                # Componentes UI reutilizables genéricos (botones, modales, diseño base)
+│   └── features/              # Módulos de negocio (ej. gestión de usuarios)
+│       └── users/
+│           ├── domain/        # 1. Reglas de negocio puras (independientes de Angular)
+│           │   ├── models/    # Entidades einterfaces de TypeScript (ej. user.model.ts)
+│           │   └── ports/     # Interfaces/Abstracciones de repositorios (ej. user.repository.ts)
+│           ├── application/   # 2. Casos de uso (Orquestación de la lógica)
+│           │   └── get-users.use-case.ts
+│           ├── infrastructure/# 3. Detalles externos (APIs, mappers, persistencia)
+│           │   ├── datasources/ # Llamadas HTTP con HttpClient
+│           │   ├── mappers/   # Transformadores de DTO a Entidades de Dominio
+│           │   └── repositories-impl/ # Implementación de los puertos del dominio
+│           └── presentation/  # 4. Interfaz de usuario (Angular puro)
+│               ├── components/# Componentes visuales y contenedores (Standalone)
+│               └── user.routes.ts # Rutas específicas del feature con carga perezosa (lazy load)
