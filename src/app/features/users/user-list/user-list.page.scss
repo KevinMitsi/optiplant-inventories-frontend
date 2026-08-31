@@ -6,6 +6,6 @@
 
 @include ds.crud-list;
 
-.branch-table {
+.data-table {
   @include ds.responsive-table;
 }

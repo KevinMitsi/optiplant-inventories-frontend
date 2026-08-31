@@ -1,0 +1,20 @@
+@use '../../../../styles/abstracts' as ds;
+
+:host {
+  display: block;
+}
+
+@include ds.crud-form;
+@include ds.list-filters;
+
+.units-section {
+  max-width: 40rem;
+  margin: ds.space(6) auto 0;
+
+  h2 {
+    margin: 0 0 ds.space(3);
+    font-size: ds.font-size('lg');
+    font-weight: 700;
+    color: ds.color('neutral-900');
+  }
+}

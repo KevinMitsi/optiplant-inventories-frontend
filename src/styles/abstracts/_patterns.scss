@@ -30,6 +30,14 @@
     @include mixins.respond('md') {
       flex-direction: row;
       align-items: center;
+
+      // Sin esto los campos quedan pegados a la izquierda (content-width) y
+      // dejan un hueco vacío a la derecha del contenedor — parece que solo
+      // el último campo tiene margen. Repartidos, ambos lados quedan simétricos.
+      > * {
+        flex: 1 1 0;
+        min-width: 0;
+      }
     }
 
     input,
@@ -106,24 +114,40 @@
 
 @mixin row-actions {
   .actions {
-    @include mixins.flex(row, center, flex-end, functions.space(3));
+    // Gap generoso + pill sólido naranja (color primario) en link y botón:
+    // se leen como un grupo de acciones separadas, no como texto pegado.
+    @include mixins.flex(row, center, center, functions.space(5));
+    flex-wrap: wrap;
 
-    button {
-      border: 1.5px solid functions.color('neutral-300');
-      background: functions.color('neutral-0');
+    // Margen explícito además del `gap` del flex: por si el navegador no lo
+    // aplica (o el `td` reflow de `responsive-table` lo neutraliza).
+    > * + * {
+      margin-left: functions.space(5);
+    }
+
+    button,
+    a {
+      display: inline-flex;
+      align-items: center;
+      border: none;
+      background: functions.color('primary');
+      color: functions.color('neutral-0');
+      font-weight: 700;
       border-radius: functions.radius('sm');
-      padding: functions.space(2) functions.space(3);
+      padding: functions.space(2) functions.space(4);
       cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(255, 96, 0, 0.3);
       transition:
         background-color 0.15s ease,
-        border-color 0.15s ease,
+        box-shadow 0.15s ease,
         transform 0.1s ease;
 
       @include mixins.focus-ring;
 
       &:hover:not(:disabled) {
-        background: functions.color('neutral-100');
-        border-color: functions.color('neutral-500');
+        background: functions.color('primary-dark');
+        box-shadow: 0 4px 12px rgba(255, 96, 0, 0.4);
       }
 
       &:active:not(:disabled) {
@@ -133,6 +157,7 @@
       &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+        box-shadow: none;
       }
     }
   }
@@ -192,6 +217,72 @@
         border-color: functions.color('neutral-500');
       }
     }
+
+    &--danger {
+      background: functions.color('danger');
+      color: functions.color('neutral-0');
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32);
+
+      &:hover {
+        background: #dc2626;
+        box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
+      }
+
+      &:active {
+        transform: translateY(1px);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
+  }
+}
+
+/// Overlay modal de confirmación (`app-confirm-dialog`, ver
+/// `shared/ui/confirm-dialog`) — reutilizado por cualquier acción destructiva
+/// o irreversible (dar de baja sucursal/transportista, etc.).
+@mixin confirm-dialog {
+  .confirm-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: functions.space(4);
+    z-index: 1000;
+  }
+
+  .confirm-dialog {
+    @include mixins.card;
+    width: 100%;
+    max-width: 26rem;
+    padding: functions.space(6);
+    border-top: 5px solid functions.color('danger');
+
+    &--neutral {
+      border-top-color: functions.color('primary');
+    }
+
+    h2 {
+      margin: 0 0 functions.space(3);
+      font-size: functions.font-size('lg');
+      font-weight: 700;
+      color: functions.color('neutral-900');
+    }
+
+    p {
+      margin: 0;
+      color: functions.color('neutral-700');
+    }
+
+    .confirm-dialog__actions {
+      @include mixins.flex(row, center, flex-end, functions.space(3));
+      margin-top: functions.space(6);
+    }
   }
 }
 
@@ -232,6 +323,8 @@
   input,
   select,
   textarea {
+    box-sizing: border-box;
+    width: 100%;
     padding: functions.space(3) functions.space(4);
     margin-top: functions.space(2);
     border: 1.5px solid functions.color('neutral-300');
@@ -243,7 +336,19 @@
     transition:
       border-color 0.15s ease,
       box-shadow 0.15s ease;
+  }
 
+  select {
+    // El navegador dimensiona el `<select>` cerrado según la opción más
+    // larga; sin esto desborda contenedores angostos como `.field-group`.
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  input,
+  select,
+  textarea {
     &:hover:not(:disabled) {
       border-color: functions.color('neutral-500');
     }
@@ -258,6 +363,17 @@
       border-color: functions.color('primary');
       box-shadow: 0 0 0 4px functions.color('primary-light');
     }
+
+    // Angular marca cada control con `ng-invalid`/`ng-touched` sin plantilla
+    // extra: basta targetear esas clases para el borde rojo por campo.
+    &.ng-invalid.ng-touched {
+      border-color: functions.color('danger');
+      background: functions.color('danger-light');
+
+      &:focus-visible {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+      }
+    }
   }
 
   textarea {
@@ -265,10 +381,52 @@
     resize: vertical;
   }
 
+  .field-group {
+    @include mixins.flex(row, flex-start, flex-start, functions.space(3));
+
+    > * {
+      flex: 1 1 0;
+      // Sin esto un flex item no se achica más allá del contenido intrínseco
+      // (el select con el país más largo) y desborda al hermano.
+      min-width: 0;
+    }
+  }
+
+  .phone-field {
+    @include mixins.flex(row, stretch, flex-start, 0);
+    margin-top: functions.space(2);
+
+    .phone-prefix {
+      display: flex;
+      align-items: center;
+      padding: 0 functions.space(3);
+      border: 1.5px solid functions.color('neutral-300');
+      border-right: none;
+      border-radius: functions.radius('md') 0 0 functions.radius('md');
+      background: functions.color('neutral-100');
+      color: functions.color('neutral-500');
+      font-size: functions.font-size('sm');
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    input {
+      margin-top: 0;
+      border-radius: 0 functions.radius('md') functions.radius('md') 0;
+    }
+  }
+
   .hint {
     margin: functions.space(2) 0 0;
     font-size: functions.font-size('xs');
     color: functions.color('neutral-500');
+  }
+
+  .field-error {
+    margin: functions.space(2) 0 0;
+    font-size: functions.font-size('xs');
+    font-weight: 600;
+    color: functions.color('danger');
   }
 
   .actions {

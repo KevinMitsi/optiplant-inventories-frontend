@@ -39,6 +39,8 @@ interface LogisticsRouteForm {
         </select>
         @if (isEditMode()) {
           <p class="hint">El origen es inmutable una vez creada la ruta.</p>
+        } @else if (form.controls.originBranchId.invalid && form.controls.originBranchId.touched) {
+          <p class="field-error" role="alert">Selecciona la sucursal origen.</p>
         }
 
         <label for="destinationBranchId">Sucursal destino</label>
@@ -50,22 +52,43 @@ interface LogisticsRouteForm {
         </select>
         @if (isEditMode()) {
           <p class="hint">El destino es inmutable una vez creada la ruta.</p>
+        } @else if (form.controls.destinationBranchId.invalid && form.controls.destinationBranchId.touched) {
+          <p class="field-error" role="alert">Selecciona la sucursal destino.</p>
         }
 
         <label for="name">Nombre</label>
         <input id="name" formControlName="name" placeholder="Opcional" />
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <p class="field-error" role="alert">Máximo 150 caracteres.</p>
+        }
 
         <label for="estimatedDurationMinutes">Duración estimada (min)</label>
         <input id="estimatedDurationMinutes" type="number" min="0" formControlName="estimatedDurationMinutes" />
+        @if (form.controls.estimatedDurationMinutes.invalid && form.controls.estimatedDurationMinutes.touched) {
+          <p class="field-error" role="alert">
+            {{
+              form.controls.estimatedDurationMinutes.hasError('required')
+                ? 'La duración estimada es obligatoria.'
+                : 'No puede ser negativa.'
+            }}
+          </p>
+        }
 
         <label for="estimatedCost">Costo estimado</label>
         <input id="estimatedCost" type="number" min="0" step="0.01" formControlName="estimatedCost" />
+        @if (form.controls.estimatedCost.invalid && form.controls.estimatedCost.touched) {
+          <p class="field-error" role="alert">No puede ser negativo.</p>
+        }
 
         <label for="priority">Prioridad</label>
         <input id="priority" type="number" formControlName="priority" />
 
         @if (errorMessage(); as message) {
           <p class="form-error" role="alert">{{ message }}</p>
+        }
+
+        @if (form.invalid && form.touched) {
+          <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
         }
 
         <div class="actions">

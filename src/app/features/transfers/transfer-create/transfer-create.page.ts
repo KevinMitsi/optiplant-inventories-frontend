@@ -46,9 +46,19 @@ interface TransferForm {
           <option [value]="branch.id">{{ branch.name }}</option>
         }
       </select>
+      @if (form.controls.destinationBranchId.invalid && form.controls.destinationBranchId.touched) {
+        <p class="field-error" role="alert">Selecciona la sucursal destino.</p>
+      }
 
       <label for="transferNumber">Número</label>
       <input id="transferNumber" formControlName="transferNumber" placeholder="TR-2026-0001" />
+      @if (form.controls.transferNumber.invalid && form.controls.transferNumber.touched) {
+        <p class="field-error" role="alert">
+          {{
+            form.controls.transferNumber.hasError('required') ? 'El número es obligatorio.' : 'Máximo 40 caracteres.'
+          }}
+        </p>
+      }
 
       <label for="priority">Prioridad</label>
       <select id="priority" formControlName="priority">
@@ -72,6 +82,9 @@ interface TransferForm {
               <option [value]="product.id">{{ product.sku }} — {{ product.name }}</option>
             }
           </select>
+          @if (item.controls.productId.invalid && item.controls.productId.touched) {
+            <p class="field-error" role="alert">Selecciona un producto.</p>
+          }
 
           <label [for]="'productUnitId-' + $index">Presentación</label>
           <select [id]="'productUnitId-' + $index" [formControl]="item.controls.productUnitId">
@@ -80,9 +93,19 @@ interface TransferForm {
               <option [value]="unit.id">{{ unit.unit.symbol }} — {{ unit.unit.name }}</option>
             }
           </select>
+          @if (item.controls.productUnitId.invalid && item.controls.productUnitId.touched) {
+            <p class="field-error" role="alert">Selecciona una presentación.</p>
+          }
 
           <label [for]="'quantity-' + $index">Cantidad</label>
           <input [id]="'quantity-' + $index" type="number" [formControl]="item.controls.quantity" step="any" min="0" />
+          @if (item.controls.quantity.invalid && item.controls.quantity.touched) {
+            <p class="field-error" role="alert">
+              {{
+                item.controls.quantity.hasError('required') ? 'La cantidad es obligatoria.' : 'Debe ser mayor que 0.'
+              }}
+            </p>
+          }
 
           @if (form.controls.items.length > 1) {
             <button type="button" class="button button--ghost" (click)="removeItem($index)">Quitar línea</button>
@@ -93,6 +116,10 @@ interface TransferForm {
 
       @if (errorMessage(); as message) {
         <p class="form-error" role="alert">{{ message }}</p>
+      }
+
+      @if (form.invalid && form.touched) {
+        <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
       }
 
       <div class="actions">

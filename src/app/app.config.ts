@@ -13,6 +13,8 @@ import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { AuthRepository } from './core/domain/repositories/auth.repository';
 import { AuthHttpRepository } from './core/infrastructure/repositories/auth-http.repository';
+import { UserRepository } from './core/domain/repositories/user.repository';
+import { UserHttpRepository } from './core/infrastructure/repositories/user-http.repository';
 import { BranchRepository } from './core/domain/repositories/branch.repository';
 import { BranchHttpRepository } from './core/infrastructure/repositories/branch-http.repository';
 import { CategoryRepository } from './core/domain/repositories/category.repository';
@@ -66,6 +68,7 @@ export const appConfig: ApplicationConfig = {
     ),
     // Enlaza cada puerto de dominio con su implementación HTTP (Clean Architecture).
     { provide: AuthRepository, useClass: AuthHttpRepository },
+    { provide: UserRepository, useClass: UserHttpRepository },
     { provide: BranchRepository, useClass: BranchHttpRepository },
     { provide: CategoryRepository, useClass: CategoryHttpRepository },
     { provide: CarrierRepository, useClass: CarrierHttpRepository },
