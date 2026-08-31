@@ -49,15 +49,31 @@ interface PurchaseOrderForm {
           <option [value]="supplier.id">{{ supplier.code }} — {{ supplier.name }}</option>
         }
       </select>
+      @if (form.controls.supplierId.invalid && form.controls.supplierId.touched) {
+        <p class="field-error" role="alert">Selecciona un proveedor.</p>
+      }
 
       <label for="orderNumber">Número</label>
       <input id="orderNumber" formControlName="orderNumber" placeholder="OC-2026-0001" />
+      @if (form.controls.orderNumber.invalid && form.controls.orderNumber.touched) {
+        <p class="field-error" role="alert">
+          {{
+            form.controls.orderNumber.hasError('required') ? 'El número es obligatorio.' : 'Máximo 40 caracteres.'
+          }}
+        </p>
+      }
 
       <label for="orderDate">Fecha</label>
       <input id="orderDate" type="date" formControlName="orderDate" />
+      @if (form.controls.orderDate.invalid && form.controls.orderDate.touched) {
+        <p class="field-error" role="alert">La fecha es obligatoria.</p>
+      }
 
       <label for="paymentTermDays">Plazo de pago, en días (opcional)</label>
       <input id="paymentTermDays" type="number" formControlName="paymentTermDays" step="1" min="0" />
+      @if (form.controls.paymentTermDays.invalid && form.controls.paymentTermDays.touched) {
+        <p class="field-error" role="alert">No puede ser negativo.</p>
+      }
 
       <label for="notes">Notas (opcional)</label>
       <input id="notes" formControlName="notes" />
@@ -73,6 +89,9 @@ interface PurchaseOrderForm {
               <option [value]="product.id">{{ product.sku }} — {{ product.name }}</option>
             }
           </select>
+          @if (item.controls.productId.invalid && item.controls.productId.touched) {
+            <p class="field-error" role="alert">Selecciona un producto.</p>
+          }
 
           <label [for]="'productUnitId-' + $index">Presentación</label>
           <select [id]="'productUnitId-' + $index" [formControl]="item.controls.productUnitId">
@@ -81,12 +100,31 @@ interface PurchaseOrderForm {
               <option [value]="unit.id">{{ unit.unit.symbol }} — {{ unit.unit.name }}</option>
             }
           </select>
+          @if (item.controls.productUnitId.invalid && item.controls.productUnitId.touched) {
+            <p class="field-error" role="alert">Selecciona una presentación.</p>
+          }
 
           <label [for]="'quantity-' + $index">Cantidad</label>
           <input [id]="'quantity-' + $index" type="number" [formControl]="item.controls.quantity" step="any" min="0" />
+          @if (item.controls.quantity.invalid && item.controls.quantity.touched) {
+            <p class="field-error" role="alert">
+              {{
+                item.controls.quantity.hasError('required') ? 'La cantidad es obligatoria.' : 'Debe ser mayor que 0.'
+              }}
+            </p>
+          }
 
           <label [for]="'unitPrice-' + $index">Precio unitario pactado</label>
           <input [id]="'unitPrice-' + $index" type="number" [formControl]="item.controls.unitPrice" step="any" min="0" />
+          @if (item.controls.unitPrice.invalid && item.controls.unitPrice.touched) {
+            <p class="field-error" role="alert">
+              {{
+                item.controls.unitPrice.hasError('required')
+                  ? 'El precio unitario es obligatorio.'
+                  : 'No puede ser negativo.'
+              }}
+            </p>
+          }
 
           <label [for]="'discountPercentage-' + $index">Descuento % (opcional)</label>
           <input
@@ -97,6 +135,9 @@ interface PurchaseOrderForm {
             min="0"
             max="100"
           />
+          @if (item.controls.discountPercentage.invalid && item.controls.discountPercentage.touched) {
+            <p class="field-error" role="alert">Debe estar entre 0 y 100.</p>
+          }
 
           @if (form.controls.items.length > 1) {
             <button type="button" class="button button--ghost" (click)="removeItem($index)">Quitar línea</button>
@@ -107,6 +148,10 @@ interface PurchaseOrderForm {
 
       @if (errorMessage(); as message) {
         <p class="form-error" role="alert">{{ message }}</p>
+      }
+
+      @if (form.invalid && form.touched) {
+        <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
       }
 
       <div class="actions">

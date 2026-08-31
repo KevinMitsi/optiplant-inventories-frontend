@@ -43,6 +43,37 @@ interface ProductPriceForm {
   template: `
     <h1>{{ isEditMode() ? 'Editar lista de precios' : 'Nueva lista de precios' }}</h1>
 
+    @if (showInfoDialog()) {
+      <div class="confirm-dialog-backdrop" (click)="dismissInfoDialog()">
+        <div
+          class="confirm-dialog confirm-dialog--neutral"
+          role="alertdialog"
+          aria-modal="true"
+          [attr.aria-labelledby]="infoDialogTitleId"
+          (click)="$event.stopPropagation()"
+        >
+          <h2 [id]="infoDialogTitleId">¿Qué es una lista de precios?</h2>
+          <p>
+            Es una forma de agrupar precios distintos para los mismos productos. Por ejemplo: un precio para venta
+            al por mayor y otro al detal, o precios especiales por sucursal o por cliente.
+          </p>
+          <p>
+            Cada lista tiene un código y un nombre que la identifican (ej. "MINORISTA — Precio al detal"). Después,
+            a cada producto le asignas un precio dentro de esa lista. Un mismo producto puede tener un precio
+            diferente en cada lista que crees.
+          </p>
+          <p>
+            A la hora de vender, eliges qué lista de precios usar para esa venta. Así, el mismo producto se cobra a
+            un valor u otro según la lista que hayas escogido — sin tener que cambiar el precio del producto cada
+            vez.
+          </p>
+          <div class="confirm-dialog__actions">
+            <button type="button" class="button button--primary" (click)="dismissInfoDialog()">Entendido</button>
+          </div>
+        </div>
+      </div>
+    }
+
     @if (loadingPriceList()) {
       <p>Cargando…</p>
     } @else {
@@ -51,10 +82,23 @@ interface ProductPriceForm {
         <input id="code" formControlName="code" placeholder="MINORISTA" />
         @if (isEditMode()) {
           <p class="hint">El código es inmutable una vez creada la lista de precios.</p>
+        } @else if (form.controls.code.invalid && form.controls.code.touched) {
+          <p class="field-error" role="alert">
+            {{
+              form.controls.code.hasError('required') ? 'El código es obligatorio.' : 'Máximo 30 caracteres.'
+            }}
+          </p>
         }
 
         <label for="name">Nombre</label>
         <input id="name" formControlName="name" />
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <p class="field-error" role="alert">
+            {{
+              form.controls.name.hasError('required') ? 'El nombre es obligatorio.' : 'Máximo 100 caracteres.'
+            }}
+          </p>
+        }
 
         <label for="description">Descripción</label>
         <input id="description" formControlName="description" />
@@ -67,6 +111,10 @@ interface ProductPriceForm {
 
         @if (errorMessage(); as message) {
           <p class="form-error" role="alert">{{ message }}</p>
+        }
+
+        @if (form.invalid && form.touched) {
+          <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
         }
 
         <div class="actions">
@@ -111,6 +159,13 @@ interface ProductPriceForm {
               Guardar precio
             </button>
           </form>
+          @if (priceForm.controls.price.invalid && priceForm.controls.price.touched) {
+            <p class="field-error" role="alert">
+              {{
+                priceForm.controls.price.hasError('required') ? 'El precio es obligatorio.' : 'No puede ser negativo.'
+              }}
+            </p>
+          }
 
           @if (priceMessage(); as message) {
             <p class="hint">{{ message }}</p>
@@ -146,6 +201,9 @@ export class PriceListFormPage {
   protected readonly priceActionBusy = signal(false);
   protected readonly priceMessage = signal<string | null>(null);
   protected readonly priceErrorMessage = signal<string | null>(null);
+
+  protected readonly showInfoDialog = signal(true);
+  protected readonly infoDialogTitleId = `price-list-info-title-${crypto.randomUUID()}`;
 
   protected readonly form = new FormGroup<PriceListForm>({
     code: new FormControl('', {
@@ -189,6 +247,10 @@ export class PriceListFormPage {
       this.priceMessage.set(null);
       this.priceErrorMessage.set(null);
     });
+  }
+
+  protected dismissInfoDialog(): void {
+    this.showInfoDialog.set(false);
   }
 
   protected lookupPrice(priceListId: string): void {

@@ -217,6 +217,72 @@
         border-color: functions.color('neutral-500');
       }
     }
+
+    &--danger {
+      background: functions.color('danger');
+      color: functions.color('neutral-0');
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32);
+
+      &:hover {
+        background: #dc2626;
+        box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
+      }
+
+      &:active {
+        transform: translateY(1px);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
+  }
+}
+
+/// Overlay modal de confirmación (`app-confirm-dialog`, ver
+/// `shared/ui/confirm-dialog`) — reutilizado por cualquier acción destructiva
+/// o irreversible (dar de baja sucursal/transportista, etc.).
+@mixin confirm-dialog {
+  .confirm-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: functions.space(4);
+    z-index: 1000;
+  }
+
+  .confirm-dialog {
+    @include mixins.card;
+    width: 100%;
+    max-width: 26rem;
+    padding: functions.space(6);
+    border-top: 5px solid functions.color('danger');
+
+    &--neutral {
+      border-top-color: functions.color('primary');
+    }
+
+    h2 {
+      margin: 0 0 functions.space(3);
+      font-size: functions.font-size('lg');
+      font-weight: 700;
+      color: functions.color('neutral-900');
+    }
+
+    p {
+      margin: 0;
+      color: functions.color('neutral-700');
+    }
+
+    .confirm-dialog__actions {
+      @include mixins.flex(row, center, flex-end, functions.space(3));
+      margin-top: functions.space(6);
+    }
   }
 }
 

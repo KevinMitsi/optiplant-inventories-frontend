@@ -6,6 +6,18 @@
 
 @include ds.crud-form;
 @include ds.list-filters;
+@include ds.confirm-dialog;
+
+// El diálogo informativo de "¿Qué es una lista de precios?" lleva tres
+// párrafos: con el ancho por defecto de `confirm-dialog` (26rem) el texto
+// queda demasiado apretado.
+.confirm-dialog {
+  max-width: 32rem;
+
+  p + p {
+    margin-top: ds.space(3);
+  }
+}
 
 .units-section {
   max-width: 48rem;

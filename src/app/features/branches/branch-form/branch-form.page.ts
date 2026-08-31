@@ -20,6 +20,8 @@ interface BranchForm {
 }
 
 const ONLY_DIGITS = /^\d*$/;
+/** Letras (con acentos/ñ), espacios y puntuación habitual de nombres de sucursal — nada de dígitos. */
+const NAME_PATTERN = /^[A-Za-zÀ-ÿÑñ][A-Za-zÀ-ÿÑñ\s.,&'-]*$/;
 
 /**
  * Alta/edición de sucursal en un único componente (misma forma, distinto
@@ -64,7 +66,13 @@ const ONLY_DIGITS = /^\d*$/;
         <input id="name" formControlName="name" />
         @if (form.controls.name.invalid && form.controls.name.touched) {
           <p class="field-error" role="alert">
-            {{ form.controls.name.hasError('required') ? 'El nombre es obligatorio.' : 'Máximo 150 caracteres.' }}
+            {{
+              form.controls.name.hasError('required')
+                ? 'El nombre es obligatorio.'
+                : form.controls.name.hasError('maxlength')
+                  ? 'Máximo 150 caracteres.'
+                  : 'El nombre no puede contener números.'
+            }}
           </p>
         }
 
@@ -200,7 +208,10 @@ export class BranchFormPage {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(30), Validators.pattern(/^[A-Za-z0-9._-]+$/)],
     }),
-    name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(150)] }),
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(150), Validators.pattern(NAME_PATTERN)],
+    }),
     addressLine: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(250)],

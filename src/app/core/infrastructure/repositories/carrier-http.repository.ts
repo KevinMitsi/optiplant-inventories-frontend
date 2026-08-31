@@ -43,13 +43,13 @@ export class CarrierHttpRepository extends CarrierRepository {
 
   override activate(carrierId: string): Observable<Carrier> {
     return this.http
-      .post<CarrierResponseDto>(ApiEndpoints.carriers.activate(carrierId), {})
+      .patch<CarrierResponseDto>(ApiEndpoints.carriers.activate(carrierId), {})
       .pipe(map(toCarrier));
   }
 
   override deactivate(carrierId: string): Observable<Carrier> {
     return this.http
-      .post<CarrierResponseDto>(ApiEndpoints.carriers.deactivate(carrierId), {})
+      .patch<CarrierResponseDto>(ApiEndpoints.carriers.deactivate(carrierId), {})
       .pipe(map(toCarrier));
   }
 }

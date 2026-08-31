@@ -35,6 +35,13 @@ interface AdjustmentForm {
     <form class="entity-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <label for="reason">Motivo general</label>
       <input id="reason" formControlName="reason" placeholder="Conteo físico de fin de mes" />
+      @if (form.controls.reason.invalid && form.controls.reason.touched) {
+        <p class="field-error" role="alert">
+          {{
+            form.controls.reason.hasError('required') ? 'El motivo general es obligatorio.' : 'Máximo 250 caracteres.'
+          }}
+        </p>
+      }
 
       <h2>Líneas</h2>
       @for (item of form.controls.items.controls; track $index) {
@@ -47,6 +54,9 @@ interface AdjustmentForm {
               <option [value]="product.id">{{ product.sku }} — {{ product.name }}</option>
             }
           </select>
+          @if (item.controls.productId.invalid && item.controls.productId.touched) {
+            <p class="field-error" role="alert">Selecciona un producto.</p>
+          }
 
           <label [for]="'quantityDelta-' + $index">Cantidad (con signo: positivo entra, negativo sale)</label>
           <input
@@ -55,9 +65,15 @@ interface AdjustmentForm {
             [formControl]="item.controls.quantityDelta"
             step="any"
           />
+          @if (item.controls.quantityDelta.invalid && item.controls.quantityDelta.touched) {
+            <p class="field-error" role="alert">La cantidad es obligatoria.</p>
+          }
 
           <label [for]="'itemReason-' + $index">Motivo de la línea (opcional)</label>
           <input [id]="'itemReason-' + $index" [formControl]="item.controls.reason" />
+          @if (item.controls.reason.invalid && item.controls.reason.touched) {
+            <p class="field-error" role="alert">Máximo 250 caracteres.</p>
+          }
 
           @if (form.controls.items.length > 1) {
             <button type="button" class="button button--ghost" (click)="removeItem($index)">Quitar línea</button>
@@ -68,6 +84,10 @@ interface AdjustmentForm {
 
       @if (errorMessage(); as message) {
         <p class="form-error" role="alert">{{ message }}</p>
+      }
+
+      @if (form.invalid && form.touched) {
+        <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
       }
 
       <div class="actions">

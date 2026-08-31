@@ -74,7 +74,7 @@ export class ProductHttpRepository extends ProductRepository {
   ): Observable<Product> {
     const body: ChangeUnitFactorRequestDto = input;
     return this.http
-      .put<ProductResponseDto>(ApiEndpoints.products.unitFactor(productId, productUnitId), body)
+      .patch<ProductResponseDto>(ApiEndpoints.products.unitFactor(productId, productUnitId), body)
       .pipe(map(toProduct));
   }
 
@@ -93,7 +93,7 @@ export class ProductHttpRepository extends ProductRepository {
   override changeBaseUnit(productId: string, input: ChangeBaseUnitInput): Observable<Product> {
     const body: ChangeBaseUnitRequestDto = input;
     return this.http
-      .post<ProductResponseDto>(ApiEndpoints.products.baseUnit(productId), body)
+      .patch<ProductResponseDto>(ApiEndpoints.products.baseUnit(productId), body)
       .pipe(map(toProduct));
   }
 }
