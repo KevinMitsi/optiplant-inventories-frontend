@@ -68,3 +68,69 @@
   border-radius: functions.radius('md');
   box-shadow: functions.shadow('sm');
 }
+
+/// Tabla responsiva "mobile-first": por debajo de `$breakpoint` cada `<tr>`
+/// se reapila como tarjeta y cada `<td>` muestra su etiqueta vía el atributo
+/// `data-label` (pseudo-elemento `::before`); a partir de `$breakpoint`
+/// recupera el layout tabular normal. Un único `<table>`, sin duplicar
+/// markup ni plantilla por tamaño de pantalla. Uso:
+/// `.data-table { @include ds.responsive-table; }`.
+@mixin responsive-table($breakpoint: 'md') {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    display: none;
+
+    @include respond($breakpoint) {
+      display: table-header-group;
+    }
+  }
+
+  tr {
+    @include card;
+    display: block;
+    margin-bottom: functions.space(3);
+    padding: functions.space(3);
+
+    @include respond($breakpoint) {
+      display: table-row;
+      margin-bottom: 0;
+      padding: 0;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+      border-bottom: 1px solid functions.color('neutral-200');
+    }
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    gap: functions.space(3);
+    padding: functions.space(1) 0;
+    border: none;
+
+    &::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: functions.color('neutral-500');
+    }
+
+    @include respond($breakpoint) {
+      display: table-cell;
+      padding: functions.space(3);
+
+      &::before {
+        content: none;
+      }
+    }
+  }
+
+  th {
+    text-align: left;
+    padding: functions.space(3);
+    color: functions.color('neutral-700');
+    border-bottom: 1px solid functions.color('neutral-200');
+  }
+}

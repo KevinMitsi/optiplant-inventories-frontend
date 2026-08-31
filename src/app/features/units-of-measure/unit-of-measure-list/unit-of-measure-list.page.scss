@@ -1,0 +1,16 @@
+@use '../../../../styles/abstracts' as ds;
+
+:host {
+  display: block;
+}
+
+h1 {
+  margin: 0 0 ds.space(4);
+  font-size: ds.font-size('xxl');
+}
+
+@include ds.form-error;
+
+.data-table {
+  @include ds.responsive-table;
+}

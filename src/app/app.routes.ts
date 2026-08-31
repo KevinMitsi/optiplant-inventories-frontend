@@ -28,6 +28,23 @@ export const routes: Routes = [
         path: 'branches',
         loadChildren: () => import('./features/branches/branches.routes').then((m) => m.BRANCHES_ROUTES),
       },
+      {
+        path: 'categories',
+        loadChildren: () => import('./features/categories/categories.routes').then((m) => m.CATEGORIES_ROUTES),
+      },
+      {
+        path: 'carriers',
+        loadChildren: () => import('./features/carriers/carriers.routes').then((m) => m.CARRIERS_ROUTES),
+      },
+      {
+        path: 'suppliers',
+        loadChildren: () => import('./features/suppliers/suppliers.routes').then((m) => m.SUPPLIERS_ROUTES),
+      },
+      {
+        path: 'units-of-measure',
+        loadChildren: () =>
+          import('./features/units-of-measure/units-of-measure.routes').then((m) => m.UNITS_OF_MEASURE_ROUTES),
+      },
     ],
   },
   { path: '**', redirectTo: '' },
