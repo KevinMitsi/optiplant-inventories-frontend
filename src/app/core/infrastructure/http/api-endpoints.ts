@@ -110,6 +110,17 @@ export const ApiEndpoints = {
     confirm: (saleId: string) => `${environment.apiBaseUrl}/sales/${saleId}/confirmation`,
     cancel: (saleId: string) => `${environment.apiBaseUrl}/sales/${saleId}/cancellation`,
   },
+  purchaseOrders: {
+    search: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/purchase-orders`,
+    create: (branchId: string) => `${environment.apiBaseUrl}/branches/${branchId}/purchase-orders`,
+    byId: (purchaseOrderId: string) => `${environment.apiBaseUrl}/purchase-orders/${purchaseOrderId}`,
+    confirm: (purchaseOrderId: string) =>
+      `${environment.apiBaseUrl}/purchase-orders/${purchaseOrderId}/confirmation`,
+    cancel: (purchaseOrderId: string) =>
+      `${environment.apiBaseUrl}/purchase-orders/${purchaseOrderId}/cancellation`,
+    receiveItem: (purchaseOrderId: string, itemId: string) =>
+      `${environment.apiBaseUrl}/purchase-orders/${purchaseOrderId}/items/${itemId}/receipt`,
+  },
   dashboard: {
     salesSummary: (organizationId: string) =>
       `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/sales-summary`,

@@ -21,7 +21,6 @@
 - **`priceListId` opcional en el formulario de alta**: forzarlo habría contradicho HU-25 (precio manual por línea como alternativa válida, no solo fallback).
 - **Detalle reutiliza el mapa `productId → Product`** cargado una vez (mismo patrón que `InventoryAdjustmentDetailPage`) para resolver SKU/nombre y presentación de cada línea sin pedir cada producto por separado.
 
-## Qué sigue (Fase 10 propuesta)
+## Qué sigue
 
-1. Módulo de Compras (`Órdenes de compra a proveedores`): borrador (HU-17/HU-18), confirmación y recepción —parcial o total— por línea (HU-19/HU-20, RF-21/RF-23: recalcula costo promedio ponderado).
-2. Pruebas unitarias: `ng test` sigue bloqueado en este entorno por falta de Chrome (`CHROME_BIN` no configurable aquí); pendiente para un entorno con navegador disponible.
+Ver [`fase-10-compras.md`](./fase-10-compras.md): módulo de Compras (HU-17/HU-18/HU-19/HU-20) ya implementado; queda pendiente lo que ese documento propone a continuación.
