@@ -23,7 +23,8 @@ type NavIcon =
   | 'carriers'
   | 'routes'
   | 'suppliers'
-  | 'units';
+  | 'units'
+  | 'users';
 
 interface NavItem {
   label: string;
@@ -109,6 +110,7 @@ const NAV_STRUCTURE: readonly NavEntry[] = [
       label: 'Organización',
       icon: 'branches',
       items: [
+        { label: 'Usuarios', path: '/users', icon: 'users', roles: [Role.Admin, Role.BranchManager] },
         { label: 'Sucursales', path: '/branches', icon: 'branches' },
         { label: 'Proveedores', path: '/suppliers', icon: 'suppliers' },
       ],
@@ -203,6 +205,12 @@ const NAV_STRUCTURE: readonly NavEntry[] = [
             <path d="M4 17.5 15 6.5" />
             <path d="M6 15.5l2 2M9 12.5l2 2M12 9.5l2 2" />
             <rect x="14.5" y="4" width="6" height="6" rx="1.2" transform="rotate(45 17.5 7)" />
+          }
+          @case ('users') {
+            <circle cx="9" cy="8" r="3.2" />
+            <path d="M3.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6" />
+            <circle cx="17" cy="8.5" r="2.3" />
+            <path d="M15.5 14.2c2.5.5 4 2.7 4 5.8" />
           }
         }
       </svg>

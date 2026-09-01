@@ -116,14 +116,22 @@
   .actions {
     // Gap generoso + pill sólido naranja (color primario) en link y botón:
     // se leen como un grupo de acciones separadas, no como texto pegado.
+    //
+    // `!important` en `display`: la regla `.data-table td { display: table-cell }`
+    // de `responsive-table` (mixins.scss) tiene la misma o mayor especificidad
+    // (queda anidada bajo `.data-table`) y se declara después en cada page.scss
+    // (`@include crud-list;` y luego `.data-table { @include responsive-table; }`),
+    // así que sin `!important` gana ella: el `td.actions` deja de ser flex,
+    // los botones quedan en flujo normal sin gap y se solapan visualmente
+    // (el box-shadow de uno tapa el borde del otro).
+    display: flex !important;
     @include mixins.flex(row, center, center, functions.space(5));
     flex-wrap: wrap;
-
-    // Margen explícito además del `gap` del flex: por si el navegador no lo
-    // aplica (o el `td` reflow de `responsive-table` lo neutraliza).
-    > * + * {
-      margin-left: functions.space(5);
-    }
+    // Nota: no agregar `margin-left` extra en `> * + *` — el `gap` del flex ya
+    // separa los botones. Sumar ambos duplica el espacio real (1.5rem pasa a
+    // 3rem) y hace que dos pills que sí caben en el ancho de columna
+    // (min-width de cada listado) salten a una segunda línea y queden
+    // solapadas/escalonadas.
 
     button,
     a {
@@ -413,6 +421,38 @@
     input {
       margin-top: 0;
       border-radius: 0 functions.radius('md') functions.radius('md') 0;
+    }
+  }
+
+  .password-field {
+    position: relative;
+    display: flex;
+
+    input {
+      flex: 1;
+      padding-right: functions.space(8);
+    }
+
+    .password-toggle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: functions.space(1);
+      display: flex;
+      align-items: center;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      padding: 0 functions.space(2);
+      font-size: functions.font-size('base');
+      line-height: 1;
+      cursor: pointer;
+
+      @include mixins.focus-ring;
+
+      &:hover:not(:disabled) {
+        background: transparent;
+      }
     }
   }
 

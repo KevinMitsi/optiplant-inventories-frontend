@@ -22,7 +22,6 @@ export function toProductPrice(dto: ProductPriceResponseDto): ProductPrice {
     id: dto.id,
     priceListId: dto.priceListId,
     productId: dto.productId,
-    productUnitId: dto.productUnitId,
     price: dto.price,
   };
 }

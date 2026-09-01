@@ -55,24 +55,20 @@ export class PriceListHttpRepository extends PriceListRepository {
 
   override activate(priceListId: string): Observable<PriceList> {
     return this.http
-      .post<PriceListResponseDto>(ApiEndpoints.priceLists.activate(priceListId), {})
+      .patch<PriceListResponseDto>(ApiEndpoints.priceLists.activate(priceListId), {})
       .pipe(map(toPriceList));
   }
 
   override deactivate(priceListId: string): Observable<PriceList> {
     return this.http
-      .post<PriceListResponseDto>(ApiEndpoints.priceLists.deactivate(priceListId), {})
+      .patch<PriceListResponseDto>(ApiEndpoints.priceLists.deactivate(priceListId), {})
       .pipe(map(toPriceList));
   }
 
-  override getProductPrice(
-    priceListId: string,
-    productId: string,
-    productUnitId: string,
-  ): Observable<ProductPrice> {
+  override getProductPrice(priceListId: string, productId: string): Observable<ProductPrice> {
     return this.http
       .get<ProductPriceResponseDto>(ApiEndpoints.priceLists.productPrices(priceListId), {
-        params: toHttpParams({ productId, productUnitId }),
+        params: toHttpParams({ productId }),
       })
       .pipe(map(toProductPrice));
   }
@@ -80,7 +76,7 @@ export class PriceListHttpRepository extends PriceListRepository {
   override setProductPrice(priceListId: string, input: SetProductPriceInput): Observable<ProductPrice> {
     const body: SetProductPriceRequestDto = input;
     return this.http
-      .post<ProductPriceResponseDto>(ApiEndpoints.priceLists.productPrices(priceListId), body)
+      .patch<ProductPriceResponseDto>(ApiEndpoints.priceLists.productPrices(priceListId), body)
       .pipe(map(toProductPrice));
   }
 }

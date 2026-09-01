@@ -24,7 +24,6 @@ interface PriceListForm {
 
 interface ProductPriceForm {
   productId: FormControl<string>;
-  productUnitId: FormControl<string>;
   price: FormControl<number | null>;
 }
 
@@ -33,8 +32,8 @@ interface ProductPriceForm {
  * código es inmutable una vez creada. En edición se añade una sección para
  * consultar/fijar el precio de un producto en la lista: la API no expone un
  * listado de precios de la lista, solo `GET`/`POST` puntuales por
- * `productId`+`productUnitId` (HU-25), así que la UI refleja esa forma en
- * vez de simular una tabla que el backend no puede llenar.
+ * `productId` (HU-25), así que la UI refleja esa forma en vez de simular una
+ * tabla que el backend no puede llenar.
  */
 @Component({
   selector: 'app-price-list-form-page',
@@ -136,12 +135,6 @@ interface ProductPriceForm {
                 <option [value]="product.id">{{ product.sku }} — {{ product.name }}</option>
               }
             </select>
-            <select formControlName="productUnitId">
-              <option value="" disabled>Presentación…</option>
-              @for (unit of selectedProductUnits(); track unit.id) {
-                <option [value]="unit.id">{{ unit.unit.name }} ({{ unit.unit.symbol }})</option>
-              }
-            </select>
             <input type="number" formControlName="price" step="any" min="0" placeholder="Precio" />
             <button
               type="button"
@@ -168,10 +161,29 @@ interface ProductPriceForm {
           }
 
           @if (priceMessage(); as message) {
-            <p class="hint">{{ message }}</p>
+            <p class="price-alert price-alert--success" role="status">{{ message }}</p>
           }
           @if (priceErrorMessage(); as message) {
             <p class="form-error" role="alert">{{ message }}</p>
+          }
+
+          @if (savedPrices().length > 0) {
+            <table class="data-table saved-prices-table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Precio</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of savedPrices(); track row.id) {
+                  <tr>
+                    <td data-label="Producto">{{ row.productLabel }}</td>
+                    <td data-label="Precio">{{ row.price }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           }
         </section>
       }
@@ -218,18 +230,12 @@ export class PriceListFormPage {
 
   protected readonly priceForm = new FormGroup<ProductPriceForm>({
     productId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    productUnitId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     price: new FormControl<number | null>(null, { validators: [Validators.required, Validators.min(0)] }),
   });
 
-  protected readonly selectedProductUnits = computed(() => {
-    const selectedId = this.selectedProductId();
-    return this.products().find((product) => product.id === selectedId)?.units ?? [];
-  });
+  protected readonly lookupDisabled = computed(() => !this.selectedProductId());
 
-  protected readonly lookupDisabled = computed(
-    () => !this.selectedProductId() || !this.priceForm.controls.productUnitId.value,
-  );
+  protected readonly savedPrices = signal<{ id: string; productLabel: string; price: number }[]>([]);
 
   private readonly selectedProductId = signal('');
 
@@ -243,7 +249,6 @@ export class PriceListFormPage {
 
     this.priceForm.controls.productId.valueChanges.pipe(takeUntilDestroyed()).subscribe((productId) => {
       this.selectedProductId.set(productId);
-      this.priceForm.controls.productUnitId.setValue('', { emitEvent: false });
       this.priceMessage.set(null);
       this.priceErrorMessage.set(null);
     });
@@ -254,8 +259,8 @@ export class PriceListFormPage {
   }
 
   protected lookupPrice(priceListId: string): void {
-    const { productId, productUnitId } = this.priceForm.getRawValue();
-    if (!productId || !productUnitId) {
+    const { productId } = this.priceForm.getRawValue();
+    if (!productId) {
       return;
     }
 
@@ -263,7 +268,7 @@ export class PriceListFormPage {
     this.priceMessage.set(null);
     this.priceErrorMessage.set(null);
     this.getProductPriceUseCase
-      .execute(priceListId, productId, productUnitId)
+      .execute(priceListId, productId)
       .pipe(finalize(() => this.priceActionBusy.set(false)))
       .subscribe({
         next: (productPrice) => {
@@ -280,15 +285,32 @@ export class PriceListFormPage {
       return;
     }
 
-    const { productId, productUnitId, price } = this.priceForm.getRawValue();
+    const { productId, price } = this.priceForm.getRawValue();
+    const product = this.products().find((item) => item.id === productId);
+    const productLabel = product ? `${product.sku} — ${product.name}` : productId;
+
     this.priceActionBusy.set(true);
     this.priceMessage.set(null);
     this.priceErrorMessage.set(null);
     this.setProductPriceUseCase
-      .execute(priceListId, { productId, productUnitId, price: price! })
+      .execute(priceListId, { productId, price: price! })
       .pipe(finalize(() => this.priceActionBusy.set(false)))
       .subscribe({
-        next: (productPrice) => this.priceMessage.set(`Precio guardado: ${productPrice.price}.`),
+        next: (productPrice) => {
+          this.priceMessage.set(`Precio guardado: ${productLabel} → ${productPrice.price}.`);
+          this.savedPrices.update((rows) => [
+            { id: crypto.randomUUID(), productLabel, price: productPrice.price },
+            ...rows,
+          ]);
+          // Limpio el formulario para poder cargar el siguiente precio sin
+          // arrastrar la selección anterior (HU-25: alta de varios precios
+          // seguidos para la misma lista). `emitEvent: false` porque si no,
+          // las suscripciones a `valueChanges` de arriba (que limpian los
+          // mensajes al cambiar de producto) borrarían el mensaje de éxito
+          // que se acaba de fijar, un instante después de mostrarlo.
+          this.priceForm.reset({ productId: '', price: null }, { emitEvent: false });
+          this.selectedProductId.set('');
+        },
         error: (error: ApiError) => this.priceErrorMessage.set(error.message ?? 'No se pudo guardar el precio.'),
       });
   }
@@ -318,8 +340,15 @@ export class PriceListFormPage {
           validUntil: validUntil || undefined,
         });
 
+    const isCreate = !this.priceListId;
     request$.pipe(finalize(() => this.submitting.set(false))).subscribe({
-      next: () => void this.router.navigateByUrl('/price-lists'),
+      next: (savedPriceList) =>
+        // Recién creada, la mandamos a su propia edición en vez de al listado:
+        // ahí vive la sección "Precio de un producto" (HU-25) y sin este salto
+        // queda escondida detrás de un link "Editar" que nada anuncia.
+        void this.router.navigateByUrl(
+          isCreate ? `/price-lists/${savedPriceList.id}/edit` : '/price-lists',
+        ),
       error: (error: ApiError) => this.errorMessage.set(error.message ?? 'No se pudo guardar la lista de precios.'),
     });
   }

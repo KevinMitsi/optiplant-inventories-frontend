@@ -6,7 +6,6 @@
 export interface SaleItem {
   id: string;
   productId: string;
-  productUnitId: string;
   quantity: number;
   unitPrice: number;
   discountPercentage: number;
@@ -39,7 +38,6 @@ export interface Sale {
 /** Línea al crear una venta (`SaleItemRequest`); `unitPrice` es opcional (HU-25). */
 export interface CreateSaleItemInput {
   productId: string;
-  productUnitId: string;
   quantity: number;
   unitPrice?: number;
   discountPercentage?: number;

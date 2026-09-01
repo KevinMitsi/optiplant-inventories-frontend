@@ -5,7 +5,6 @@ export function toPurchaseOrderItem(dto: PurchaseOrderItemResponseDto): Purchase
   return {
     id: dto.id,
     productId: dto.productId,
-    productUnitId: dto.productUnitId,
     quantity: dto.quantity,
     receivedQuantity: dto.receivedQuantity,
     unitPrice: dto.unitPrice,

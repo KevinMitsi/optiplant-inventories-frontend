@@ -47,13 +47,13 @@ export class PurchaseOrderHttpRepository extends PurchaseOrderRepository {
 
   override confirm(purchaseOrderId: string): Observable<PurchaseOrder> {
     return this.http
-      .post<PurchaseOrderResponseDto>(ApiEndpoints.purchaseOrders.confirm(purchaseOrderId), {})
+      .patch<PurchaseOrderResponseDto>(ApiEndpoints.purchaseOrders.confirm(purchaseOrderId), {})
       .pipe(map(toPurchaseOrder));
   }
 
   override cancel(purchaseOrderId: string): Observable<PurchaseOrder> {
     return this.http
-      .post<PurchaseOrderResponseDto>(ApiEndpoints.purchaseOrders.cancel(purchaseOrderId), {})
+      .patch<PurchaseOrderResponseDto>(ApiEndpoints.purchaseOrders.cancel(purchaseOrderId), {})
       .pipe(map(toPurchaseOrder));
   }
 
@@ -64,7 +64,7 @@ export class PurchaseOrderHttpRepository extends PurchaseOrderRepository {
   ): Observable<PurchaseOrder> {
     const body: ReceivePurchaseOrderItemRequestDto = input;
     return this.http
-      .post<PurchaseOrderResponseDto>(ApiEndpoints.purchaseOrders.receiveItem(purchaseOrderId, itemId), body)
+      .patch<PurchaseOrderResponseDto>(ApiEndpoints.purchaseOrders.receiveItem(purchaseOrderId, itemId), body)
       .pipe(map(toPurchaseOrder));
   }
 }

@@ -2,26 +2,33 @@
  * resto de la app trabaja con `core/domain/models/product.model.ts`. */
 import { UnitOfMeasureResponseDto } from './unit-of-measure.dto';
 
-export interface ProductUnitResponseDto {
-  id: string;
-  unit: UnitOfMeasureResponseDto;
-  conversionFactor: number;
-  baseUnit: boolean;
-  active: boolean;
-}
-
 export interface ProductResponseDto {
   id: string;
   organizationId: string;
+  parentProductId?: string;
   categoryId?: string;
   sku: string;
   barcode?: string;
   name: string;
   description?: string;
+  unit: UnitOfMeasureResponseDto;
   active: boolean;
-  units: ProductUnitResponseDto[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ProductFamilyResponseDto {
+  principal: ProductResponseDto;
+  variants: ProductResponseDto[];
+}
+
+export interface ProductVariantRequestDto {
+  sku: string;
+  name: string;
+  barcode?: string;
+  description?: string;
+  categoryId?: string;
+  unitOfMeasureId?: string;
 }
 
 export interface CreateProductRequestDto {
@@ -30,7 +37,8 @@ export interface CreateProductRequestDto {
   categoryId?: string;
   barcode?: string;
   description?: string;
-  baseUnitId: string;
+  unitOfMeasureId: string;
+  variants?: ProductVariantRequestDto[];
 }
 
 export interface UpdateProductRequestDto {
@@ -38,18 +46,4 @@ export interface UpdateProductRequestDto {
   categoryId?: string;
   barcode?: string;
   description?: string;
-}
-
-export interface AddProductUnitRequestDto {
-  unitOfMeasureId: string;
-  conversionFactor: number;
-}
-
-export interface ChangeUnitFactorRequestDto {
-  conversionFactor: number;
-}
-
-export interface ChangeBaseUnitRequestDto {
-  newBaseProductUnitId: string;
-  previousBaseNewFactor: number;
 }

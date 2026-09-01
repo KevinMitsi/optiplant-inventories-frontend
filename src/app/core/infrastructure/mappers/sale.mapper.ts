@@ -5,7 +5,6 @@ export function toSaleItem(dto: SaleItemResponseDto): SaleItem {
   return {
     id: dto.id,
     productId: dto.productId,
-    productUnitId: dto.productUnitId,
     quantity: dto.quantity,
     unitPrice: dto.unitPrice,
     discountPercentage: dto.discountPercentage,

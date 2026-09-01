@@ -53,7 +53,7 @@ type LineActionMode = 'approve' | 'dispatch' | 'receive' | null;
         <span
           class="badge"
           [class.badge--warning]="transfer.status === 'REQUESTED' || transfer.status === 'IN_PREPARATION'"
-          [class.badge--info]="transfer.status === 'APPROVED' || transfer.status === 'DISPATCHED'"
+          [class.badge--info]="transfer.status === 'APPROVED' || transfer.status === 'IN_TRANSIT'"
           [class.badge--active]="transfer.status === 'RECEIVED' || transfer.status === 'CLOSED'"
           [class.badge--danger]="transfer.status === 'CANCELLED' || transfer.status === 'PARTIALLY_RECEIVED'"
         >
@@ -77,7 +77,7 @@ type LineActionMode = 'approve' | 'dispatch' | 'receive' | null;
         <thead>
           <tr>
             <th>Producto</th>
-            <th>Presentación</th>
+            <th>Unidad</th>
             <th>Solicitado</th>
             <th>Aprobado</th>
             <th>Despachado</th>
@@ -91,7 +91,7 @@ type LineActionMode = 'approve' | 'dispatch' | 'receive' | null;
           @for (item of transfer.items; track item.id; let itemIndex = $index) {
             <tr>
               <td data-label="Producto">{{ productLabel(item.productId) }}</td>
-              <td data-label="Presentación">{{ unitLabel(item.productId, item.productUnitId) }}</td>
+              <td data-label="Unidad">{{ unitLabel(item.productId) }}</td>
               <td data-label="Solicitado">{{ item.requestedQuantity }}</td>
               <td data-label="Aprobado">{{ item.approvedQuantity }}</td>
               <td data-label="Despachado">{{ item.shippedQuantity }}</td>
@@ -309,9 +309,9 @@ export class TransferDetailPage {
     return this.branches().get(branchId)?.name ?? branchId;
   }
 
-  protected unitLabel(productId: string, productUnitId: string): string {
-    const unit = this.products().get(productId)?.units.find((productUnit) => productUnit.id === productUnitId);
-    return unit ? `${unit.unit.symbol} — ${unit.unit.name}` : productUnitId;
+  protected unitLabel(productId: string): string {
+    const unit = this.products().get(productId)?.unit;
+    return unit ? `${unit.symbol} — ${unit.name}` : '—';
   }
 
   protected carrierLabel(carrierId: string | null): string {
@@ -352,7 +352,10 @@ export class TransferDetailPage {
   }
 
   protected canReceive(transfer: Transfer): boolean {
-    return transfer.status === 'DISPATCHED';
+    // El backend nombra este estado `IN_TRANSIT` (no `DISPATCHED`, como se
+    // asumió originalmente): sin este ajuste el botón "Recibir" no aparecía
+    // nunca tras despachar, en ninguna sucursal.
+    return transfer.status === 'IN_TRANSIT';
   }
 
   protected canCancel(transfer: Transfer): boolean {

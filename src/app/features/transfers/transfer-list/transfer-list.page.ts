@@ -57,7 +57,7 @@ const EMPTY_PAGE: Page<Transfer> = {
         <option value="REQUESTED">Solicitada</option>
         <option value="APPROVED">Aprobada</option>
         <option value="IN_PREPARATION">En preparación</option>
-        <option value="DISPATCHED">Despachada</option>
+        <option value="IN_TRANSIT">Despachada</option>
         <option value="RECEIVED">Recibida</option>
         <option value="PARTIALLY_RECEIVED">Recibida parcialmente</option>
         <option value="CLOSED">Cerrada</option>
@@ -103,7 +103,7 @@ const EMPTY_PAGE: Page<Transfer> = {
                   <span
                     class="badge"
                     [class.badge--warning]="transfer.status === 'REQUESTED' || transfer.status === 'IN_PREPARATION'"
-                    [class.badge--info]="transfer.status === 'APPROVED' || transfer.status === 'DISPATCHED'"
+                    [class.badge--info]="transfer.status === 'APPROVED' || transfer.status === 'IN_TRANSIT'"
                     [class.badge--active]="transfer.status === 'RECEIVED' || transfer.status === 'CLOSED'"
                     [class.badge--danger]="transfer.status === 'CANCELLED' || transfer.status === 'PARTIALLY_RECEIVED'"
                   >

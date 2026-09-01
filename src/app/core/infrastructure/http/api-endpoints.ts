@@ -10,6 +10,17 @@ export const ApiEndpoints = {
     refresh: () => `${environment.apiBaseUrl}/auth/refresh`,
     me: () => `${environment.apiBaseUrl}/auth/me`,
   },
+  users: {
+    search: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/users`,
+    create: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/users`,
+    byId: (userId: string) => `${environment.apiBaseUrl}/users/${userId}`,
+    profile: (userId: string) => `${environment.apiBaseUrl}/users/${userId}/profile`,
+    assignment: (userId: string) => `${environment.apiBaseUrl}/users/${userId}/assignment`,
+    activate: (userId: string) => `${environment.apiBaseUrl}/users/${userId}/activation`,
+    deactivate: (userId: string) => `${environment.apiBaseUrl}/users/${userId}/deactivation`,
+  },
   branches: {
     search: (organizationId: string) =>
       `${environment.apiBaseUrl}/organizations/${organizationId}/branches`,
@@ -60,14 +71,8 @@ export const ApiEndpoints = {
     byId: (productId: string) => `${environment.apiBaseUrl}/products/${productId}`,
     activate: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/activation`,
     deactivate: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/deactivation`,
-    addUnit: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/units`,
-    unitFactor: (productId: string, productUnitId: string) =>
-      `${environment.apiBaseUrl}/products/${productId}/units/${productUnitId}/factor`,
-    activateUnit: (productId: string, productUnitId: string) =>
-      `${environment.apiBaseUrl}/products/${productId}/units/${productUnitId}/activation`,
-    deactivateUnit: (productId: string, productUnitId: string) =>
-      `${environment.apiBaseUrl}/products/${productId}/units/${productUnitId}/deactivation`,
-    baseUnit: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/base-unit`,
+    family: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/family`,
+    variants: (productId: string) => `${environment.apiBaseUrl}/products/${productId}/variants`,
   },
   priceLists: {
     search: (organizationId: string) =>

@@ -55,8 +55,10 @@
   }
 
   @include ds.respond('lg') {
-    position: static;
+    position: sticky;
     inset: auto;
+    top: 0;
+    height: 100dvh;
     transform: none;
     max-width: none;
     box-shadow: none;

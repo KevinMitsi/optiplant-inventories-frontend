@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -12,7 +13,6 @@ import { AuthStore } from '../../../core/state/auth-store.service';
 
 interface PurchaseOrderItemForm {
   productId: FormControl<string>;
-  productUnitId: FormControl<string>;
   quantity: FormControl<number | null>;
   unitPrice: FormControl<number | null>;
   discountPercentage: FormControl<number | null>;
@@ -36,7 +36,7 @@ interface PurchaseOrderForm {
  */
 @Component({
   selector: 'app-purchase-order-create-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1>Nueva orden de compra</h1>
@@ -93,17 +93,6 @@ interface PurchaseOrderForm {
             <p class="field-error" role="alert">Selecciona un producto.</p>
           }
 
-          <label [for]="'productUnitId-' + $index">Presentación</label>
-          <select [id]="'productUnitId-' + $index" [formControl]="item.controls.productUnitId">
-            <option value="" disabled>Seleccione una presentación…</option>
-            @for (unit of unitsForProduct(item.controls.productId.value); track unit.id) {
-              <option [value]="unit.id">{{ unit.unit.symbol }} — {{ unit.unit.name }}</option>
-            }
-          </select>
-          @if (item.controls.productUnitId.invalid && item.controls.productUnitId.touched) {
-            <p class="field-error" role="alert">Selecciona una presentación.</p>
-          }
-
           <label [for]="'quantity-' + $index">Cantidad</label>
           <input [id]="'quantity-' + $index" type="number" [formControl]="item.controls.quantity" step="any" min="0" />
           @if (item.controls.quantity.invalid && item.controls.quantity.touched) {
@@ -137,6 +126,10 @@ interface PurchaseOrderForm {
           />
           @if (item.controls.discountPercentage.invalid && item.controls.discountPercentage.touched) {
             <p class="field-error" role="alert">Debe estar entre 0 y 100.</p>
+          } @else {
+            @if (discountedUnitPrice(item); as discounted) {
+              <p class="hint">Precio con descuento: {{ discounted | number: '1.2-2' }}</p>
+            }
           }
 
           @if (form.controls.items.length > 1) {
@@ -200,16 +193,26 @@ export class PurchaseOrderCreatePage {
     this.loadSuppliers();
   }
 
-  protected unitsForProduct(productId: string) {
-    return this.products().find((product) => product.id === productId)?.units ?? [];
-  }
-
   protected addItem(): void {
     this.form.controls.items.push(this.buildItem());
   }
 
   protected removeItem(index: number): void {
     this.form.controls.items.removeAt(index);
+  }
+
+  /**
+   * Precio de la línea ya con el descuento aplicado, solo informativo: el
+   * `discountPercentage` ya viaja tal cual en el payload, esto solo evita
+   * que el usuario tenga que calcularlo a mano.
+   */
+  protected discountedUnitPrice(item: FormGroup<PurchaseOrderItemForm>): number | null {
+    const unitPrice = item.controls.unitPrice.value;
+    const discountPercentage = item.controls.discountPercentage.value;
+    if (unitPrice === null || unitPrice === undefined || !discountPercentage) {
+      return null;
+    }
+    return unitPrice * (1 - discountPercentage / 100);
   }
 
   protected submit(): void {
@@ -229,9 +232,8 @@ export class PurchaseOrderCreatePage {
         orderDate,
         paymentTermDays: paymentTermDays ?? undefined,
         notes: notes || undefined,
-        items: items.map(({ productId, productUnitId, quantity, unitPrice, discountPercentage }) => ({
+        items: items.map(({ productId, quantity, unitPrice, discountPercentage }) => ({
           productId,
-          productUnitId,
           quantity: quantity!,
           unitPrice: unitPrice!,
           discountPercentage: discountPercentage ?? undefined,
@@ -247,7 +249,6 @@ export class PurchaseOrderCreatePage {
   private buildItem(): FormGroup<PurchaseOrderItemForm> {
     return new FormGroup<PurchaseOrderItemForm>({
       productId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      productUnitId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       quantity: new FormControl<number | null>(null, { validators: [Validators.required, Validators.min(0.000001)] }),
       unitPrice: new FormControl<number | null>(null, { validators: [Validators.required, Validators.min(0)] }),
       discountPercentage: new FormControl<number | null>(null, {

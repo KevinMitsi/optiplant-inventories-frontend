@@ -25,6 +25,10 @@ export const routes: Routes = [
         title: 'Panel · OptiPlant',
       },
       {
+        path: 'users',
+        loadChildren: () => import('./features/users/users.routes').then((m) => m.USERS_ROUTES),
+      },
+      {
         path: 'branches',
         loadChildren: () => import('./features/branches/branches.routes').then((m) => m.BRANCHES_ROUTES),
       },

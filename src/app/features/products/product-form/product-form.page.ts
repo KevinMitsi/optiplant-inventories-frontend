@@ -1,17 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { Observable, finalize } from 'rxjs';
 import { CreateProductUseCase } from '../../../core/application/products/create-product.usecase';
 import { UpdateProductUseCase } from '../../../core/application/products/update-product.usecase';
 import { GetProductUseCase } from '../../../core/application/products/get-product.usecase';
-import { AddProductUnitUseCase } from '../../../core/application/products/add-product-unit.usecase';
-import { ChangeProductUnitFactorUseCase } from '../../../core/application/products/change-product-unit-factor.usecase';
-import { SetProductUnitStatusUseCase } from '../../../core/application/products/set-product-unit-status.usecase';
-import { ChangeBaseUnitUseCase } from '../../../core/application/products/change-base-unit.usecase';
+import { ListProductVariantsUseCase } from '../../../core/application/products/list-product-variants.usecase';
+import { AddProductVariantUseCase } from '../../../core/application/products/add-product-variant.usecase';
 import { SearchCategoriesUseCase } from '../../../core/application/categories/search-categories.usecase';
 import { ListUnitsOfMeasureUseCase } from '../../../core/application/units-of-measure/list-units-of-measure.usecase';
-import { Product, ProductUnit } from '../../../core/domain/models/product.model';
+import { Product, ProductFamily } from '../../../core/domain/models/product.model';
 import { Category } from '../../../core/domain/models/category.model';
 import { UnitOfMeasure } from '../../../core/domain/models/unit-of-measure.model';
 import { ApiError } from '../../../core/domain/models/api-error.model';
@@ -23,21 +21,25 @@ interface ProductForm {
   categoryId: FormControl<string>;
   barcode: FormControl<string>;
   description: FormControl<string>;
-  baseUnitId: FormControl<string>;
+  unitOfMeasureId: FormControl<string>;
 }
 
-interface AddUnitForm {
+interface AddVariantForm {
+  sku: FormControl<string>;
+  name: FormControl<string>;
+  barcode: FormControl<string>;
+  description: FormControl<string>;
   unitOfMeasureId: FormControl<string>;
-  conversionFactor: FormControl<number | null>;
 }
 
 /**
  * Alta/edición de producto, mismo patrón que `CategoryFormPage`: el modo lo
- * decide la presencia de `:id` en la ruta; SKU y unidad base son inmutables
- * una vez creado el producto (APIDOC.json). En edición se añade la gestión
- * de presentaciones (`ProductUnit`): añadir, cambiar factor, activar/
- * desactivar y designar unidad base — solo disponible con el producto ya
- * creado, porque todas esas operaciones cuelgan de su `id`.
+ * decide la presencia de `:id` en la ruta; SKU y unidad son inmutables una
+ * vez creado el producto (APIDOC.json). En edición se añade la gestión de
+ * variantes: cada variante es un producto autónomo, con su propio SKU,
+ * inventario y precio — no comparte stock con el principal ni se convierte a
+ * su unidad. Solo disponible con el producto ya creado, porque cuelga de su
+ * `id`.
  */
 @Component({
   selector: 'app-product-form-page',
@@ -86,17 +88,19 @@ interface AddUnitForm {
         <input id="description" formControlName="description" />
 
         @if (!isEditMode()) {
-          <label for="baseUnitId">Unidad base</label>
-          <select id="baseUnitId" formControlName="baseUnitId">
+          <label for="unitOfMeasureId">Unidad</label>
+          <select id="unitOfMeasureId" formControlName="unitOfMeasureId">
             <option value="" disabled>Seleccione una unidad…</option>
             @for (unit of unitsOfMeasure(); track unit.id) {
               <option [value]="unit.id">{{ unit.name }} ({{ unit.symbol }})</option>
             }
           </select>
           <p class="hint">Unidad en la que se contabiliza el stock. No se puede cambiar después de crear el producto.</p>
-          @if (form.controls.baseUnitId.invalid && form.controls.baseUnitId.touched) {
-            <p class="field-error" role="alert">Selecciona la unidad base.</p>
+          @if (form.controls.unitOfMeasureId.invalid && form.controls.unitOfMeasureId.touched) {
+            <p class="field-error" role="alert">Selecciona la unidad.</p>
           }
+        } @else if (product(); as currentProduct) {
+          <p class="hint">Unidad: {{ currentProduct.unit.name }} ({{ currentProduct.unit.symbol }}).</p>
         }
 
         @if (errorMessage(); as message) {
@@ -117,186 +121,70 @@ interface AddUnitForm {
 
       @if (isEditMode() && product(); as currentProduct) {
         <section class="units-section">
-          <h2>Presentaciones</h2>
+          <h2>Variantes</h2>
           <p class="hint">
-            Una presentación es cada forma en la que se maneja el producto (unidad, caja, paquete…). El
-            <strong>Factor</strong> indica cuántas unidades base equivalen a una de esa presentación — por ejemplo, si la
-            base es "Unidad" y la presentación es "Caja de 24", el factor es 24. La presentación marcada como
-            <strong>Base</strong> es en la que se contabiliza el stock del producto.
+            Una variante NO es otra presentación del mismo stock: es un producto aparte, con su propio SKU, su
+            propio inventario y su propio precio. Solo un producto principal admite variantes.
           </p>
 
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Unidad</th>
-                <th title="Unidades base que equivalen a una unidad de esta presentación">Factor ⓘ</th>
-                <th>Base</th>
-                <th>Estado</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (unit of currentProduct.units; track unit.id) {
+          @if (variants().length > 0) {
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td data-label="Unidad">{{ unit.unit.name }} ({{ unit.unit.symbol }})</td>
-                  <td data-label="Factor">
-                    @if (editingFactorId() === unit.id) {
-                      <input
-                        type="number"
-                        [formControl]="factorControl"
-                        step="any"
-                        min="0.000001"
-                      />
-                    } @else {
-                      {{ unit.conversionFactor }}
-                    }
-                  </td>
-                  <td data-label="Base">
-                    <span class="badge" [class.badge--active]="unit.baseUnit">
-                      {{ unit.baseUnit ? 'Sí' : 'No' }}
-                    </span>
-                  </td>
-                  <td data-label="Estado">
-                    <span class="badge" [class.badge--active]="unit.active">
-                      {{ unit.active ? 'Activa' : 'Inactiva' }}
-                    </span>
-                  </td>
-                  <td data-label="Acciones" class="actions">
-                    @if (editingFactorId() === unit.id) {
-                      <button type="button" (click)="saveFactor(currentProduct.id, unit)" [disabled]="unitActionBusy()">
-                        Guardar
-                      </button>
-                      <button type="button" (click)="cancelFactorEdit()">Cancelar</button>
-                    } @else {
-                      @if (!unit.baseUnit) {
-                        <button type="button" (click)="startFactorEdit(unit)" [disabled]="unitActionBusy()">
-                          Cambiar factor
-                        </button>
-                        @if (unit.active) {
-                          <button type="button" (click)="startSetBase(unit)" [disabled]="unitActionBusy()">
-                            Fijar como base
-                          </button>
-                        }
-                        <button
-                          type="button"
-                          (click)="toggleUnitStatus(currentProduct.id, unit)"
-                          [disabled]="unitActionBusy()"
-                        >
-                          {{ unit.active ? 'Dar de baja' : 'Reactivar' }}
-                        </button>
-                      }
-                    }
-                  </td>
+                  <th>SKU</th>
+                  <th>Nombre</th>
+                  <th>Unidad</th>
+                  <th>Estado</th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                @for (variant of variants(); track variant.id) {
+                  <tr>
+                    <td data-label="SKU">{{ variant.sku }}</td>
+                    <td data-label="Nombre">{{ variant.name }}</td>
+                    <td data-label="Unidad">{{ variant.unit.name }} ({{ variant.unit.symbol }})</td>
+                    <td data-label="Estado">
+                      <span class="badge" [class.badge--active]="variant.active">
+                        {{ variant.active ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="hint">Este producto todavía no tiene variantes.</p>
+          }
 
-          <form class="filters" [formGroup]="addUnitForm" (ngSubmit)="addUnit(currentProduct.id)">
+          <form class="filters" [formGroup]="addVariantForm" (ngSubmit)="addVariant(currentProduct.id)">
+            <input formControlName="sku" placeholder="SKU de la variante" />
+            <input formControlName="name" placeholder="Nombre de la variante" />
+            <input formControlName="barcode" placeholder="Código de barras (opcional)" />
+            <input formControlName="description" placeholder="Descripción (opcional)" />
             <select formControlName="unitOfMeasureId">
-              <option value="" disabled>Añadir presentación…</option>
-              @for (unit of availableUnitsOfMeasure(currentProduct); track unit.id) {
+              <option value="">Hereda la unidad del principal</option>
+              @for (unit of unitsOfMeasure(); track unit.id) {
                 <option [value]="unit.id">{{ unit.name }} ({{ unit.symbol }})</option>
               }
             </select>
-            <input
-              type="number"
-              formControlName="conversionFactor"
-              step="any"
-              min="0.000001"
-              placeholder="Factor (unidades base por presentación)"
-            />
-            <button type="submit" class="button button--primary" [disabled]="addUnitForm.invalid || unitActionBusy()">
-              Añadir
+            <button
+              type="submit"
+              class="button button--primary"
+              [disabled]="addVariantForm.invalid || variantActionBusy()"
+            >
+              Añadir variante
             </button>
           </form>
-          <p class="hint">
-            El factor de la nueva presentación se expresa en unidades base: cuántas unidades base contiene una unidad de
-            esta presentación (ej.: una "Caja de 24" con base "Unidad" lleva factor 24).
-          </p>
-          @if (addUnitForm.controls.unitOfMeasureId.invalid && addUnitForm.controls.unitOfMeasureId.touched) {
-            <p class="field-error" role="alert">Selecciona una presentación.</p>
+          @if (addVariantForm.controls.sku.invalid && addVariantForm.controls.sku.touched) {
+            <p class="field-error" role="alert">El SKU de la variante es obligatorio.</p>
           }
-          @if (addUnitForm.controls.conversionFactor.invalid && addUnitForm.controls.conversionFactor.touched) {
-            <p class="field-error" role="alert">
-              {{
-                addUnitForm.controls.conversionFactor.hasError('required')
-                  ? 'El factor de conversión es obligatorio.'
-                  : 'Debe ser mayor que 0.'
-              }}
-            </p>
+          @if (addVariantForm.controls.name.invalid && addVariantForm.controls.name.touched) {
+            <p class="field-error" role="alert">El nombre de la variante es obligatorio.</p>
+          }
+          @if (variantsErrorMessage(); as message) {
+            <p class="form-error" role="alert">{{ message }}</p>
           }
         </section>
-
-        @if (settingBaseUnit(); as targetUnit) {
-          <div class="units-modal-backdrop" (click)="cancelSetBase()">
-            <div
-              class="units-modal"
-              role="alertdialog"
-              aria-modal="true"
-              [attr.aria-labelledby]="setBaseDialogTitleId"
-              (click)="$event.stopPropagation()"
-            >
-              <h3 [id]="setBaseDialogTitleId">Cambiar unidad base</h3>
-              <p>
-                Vas a designar <strong>{{ targetUnit.unit.name }} ({{ targetUnit.unit.symbol }})</strong> como la nueva
-                unidad base del producto. El stock se seguirá contabilizando en la nueva base a partir de este momento.
-              </p>
-              @if (currentBaseUnit(); as currentBase) {
-                <p>
-                  <strong>{{ currentBase.unit.name }}</strong> deja de ser la base. El sistema no puede calcular sola su
-                  nueva equivalencia — indica cuántas unidades de <strong>{{ targetUnit.unit.name }}</strong> equivalen
-                  ahora a una <strong>{{ currentBase.unit.name }}</strong>.
-                </p>
-                <p class="hint">
-                  Ejemplo: si la base pasa de "Botella" a "Caja de 24", una Botella pasa a valer 1/24 (≈0.0417) cajas.
-                </p>
-                <label for="previousBaseFactor">Nuevo factor de "{{ currentBase.unit.name }}"</label>
-              } @else {
-                <label for="previousBaseFactor">Nuevo factor de la base anterior</label>
-              }
-              <input
-                id="previousBaseFactor"
-                type="number"
-                [formControl]="previousBaseFactorControl"
-                step="any"
-                min="0.000001"
-              />
-              @if (previousBaseFactorControl.invalid && previousBaseFactorControl.touched) {
-                <p class="field-error" role="alert">Indica un factor mayor que 0.</p>
-              }
-              <div class="units-modal__actions">
-                <button type="button" class="button button--ghost" (click)="cancelSetBase()">Cancelar</button>
-                <button
-                  type="button"
-                  class="button button--primary"
-                  [disabled]="unitActionBusy()"
-                  (click)="confirmSetBase(currentProduct, targetUnit)"
-                >
-                  {{ unitActionBusy() ? 'Guardando…' : 'Confirmar' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-      }
-
-      @if (unitsErrorMessage(); as message) {
-        <div class="units-modal-backdrop" (click)="dismissUnitsError()">
-          <div
-            class="units-modal units-modal--error"
-            role="alertdialog"
-            aria-modal="true"
-            [attr.aria-labelledby]="unitsErrorDialogTitleId"
-            (click)="$event.stopPropagation()"
-          >
-            <h3 [id]="unitsErrorDialogTitleId">No se pudo completar la acción</h3>
-            <p>{{ message }}</p>
-            <div class="units-modal__actions">
-              <button type="button" class="button button--primary" (click)="dismissUnitsError()">Entendido</button>
-            </div>
-          </div>
-        </div>
       }
     }
   `,
@@ -306,10 +194,8 @@ export class ProductFormPage {
   private readonly createProductUseCase = inject(CreateProductUseCase);
   private readonly updateProductUseCase = inject(UpdateProductUseCase);
   private readonly getProductUseCase = inject(GetProductUseCase);
-  private readonly addProductUnitUseCase = inject(AddProductUnitUseCase);
-  private readonly changeProductUnitFactorUseCase = inject(ChangeProductUnitFactorUseCase);
-  private readonly setProductUnitStatusUseCase = inject(SetProductUnitStatusUseCase);
-  private readonly changeBaseUnitUseCase = inject(ChangeBaseUnitUseCase);
+  private readonly listProductVariantsUseCase = inject(ListProductVariantsUseCase);
+  private readonly addProductVariantUseCase = inject(AddProductVariantUseCase);
   private readonly searchCategoriesUseCase = inject(SearchCategoriesUseCase);
   private readonly listUnitsOfMeasureUseCase = inject(ListUnitsOfMeasureUseCase);
   private readonly authStore = inject(AuthStore);
@@ -325,25 +211,9 @@ export class ProductFormPage {
   protected readonly categories = signal<Category[]>([]);
   protected readonly unitsOfMeasure = signal<UnitOfMeasure[]>([]);
 
-  protected readonly unitsErrorMessage = signal<string | null>(null);
-  protected readonly unitActionBusy = signal(false);
-  protected readonly editingFactorId = signal<string | null>(null);
-  protected readonly settingBaseId = signal<string | null>(null);
-  /** Presentación marcada como base en el producto cargado, para explicar el cambio en el diálogo. */
-  protected readonly currentBaseUnit = computed(() => this.product()?.units.find((unit) => unit.baseUnit) ?? null);
-  /** Presentación objetivo del diálogo flotante "Fijar como base" — `null` cuando está cerrado. */
-  protected readonly settingBaseUnit = computed(() => {
-    const id = this.settingBaseId();
-    return id ? (this.product()?.units.find((unit) => unit.id === id) ?? null) : null;
-  });
-  protected readonly setBaseDialogTitleId = `set-base-dialog-title-${crypto.randomUUID()}`;
-  protected readonly unitsErrorDialogTitleId = `units-error-dialog-title-${crypto.randomUUID()}`;
-  protected readonly factorControl = new FormControl<number | null>(null, {
-    validators: [Validators.required, Validators.min(0.000001)],
-  });
-  protected readonly previousBaseFactorControl = new FormControl<number | null>(null, {
-    validators: [Validators.required, Validators.min(0.000001)],
-  });
+  protected readonly variants = signal<Product[]>([]);
+  protected readonly variantActionBusy = signal(false);
+  protected readonly variantsErrorMessage = signal<string | null>(null);
 
   protected readonly form = new FormGroup<ProductForm>({
     sku: new FormControl('', {
@@ -354,14 +224,15 @@ export class ProductFormPage {
     categoryId: new FormControl('', { nonNullable: true }),
     barcode: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(100)] }),
     description: new FormControl('', { nonNullable: true }),
-    baseUnitId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    unitOfMeasureId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
-  protected readonly addUnitForm = new FormGroup<AddUnitForm>({
-    unitOfMeasureId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    conversionFactor: new FormControl<number | null>(null, {
-      validators: [Validators.required, Validators.min(0.000001)],
-    }),
+  protected readonly addVariantForm = new FormGroup<AddVariantForm>({
+    sku: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(60)] }),
+    name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(180)] }),
+    barcode: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(100)] }),
+    description: new FormControl('', { nonNullable: true }),
+    unitOfMeasureId: new FormControl('', { nonNullable: true }),
   });
 
   constructor() {
@@ -370,119 +241,36 @@ export class ProductFormPage {
 
     if (this.productId) {
       this.form.controls.sku.disable();
-      this.form.controls.baseUnitId.disable();
+      this.form.controls.unitOfMeasureId.disable();
       this.loadProduct(this.productId);
+      this.loadVariants(this.productId);
     }
   }
 
-  protected availableUnitsOfMeasure(currentProduct: Product): UnitOfMeasure[] {
-    const usedIds = new Set(currentProduct.units.map((unit) => unit.unit.id));
-    return this.unitsOfMeasure().filter((unit) => !usedIds.has(unit.id));
-  }
-
-  protected startFactorEdit(unit: ProductUnit): void {
-    this.settingBaseId.set(null);
-    this.editingFactorId.set(unit.id);
-    this.factorControl.setValue(unit.conversionFactor);
-  }
-
-  protected cancelFactorEdit(): void {
-    this.editingFactorId.set(null);
-  }
-
-  protected saveFactor(productId: string, unit: ProductUnit): void {
-    if (this.factorControl.invalid) {
-      this.factorControl.markAsTouched();
+  protected addVariant(productId: string): void {
+    if (this.addVariantForm.invalid) {
+      this.addVariantForm.markAllAsTouched();
       return;
     }
 
-    this.unitActionBusy.set(true);
-    this.unitsErrorMessage.set(null);
-    this.changeProductUnitFactorUseCase
-      .execute(productId, unit.id, { conversionFactor: this.factorControl.value! })
-      .pipe(finalize(() => this.unitActionBusy.set(false)))
-      .subscribe({
-        next: (updated) => {
-          this.product.set(updated);
-          this.editingFactorId.set(null);
-        },
-        error: (error: ApiError) =>
-          this.unitsErrorMessage.set(error.message ?? 'No se pudo cambiar el factor de la presentación.'),
-      });
-  }
-
-  protected startSetBase(unit: ProductUnit): void {
-    this.editingFactorId.set(null);
-    this.settingBaseId.set(unit.id);
-    this.previousBaseFactorControl.setValue(null);
-  }
-
-  protected cancelSetBase(): void {
-    this.settingBaseId.set(null);
-  }
-
-  protected dismissUnitsError(): void {
-    this.unitsErrorMessage.set(null);
-  }
-
-  protected confirmSetBase(currentProduct: Product, unit: ProductUnit): void {
-    if (this.previousBaseFactorControl.invalid) {
-      this.previousBaseFactorControl.markAsTouched();
-      return;
-    }
-
-    this.unitActionBusy.set(true);
-    this.unitsErrorMessage.set(null);
-    this.changeBaseUnitUseCase
-      .execute(currentProduct.id, {
-        newBaseProductUnitId: unit.id,
-        previousBaseNewFactor: this.previousBaseFactorControl.value!,
+    const { sku, name, barcode, description, unitOfMeasureId } = this.addVariantForm.getRawValue();
+    this.variantActionBusy.set(true);
+    this.variantsErrorMessage.set(null);
+    this.addProductVariantUseCase
+      .execute(productId, {
+        sku,
+        name,
+        barcode: barcode || undefined,
+        description: description || undefined,
+        unitOfMeasureId: unitOfMeasureId || undefined,
       })
-      .pipe(finalize(() => this.unitActionBusy.set(false)))
+      .pipe(finalize(() => this.variantActionBusy.set(false)))
       .subscribe({
-        next: (updated) => {
-          this.product.set(updated);
-          this.settingBaseId.set(null);
+        next: (variant) => {
+          this.variants.update((rows) => [...rows, variant]);
+          this.addVariantForm.reset({ sku: '', name: '', barcode: '', description: '', unitOfMeasureId: '' });
         },
-        error: (error: ApiError) => {
-          this.settingBaseId.set(null);
-          this.unitsErrorMessage.set(error.message ?? 'No se pudo cambiar la unidad base.');
-        },
-      });
-  }
-
-  protected toggleUnitStatus(productId: string, unit: ProductUnit): void {
-    this.unitActionBusy.set(true);
-    this.unitsErrorMessage.set(null);
-    this.setProductUnitStatusUseCase
-      .execute(productId, unit.id, !unit.active)
-      .pipe(finalize(() => this.unitActionBusy.set(false)))
-      .subscribe({
-        next: (updated) => this.product.set(updated),
-        error: (error: ApiError) =>
-          this.unitsErrorMessage.set(error.message ?? 'No se pudo cambiar el estado de la presentación.'),
-      });
-  }
-
-  protected addUnit(productId: string): void {
-    if (this.addUnitForm.invalid) {
-      this.addUnitForm.markAllAsTouched();
-      return;
-    }
-
-    const { unitOfMeasureId, conversionFactor } = this.addUnitForm.getRawValue();
-    this.unitActionBusy.set(true);
-    this.unitsErrorMessage.set(null);
-    this.addProductUnitUseCase
-      .execute(productId, { unitOfMeasureId, conversionFactor: conversionFactor! })
-      .pipe(finalize(() => this.unitActionBusy.set(false)))
-      .subscribe({
-        next: (updated) => {
-          this.product.set(updated);
-          this.addUnitForm.reset({ unitOfMeasureId: '', conversionFactor: null });
-        },
-        error: (error: ApiError) =>
-          this.unitsErrorMessage.set(error.message ?? 'No se pudo añadir la presentación.'),
+        error: (error: ApiError) => this.variantsErrorMessage.set(error.message ?? 'No se pudo añadir la variante.'),
       });
   }
 
@@ -494,9 +282,9 @@ export class ProductFormPage {
 
     this.submitting.set(true);
     this.errorMessage.set(null);
-    const { sku, name, categoryId, barcode, description, baseUnitId } = this.form.getRawValue();
+    const { sku, name, categoryId, barcode, description, unitOfMeasureId } = this.form.getRawValue();
 
-    const request$ = this.productId
+    const request$: Observable<Product | ProductFamily> = this.productId
       ? this.updateProductUseCase.execute(this.productId, {
           name,
           categoryId: categoryId || undefined,
@@ -509,7 +297,7 @@ export class ProductFormPage {
           categoryId: categoryId || undefined,
           barcode: barcode || undefined,
           description: description || undefined,
-          baseUnitId,
+          unitOfMeasureId,
         });
 
     request$.pipe(finalize(() => this.submitting.set(false))).subscribe({
@@ -535,6 +323,10 @@ export class ProductFormPage {
         },
         error: () => this.errorMessage.set('No se pudo cargar el producto.'),
       });
+  }
+
+  private loadVariants(productId: string): void {
+    this.listProductVariantsUseCase.execute(productId).subscribe({ next: (variants) => this.variants.set(variants) });
   }
 
   private loadCategories(): void {

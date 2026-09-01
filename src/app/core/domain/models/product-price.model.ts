@@ -1,22 +1,20 @@
 /**
- * Precio de un producto (en una presentación concreta) dentro de una lista
- * de precios (`ProductPriceResponse` en APIDOC.json).
+ * Precio de un producto dentro de una lista de precios (`ProductPriceResponse`
+ * en APIDOC.json). Un precio por producto y lista: las variantes, al ser
+ * productos completos, llevan el suyo propio.
  */
 export interface ProductPrice {
   id: string;
   priceListId: string;
   productId: string;
-  productUnitId: string;
   price: number;
 }
 
 /**
  * Fija el precio de un producto en la lista (`SetProductPriceRequest`).
- * Crea el registro si no existe, o lo reemplaza si ya estaba fijado para
- * esa presentación (HU-25).
+ * Crea el registro si no existe, o lo reemplaza si ya estaba fijado (HU-25).
  */
 export interface SetProductPriceInput {
   productId: string;
-  productUnitId: string;
   price: number;
 }

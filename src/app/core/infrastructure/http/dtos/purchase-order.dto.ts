@@ -3,7 +3,6 @@
 export interface PurchaseOrderItemResponseDto {
   id: string;
   productId: string;
-  productUnitId: string;
   quantity: number;
   receivedQuantity: number;
   unitPrice: number;
@@ -27,7 +26,6 @@ export interface PurchaseOrderResponseDto {
 
 export interface PurchaseOrderItemRequestDto {
   productId: string;
-  productUnitId: string;
   quantity: number;
   unitPrice: number;
   discountPercentage?: number;

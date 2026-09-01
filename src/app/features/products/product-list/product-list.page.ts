@@ -166,7 +166,7 @@ export class ProductListPage {
   }
 
   protected baseUnitLabel(product: Product): string {
-    return product.units.find((unit) => unit.baseUnit)?.unit.symbol ?? '—';
+    return product.unit.symbol;
   }
 
   protected goToPage(nextPage: number): void {

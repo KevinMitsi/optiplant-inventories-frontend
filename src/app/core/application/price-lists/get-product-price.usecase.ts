@@ -7,7 +7,7 @@ import { ProductPrice } from '../../domain/models/product-price.model';
 export class GetProductPriceUseCase {
   private readonly priceListRepository = inject(PriceListRepository);
 
-  execute(priceListId: string, productId: string, productUnitId: string): Observable<ProductPrice> {
-    return this.priceListRepository.getProductPrice(priceListId, productId, productUnitId);
+  execute(priceListId: string, productId: string): Observable<ProductPrice> {
+    return this.priceListRepository.getProductPrice(priceListId, productId);
   }
 }

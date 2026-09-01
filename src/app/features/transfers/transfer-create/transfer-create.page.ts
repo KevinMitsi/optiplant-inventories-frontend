@@ -12,7 +12,6 @@ import { AuthStore } from '../../../core/state/auth-store.service';
 
 interface TransferItemForm {
   productId: FormControl<string>;
-  productUnitId: FormControl<string>;
   quantity: FormControl<number | null>;
 }
 
@@ -86,17 +85,6 @@ interface TransferForm {
             <p class="field-error" role="alert">Selecciona un producto.</p>
           }
 
-          <label [for]="'productUnitId-' + $index">Presentación</label>
-          <select [id]="'productUnitId-' + $index" [formControl]="item.controls.productUnitId">
-            <option value="" disabled>Seleccione una presentación…</option>
-            @for (unit of unitsForProduct(item.controls.productId.value); track unit.id) {
-              <option [value]="unit.id">{{ unit.unit.symbol }} — {{ unit.unit.name }}</option>
-            }
-          </select>
-          @if (item.controls.productUnitId.invalid && item.controls.productUnitId.touched) {
-            <p class="field-error" role="alert">Selecciona una presentación.</p>
-          }
-
           <label [for]="'quantity-' + $index">Cantidad</label>
           <input [id]="'quantity-' + $index" type="number" [formControl]="item.controls.quantity" step="any" min="0" />
           @if (item.controls.quantity.invalid && item.controls.quantity.touched) {
@@ -168,10 +156,6 @@ export class TransferCreatePage {
     this.loadBranches();
   }
 
-  protected unitsForProduct(productId: string) {
-    return this.products().find((product) => product.id === productId)?.units ?? [];
-  }
-
   protected addItem(): void {
     this.form.controls.items.push(this.buildItem());
   }
@@ -196,9 +180,8 @@ export class TransferCreatePage {
         transferNumber,
         priority: priority as 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT',
         notes: notes || undefined,
-        items: items.map(({ productId, productUnitId, quantity }) => ({
+        items: items.map(({ productId, quantity }) => ({
           productId,
-          productUnitId,
           quantity: quantity!,
         })),
       })
@@ -212,7 +195,6 @@ export class TransferCreatePage {
   private buildItem(): FormGroup<TransferItemForm> {
     return new FormGroup<TransferItemForm>({
       productId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      productUnitId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       quantity: new FormControl<number | null>(null, { validators: [Validators.required, Validators.min(0.000001)] }),
     });
   }

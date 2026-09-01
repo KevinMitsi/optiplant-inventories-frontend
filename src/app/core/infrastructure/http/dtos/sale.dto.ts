@@ -3,7 +3,6 @@
 export interface SaleItemResponseDto {
   id: string;
   productId: string;
-  productUnitId: string;
   quantity: number;
   unitPrice: number;
   discountPercentage: number;
@@ -25,7 +24,6 @@ export interface SaleResponseDto {
 
 export interface SaleItemRequestDto {
   productId: string;
-  productUnitId: string;
   quantity: number;
   unitPrice?: number;
   discountPercentage?: number;

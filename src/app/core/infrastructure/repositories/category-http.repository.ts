@@ -43,13 +43,13 @@ export class CategoryHttpRepository extends CategoryRepository {
 
   override activate(categoryId: string): Observable<Category> {
     return this.http
-      .post<CategoryResponseDto>(ApiEndpoints.categories.activate(categoryId), {})
+      .patch<CategoryResponseDto>(ApiEndpoints.categories.activate(categoryId), {})
       .pipe(map(toCategory));
   }
 
   override deactivate(categoryId: string): Observable<Category> {
     return this.http
-      .post<CategoryResponseDto>(ApiEndpoints.categories.deactivate(categoryId), {})
+      .patch<CategoryResponseDto>(ApiEndpoints.categories.deactivate(categoryId), {})
       .pipe(map(toCategory));
   }
 }

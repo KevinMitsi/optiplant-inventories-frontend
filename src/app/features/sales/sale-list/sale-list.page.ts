@@ -203,15 +203,17 @@ export class SaleListPage {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    // `fromDate`/`toDate` de la API son `date-time`; el `<input type="date">` solo da
-    // fecha, así que se acota al inicio/fin de ese día.
+    // `fromDate`/`toDate` de la API son `date-time` (requiere offset, si no
+    // el backend responde 400 al no poder parsear un `LocalDateTime` sin
+    // zona); el `<input type="date">` solo da fecha, así que se acota al
+    // inicio/fin de ese día en UTC.
     this.searchSalesUseCase
       .execute(branchId, {
         page: this.page,
         size: 20,
         status: status || undefined,
-        fromDate: fromDate ? `${fromDate}T00:00:00` : undefined,
-        toDate: toDate ? `${toDate}T23:59:59` : undefined,
+        fromDate: fromDate ? `${fromDate}T00:00:00Z` : undefined,
+        toDate: toDate ? `${toDate}T23:59:59Z` : undefined,
       })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({

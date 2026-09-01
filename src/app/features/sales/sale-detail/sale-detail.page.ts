@@ -49,7 +49,7 @@ import { AuthStore } from '../../../core/state/auth-store.service';
         <thead>
           <tr>
             <th>Producto</th>
-            <th>Presentación</th>
+            <th>Unidad</th>
             <th>Cantidad</th>
             <th>Precio unitario</th>
             <th>Descuento %</th>
@@ -59,7 +59,7 @@ import { AuthStore } from '../../../core/state/auth-store.service';
           @for (item of sale.items; track item.id) {
             <tr>
               <td data-label="Producto">{{ productLabel(item.productId) }}</td>
-              <td data-label="Presentación">{{ unitLabel(item.productId, item.productUnitId) }}</td>
+              <td data-label="Unidad">{{ unitLabel(item.productId) }}</td>
               <td data-label="Cantidad">{{ item.quantity }}</td>
               <td data-label="Precio unitario">{{ item.unitPrice }}</td>
               <td data-label="Descuento %">{{ item.discountPercentage }}</td>
@@ -114,9 +114,9 @@ export class SaleDetailPage {
     return product ? `${product.sku} — ${product.name}` : productId;
   }
 
-  protected unitLabel(productId: string, productUnitId: string): string {
-    const unit = this.products().get(productId)?.units.find((productUnit) => productUnit.id === productUnitId);
-    return unit ? `${unit.unit.symbol} — ${unit.unit.name}` : productUnitId;
+  protected unitLabel(productId: string): string {
+    const unit = this.products().get(productId)?.unit;
+    return unit ? `${unit.symbol} — ${unit.name}` : '—';
   }
 
   protected confirm(saleId: string): void {
