@@ -3,7 +3,6 @@
 export interface TransferItemResponseDto {
   id: string;
   productId: string;
-  productUnitId: string;
   requestedQuantity: number;
   approvedQuantity: number;
   shippedQuantity: number;
@@ -34,7 +33,6 @@ export interface TransferResponseDto {
 
 export interface TransferItemRequestDto {
   productId: string;
-  productUnitId: string;
   quantity: number;
 }
 

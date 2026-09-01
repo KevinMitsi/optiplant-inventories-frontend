@@ -48,6 +48,14 @@ export interface InventoryMovement {
   quantity: number;
   unitCost: number | null;
   reason: string;
+  /** Orden de compra de origen, si aplica. */
+  purchaseOrderId: string | null;
+  /** Venta de origen, si aplica. */
+  saleId: string | null;
+  /** Transferencia de origen, si aplica. */
+  transferId: string | null;
+  /** Ajuste de origen, si aplica. */
+  adjustmentId: string | null;
   occurredAt: string;
   createdAt: string;
 }

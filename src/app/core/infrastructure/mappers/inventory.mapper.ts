@@ -25,6 +25,10 @@ export function toInventoryMovement(dto: InventoryMovementResponseDto): Inventor
     quantity: dto.quantity,
     unitCost: dto.unitCost ?? null,
     reason: dto.reason,
+    purchaseOrderId: dto.purchaseOrderId ?? null,
+    saleId: dto.saleId ?? null,
+    transferId: dto.transferId ?? null,
+    adjustmentId: dto.adjustmentId ?? null,
     occurredAt: dto.occurredAt,
     createdAt: dto.createdAt,
   };

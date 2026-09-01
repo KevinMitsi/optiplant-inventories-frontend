@@ -7,7 +7,6 @@
 export interface PurchaseOrderItem {
   id: string;
   productId: string;
-  productUnitId: string;
   quantity: number;
   receivedQuantity: number;
   unitPrice: number;
@@ -43,7 +42,6 @@ export interface PurchaseOrder {
 /** Línea al crear una orden (`PurchaseOrderItemRequest`); a diferencia de Ventas, `unitPrice` es obligatorio (precio pactado). */
 export interface CreatePurchaseOrderItemInput {
   productId: string;
-  productUnitId: string;
   quantity: number;
   unitPrice: number;
   discountPercentage?: number;

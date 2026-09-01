@@ -33,13 +33,24 @@ interface LoginForm {
         }
 
         <label for="password">Contraseña</label>
-        <input
-          id="password"
-          type="password"
-          formControlName="password"
-          autocomplete="current-password"
-          [class.invalid]="isInvalid('password')"
-        />
+        <div class="password-field">
+          <input
+            id="password"
+            [type]="passwordVisible() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="current-password"
+            [class.invalid]="isInvalid('password')"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="passwordVisible.set(!passwordVisible())"
+            [attr.aria-label]="passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            [attr.aria-pressed]="passwordVisible()"
+          >
+            {{ passwordVisible() ? '🙈' : '👁️' }}
+          </button>
+        </div>
         @if (isInvalid('password')) {
           <span class="field-error">La contraseña es obligatoria.</span>
         }
@@ -63,6 +74,7 @@ export class LoginPage {
 
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly passwordVisible = signal(false);
 
   protected readonly form = new FormGroup<LoginForm>({
     email: new FormControl('', {

@@ -29,16 +29,16 @@
 ],
 "tags": [
 {
-"name": "Productos",
-"description": "Catálogo de productos, compartido por todas las sucursales. Un producto no almacena existencias: el stock pertenece a la pareja (sucursal, producto) y vive en el módulo de inventario (RN-02)."
-},
-{
 "name": "Usuarios",
 "description": "Administración de las cuentas de acceso. Cada usuario tiene un rol y, salvo el administrador general, una sucursal: ese par determina sobre qué puede operar (RN-12, RN-13). Es además el sujeto de la trazabilidad, ya que todo movimiento de inventario registra quién lo provocó (RN-11)."
 },
 {
 "name": "Inventario",
 "description": "Saldo de cada producto por sucursal (RN-02), su histórico de movimientos y su stock mínimo. El stock jamás cambia sin un movimiento que lo explique (RN-04)."
+},
+{
+"name": "Unidades de medida",
+"description": "Catálogo global de unidades. Es compartido por todas las organizaciones y es donde cada producto elige la unidad en la que se cuenta su stock."
 },
 {
 "name": "Compras",
@@ -89,16 +89,16 @@
 "description": "Proveedores a los que se les compran productos."
 },
 {
+"name": "Productos",
+"description": "Catálogo de productos, compartido por todas las sucursales. Un producto no almacena existencias: el stock pertenece a la pareja (sucursal, producto) y vive en el módulo de inventario (RN-02).\n\nCada producto se cuenta en una sola unidad, la suya, sin factores de conversión. Las presentaciones distintas del mismo artículo se modelan como variantes, que son productos completos con SKU, stock y precio propios."
+},
+{
 "name": "Sucursales",
 "description": "Gestión de las sucursales de la organización. Cada sucursal es una unidad operativa autónoma: su inventario, sus ventas y sus compras le pertenecen, y es uno de los dos extremos de toda transferencia."
 },
 {
 "name": "Categorías",
 "description": "Clasificación del catálogo de productos. Es global a la organización, igual que el propio catálogo."
-},
-{
-"name": "Unidades de medida",
-"description": "Catálogo global de unidades. Es compartido por todas las organizaciones y sirve de base a las presentaciones de cada producto."
 }
 ],
 "paths": {
@@ -280,11 +280,21 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Proveedor encontrado.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/SupplierResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe un proveedor con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -301,6 +311,7 @@
 "Proveedores"
 ],
 "summary": "Actualizar un proveedor",
+"description": "El código no es modificable.",
 "operationId": "updateSupplier",
 "parameters": [
 {
@@ -325,11 +336,41 @@
 },
 "responses": {
 "200": {
-"description": "OK",
+"description": "Proveedor actualizado.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/SupplierResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe un proveedor con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -348,7 +389,6 @@
 "Productos"
 ],
 "summary": "Consultar un producto",
-"description": "Devuelve el producto con todas sus presentaciones.",
 "operationId": "getProductById",
 "parameters": [
 {
@@ -394,7 +434,7 @@
 "Productos"
 ],
 "summary": "Actualizar un producto",
-"description": "Modifica nombre, categoría, código de barras y descripción. El SKU no es modificable.",
+"description": "Modifica nombre, categoría, código de barras y descripción.\n\nEl SKU y la unidad de medida no son modificables: el stock y el histórico de movimientos están expresados en esa unidad, y cambiarla reinterpretaría cantidades ya registradas. Si la unidad cambia de verdad, lo correcto es dar de alta otro producto.",
 "operationId": "updateProduct",
 "parameters": [
 {
@@ -456,83 +496,6 @@
 ]
 }
 },
-"/api/v1/products/{productId}/units/{productUnitId}/factor": {
-"put": {
-"tags": [
-"Productos"
-],
-"summary": "Cambiar el factor de una presentación",
-"description": "La unidad base no admite cambio de factor: siempre vale 1. Para alterarlo, designe otra presentación como base.",
-"operationId": "changeProductUnitFactor",
-"parameters": [
-{
-"name": "productId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-},
-{
-"name": "productUnitId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"requestBody": {
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ChangeUnitFactorRequest"
-}
-}
-},
-"required": true
-},
-"responses": {
-"200": {
-"description": "Factor actualizado.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ProductResponse"
-}
-}
-}
-},
-"404": {
-"description": "El producto no existe.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ApiError"
-}
-}
-}
-},
-"422": {
-"description": "Se intentó cambiar el factor de la unidad base, o la presentación no es del producto.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ApiError"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
 "/api/v1/price-lists/{priceListId}": {
 "get": {
 "tags": [
@@ -553,11 +516,21 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Lista de precios encontrada.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PriceListResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una lista con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -599,11 +572,41 @@
 },
 "responses": {
 "200": {
-"description": "OK",
+"description": "Lista de precios actualizada.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PriceListResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe una lista con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La vigencia es incoherente: `validUntil` anterior a `validFrom`.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -636,11 +639,21 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Ruta encontrada.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/LogisticsRouteResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una ruta con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -657,6 +670,7 @@
 "Rutas logísticas"
 ],
 "summary": "Actualizar una ruta logística",
+"description": "Modifica nombre, duración estimada, costo y prioridad. El origen y el destino no son modificables: otra pareja de sucursales es otra ruta.",
 "operationId": "updateLogisticsRoute",
 "parameters": [
 {
@@ -681,11 +695,51 @@
 },
 "responses": {
 "200": {
-"description": "OK",
+"description": "Ruta actualizada.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/LogisticsRouteResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe una ruta con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La duración estimada no es positiva.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -831,11 +885,21 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Transportista encontrado.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/CarrierResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe un transportista con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -852,6 +916,7 @@
 "Transportistas"
 ],
 "summary": "Actualizar un transportista",
+"description": "El código no es modificable.",
 "operationId": "updateCarrier",
 "parameters": [
 {
@@ -876,11 +941,41 @@
 },
 "responses": {
 "200": {
-"description": "OK",
+"description": "Transportista actualizado.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/CarrierResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe un transportista con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -1007,63 +1102,6 @@
 }
 }
 }
-}
-},
-"/api/v1/branches/{branchId}/inventory/{productId}/minimum-stock": {
-"put": {
-"tags": [
-"Inventario"
-],
-"summary": "Configurar el stock mínimo",
-"description": "Define el umbral que dispara una alerta de reabastecimiento (HU-15, RF-15).",
-"operationId": "setMinimumStock",
-"parameters": [
-{
-"name": "branchId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-},
-{
-"name": "productId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"requestBody": {
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/SetMinimumStockRequest"
-}
-}
-},
-"required": true
-},
-"responses": {
-"200": {
-"description": "Stock mínimo actualizado.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/InventoryResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
 }
 },
 "/api/v1/users/{userId}/password": {
@@ -1297,11 +1335,61 @@
 },
 "responses": {
 "200": {
-"description": "OK",
+"description": "Recepción registrada y stock de destino aumentado. Las incidencias abiertas se consultan en `/transfers/{transferId}/issues`.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/TransferResponse"
+}
+}
+}
+},
+"400": {
+"description": "Alguna cantidad recibida es negativa o no es un número.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La transferencia o alguna de las líneas indicadas no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "Otra operación tocó el mismo saldo a la vez; reintente.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La transferencia no está despachada, o se recibe más de lo despachado en una línea.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -1320,6 +1408,7 @@
 "Transferencias"
 ],
 "summary": "Iniciar la preparación de una transferencia aprobada",
+"description": "Marca que el origen empezó a alistar la mercancía. Todavía no mueve inventario.",
 "operationId": "startTransferPreparation",
 "parameters": [
 {
@@ -1334,11 +1423,41 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Preparación iniciada.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/TransferResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe una transferencia con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La transferencia no está aprobada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -1382,11 +1501,51 @@
 },
 "responses": {
 "200": {
-"description": "OK",
+"description": "Transportista y ruta asignados.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/TransferResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La transferencia, el transportista o la ruta no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La ruta no conecta el origen con el destino, o la transferencia ya fue despachada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -1439,11 +1598,51 @@
 },
 "responses": {
 "200": {
-"description": "OK",
+"description": "Incidencia resuelta.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/TransferIssueResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza a decidir cómo se cierra un faltante.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La transferencia o la incidencia no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La incidencia ya estaba resuelta, o no pertenece a esa transferencia.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -1487,11 +1686,61 @@
 },
 "responses": {
 "200": {
-"description": "OK",
+"description": "Transferencia despachada y stock de origen descontado.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/TransferResponse"
+}
+}
+}
+},
+"400": {
+"description": "Alguna cantidad despachada es negativa o no es un número.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La transferencia o alguna de las líneas indicadas no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "Otra operación tocó el mismo saldo a la vez; reintente.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "Stock insuficiente en origen (RN-08), se despacha más de lo aprobado, o la transferencia no está en preparación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -1525,7 +1774,7 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Transferencia cancelada.",
 "content": {
 "application/json": {
 "schema": {
@@ -1533,388 +1782,19 @@
 }
 }
 }
-}
 },
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/transfers/{transferId}/approval": {
-"post": {
-"tags": [
-"Transferencias"
-],
-"summary": "Aprobar una transferencia solicitada (HU-29)",
-"description": "Cada línea se aprueba por la cantidad indicada, o por la solicitada si no se indica ninguna. Comprometer stock de origen es una decisión de supervisión, fuera del alcance del operador.",
-"operationId": "approveTransfer",
-"parameters": [
-{
-"name": "transferId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"requestBody": {
+"403": {
+"description": "El rol no autoriza la operación.",
 "content": {
 "application/json": {
 "schema": {
-"$ref": "#/components/schemas/ApproveTransferRequest"
-}
-}
-},
-"required": true
-},
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/TransferResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/suppliers/{supplierId}/deactivation": {
-"post": {
-"tags": [
-"Proveedores"
-],
-"summary": "Dar de baja un proveedor",
-"operationId": "deactivateSupplier",
-"parameters": [
-{
-"name": "supplierId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/SupplierResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/suppliers/{supplierId}/activation": {
-"post": {
-"tags": [
-"Proveedores"
-],
-"summary": "Reactivar un proveedor",
-"operationId": "activateSupplier",
-"parameters": [
-{
-"name": "supplierId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/SupplierResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/sales/{saleId}/confirmation": {
-"post": {
-"tags": [
-"Ventas"
-],
-"summary": "Confirmar la venta",
-"description": "Descuenta inventario mediante SALE_OUT, validando stock disponible (RN-03).",
-"operationId": "confirmSale",
-"parameters": [
-{
-"name": "saleId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/SaleResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/sales/{saleId}/cancellation": {
-"post": {
-"tags": [
-"Ventas"
-],
-"summary": "Cancelar la venta",
-"description": "Si estaba confirmada, restituye el inventario con un movimiento RETURN_IN compensatorio.",
-"operationId": "cancelSale",
-"parameters": [
-{
-"name": "saleId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/SaleResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/purchase-orders/{purchaseOrderId}/items/{itemId}/receipt": {
-"post": {
-"tags": [
-"Compras"
-],
-"summary": "Confirmar la recepción de una línea (HU-19)",
-"description": "Incrementa automáticamente el inventario y recalcula el costo promedio ponderado del producto (RF-21, RF-23). Admite recepción parcial.",
-"operationId": "receivePurchaseOrderItem",
-"parameters": [
-{
-"name": "purchaseOrderId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-},
-{
-"name": "itemId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"requestBody": {
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ReceivePurchaseOrderItemRequest"
-}
-}
-},
-"required": true
-},
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/PurchaseOrderResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/purchase-orders/{purchaseOrderId}/confirmation": {
-"post": {
-"tags": [
-"Compras"
-],
-"summary": "Confirmar la orden con el proveedor",
-"description": "A partir de aquí puede empezar a recibirse mercancía.",
-"operationId": "confirmPurchaseOrder",
-"parameters": [
-{
-"name": "purchaseOrderId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/PurchaseOrderResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/purchase-orders/{purchaseOrderId}/cancellation": {
-"post": {
-"tags": [
-"Compras"
-],
-"summary": "Cancelar la orden",
-"description": "Solo antes de recibir cualquier mercancía.",
-"operationId": "cancelPurchaseOrder",
-"parameters": [
-{
-"name": "purchaseOrderId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/PurchaseOrderResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/products/{productId}/units": {
-"post": {
-"tags": [
-"Productos"
-],
-"summary": "Añadir una presentación",
-"description": "Registra una presentación adicional del producto (HU-10, RF-09).\n\nEl factor indica cuántas unidades base equivale una de esta presentación: si la base es la botella, una caja de 24 tiene factor 24.\n\nUn producto no puede tener dos presentaciones en la misma unidad de medida.",
-"operationId": "addProductUnit",
-"parameters": [
-{
-"name": "productId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"requestBody": {
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/AddProductUnitRequest"
-}
-}
-},
-"required": true
-},
-"responses": {
-"200": {
-"description": "Presentación añadida.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ProductResponse"
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
 },
 "404": {
-"description": "El producto o la unidad no existen.",
+"description": "No existe una transferencia con ese identificador.",
 "content": {
 "application/json": {
 "schema": {
@@ -1924,7 +1804,7 @@
 }
 },
 "422": {
-"description": "El producto ya tiene una presentación en esa unidad, o el factor no es válido.",
+"description": "La transferencia ya fue despachada, o ya estaba cancelada.",
 "content": {
 "application/json": {
 "schema": {
@@ -1941,117 +1821,13 @@
 ]
 }
 },
-"/api/v1/products/{productId}/units/{productUnitId}/deactivation": {
-"post": {
+"/api/v1/products/{productId}/variants": {
+"get": {
 "tags": [
 "Productos"
 ],
-"summary": "Dar de baja una presentación",
-"description": "La unidad base no se puede retirar: dejaría al producto sin referencia para medir su stock. Designe antes otra como base.",
-"operationId": "deactivateProductUnit",
-"parameters": [
-{
-"name": "productId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-},
-{
-"name": "productUnitId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "Presentación dada de baja.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ProductResponse"
-}
-}
-}
-},
-"422": {
-"description": "Se intentó retirar la unidad base.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ApiError"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/products/{productId}/units/{productUnitId}/activation": {
-"post": {
-"tags": [
-"Productos"
-],
-"summary": "Reactivar una presentación",
-"operationId": "activateProductUnit",
-"parameters": [
-{
-"name": "productId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-},
-{
-"name": "productUnitId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "Presentación reactivada.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ProductResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/products/{productId}/deactivation": {
-"post": {
-"tags": [
-"Productos"
-],
-"summary": "Dar de baja un producto",
-"description": "Baja lógica. El producto aparece en ventas, compras y movimientos históricos, y eliminarlo dejaría ese histórico sin poder explicarse.",
-"operationId": "deactivateProduct",
+"summary": "Listar las variantes de un producto",
+"operationId": "listProductVariants",
 "parameters": [
 {
 "name": "productId",
@@ -2065,11 +1841,14 @@
 ],
 "responses": {
 "200": {
-"description": "Producto dado de baja.",
+"description": "Variantes del producto. Vacío si no tiene.",
 "content": {
 "application/json": {
 "schema": {
+"type": "array",
+"items": {
 "$ref": "#/components/schemas/ProductResponse"
+}
 }
 }
 }
@@ -2090,16 +1869,14 @@
 "bearerAuth": []
 }
 ]
-}
 },
-"/api/v1/products/{productId}/base-unit": {
 "post": {
 "tags": [
 "Productos"
 ],
-"summary": "Cambiar la unidad base",
-"description": "Designa otra presentación como unidad base del producto.\n\nExige indicar el factor que pasa a tener la base anterior, porque su equivalencia con la nueva no es deducible: si la base pasa de botella a caja de 24, la botella pasa a valer 1/24, un dato que solo conoce el negocio.",
-"operationId": "changeBaseUnit",
+"summary": "Añadir una variante",
+"description": "Cuelga una variante de un producto ya existente (HU-10, RF-09).\n\nLa variante es un producto completo: se inventaría, se compra y se vende por separado del principal. No comparte stock con él ni se convierte a su unidad.\n\nSolo un producto principal admite variantes: el catálogo es de un solo nivel.",
+"operationId": "addProductVariant",
 "parameters": [
 {
 "name": "productId",
@@ -2115,15 +1892,15 @@
 "content": {
 "application/json": {
 "schema": {
-"$ref": "#/components/schemas/ChangeBaseUnitRequest"
+"$ref": "#/components/schemas/ProductVariantRequest"
 }
 }
 },
 "required": true
 },
 "responses": {
-"200": {
-"description": "Unidad base cambiada.",
+"201": {
+"description": "Variante creada.",
 "content": {
 "application/json": {
 "schema": {
@@ -2133,7 +1910,17 @@
 }
 },
 "404": {
-"description": "El producto no existe.",
+"description": "El producto, la categoría o la unidad no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "El SKU o el código de barras ya están en uso.",
 "content": {
 "application/json": {
 "schema": {
@@ -2143,223 +1930,11 @@
 }
 },
 "422": {
-"description": "La presentación indicada está dada de baja o no pertenece al producto.",
+"description": "Se intentó colgar la variante de otra variante, o la categoría no es válida.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/ApiError"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/products/{productId}/activation": {
-"post": {
-"tags": [
-"Productos"
-],
-"summary": "Reactivar un producto",
-"operationId": "activateProduct",
-"parameters": [
-{
-"name": "productId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "Producto reactivado.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ProductResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/price-lists/{priceListId}/product-prices": {
-"get": {
-"tags": [
-"Listas de precios"
-],
-"summary": "Consultar el precio de un producto en la lista",
-"operationId": "getProductPrice",
-"parameters": [
-{
-"name": "priceListId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-},
-{
-"name": "productId",
-"in": "query",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-},
-{
-"name": "productUnitId",
-"in": "query",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ProductPriceResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-},
-"post": {
-"tags": [
-"Listas de precios"
-],
-"summary": "Fijar el precio de un producto en la lista (HU-25)",
-"description": "Crea el precio si no existe, o lo reemplaza si ya estaba fijado para esa presentación.",
-"operationId": "setProductPrice",
-"parameters": [
-{
-"name": "priceListId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"requestBody": {
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/SetProductPriceRequest"
-}
-}
-},
-"required": true
-},
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ProductPriceResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/price-lists/{priceListId}/deactivation": {
-"post": {
-"tags": [
-"Listas de precios"
-],
-"summary": "Dar de baja una lista de precios",
-"operationId": "deactivatePriceList",
-"parameters": [
-{
-"name": "priceListId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/PriceListResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/price-lists/{priceListId}/activation": {
-"post": {
-"tags": [
-"Listas de precios"
-],
-"summary": "Reactivar una lista de precios",
-"operationId": "activatePriceList",
-"parameters": [
-{
-"name": "priceListId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/PriceListResponse"
 }
 }
 }
@@ -2656,6 +2231,7 @@
 "Proveedores"
 ],
 "summary": "Listar proveedores",
+"description": "Búsqueda parcial por `text` sobre código y nombre. Si se omite `active`, devuelve activos e inactivos.",
 "operationId": "searchSuppliers",
 "parameters": [
 {
@@ -2726,11 +2302,31 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Página de proveedores.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PageResponse"
+}
+}
+}
+},
+"400": {
+"description": "Parámetros de paginación u ordenación inválidos.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "La organización no es la del usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -2747,6 +2343,7 @@
 "Proveedores"
 ],
 "summary": "Registrar un proveedor",
+"description": "El código es único dentro de la organización.",
 "operationId": "createSupplier",
 "parameters": [
 {
@@ -2770,12 +2367,52 @@
 "required": true
 },
 "responses": {
-"200": {
-"description": "OK",
+"201": {
+"description": "Proveedor creado.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/SupplierResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza, o la organización no es la suya.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La organización no existe.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "El código ya está en uso en la organización.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -2794,7 +2431,7 @@
 "Productos"
 ],
 "summary": "Consultar el catálogo",
-"description": "Devuelve los productos de la organización, filtrados y paginados (HU-09).\n\nCada producto llega con sus presentaciones. La página se resuelve en dos consultas fijas, no en una por producto.",
+"description": "Devuelve los productos de la organización, filtrados y paginados (HU-09).\n\nPor defecto la página incluye principales y variantes, porque ambos se venden e inventarían igual. Para la vista agrupada del catálogo, filtre con `scope=PRINCIPALS_ONLY` y pida las variantes de cada uno por separado.",
 "operationId": "searchProducts",
 "parameters": [
 {
@@ -2824,7 +2461,7 @@
 "schema": {
 "type": "string"
 },
-"example": "agua"
+"example": "brisa"
 },
 {
 "name": "active",
@@ -2833,6 +2470,21 @@
 "required": false,
 "schema": {
 "type": "boolean"
+}
+},
+{
+"name": "scope",
+"in": "query",
+"description": "Qué parte de la familia devolver.",
+"required": false,
+"schema": {
+"type": "string",
+"default": "ALL",
+"enum": [
+"ALL",
+"PRINCIPALS_ONLY",
+"VARIANTS_ONLY"
+]
 }
 },
 {
@@ -2933,7 +2585,7 @@
 "Productos"
 ],
 "summary": "Dar de alta un producto",
-"description": "Registra un producto en el catálogo (HU-07, RF-07).\n\nEl SKU es único dentro de la organización, se normaliza a mayúsculas y es inmutable una vez creado. El código de barras, si se informa, también debe ser único.\n\n**La unidad base es obligatoria.** Es la unidad en la que se contabiliza el stock, y sin ella el producto no podría recibir existencias. Su factor de conversión es 1 por definición. Las demás presentaciones se añaden después.",
+"description": "Registra un producto en el catálogo (HU-07, RF-07).\n\nEl SKU es único dentro de la organización, se normaliza a mayúsculas y es inmutable una vez creado. El código de barras, si se informa, también debe ser único.\n\n**La unidad de medida es obligatoria.** Es la unidad en la que se cuenta el stock del producto, sin factor de conversión de por medio.\n\n**Las variantes son opcionales.** El producto que se crea es la variante principal; las que vengan en `variants` se crean junto a él, cada una como producto autónomo con su SKU, su stock y su precio.",
 "operationId": "createProduct",
 "parameters": [
 {
@@ -2958,11 +2610,11 @@
 },
 "responses": {
 "201": {
-"description": "Producto creado con su unidad base.",
+"description": "Producto creado, con sus variantes si las trae.",
 "content": {
 "application/json": {
 "schema": {
-"$ref": "#/components/schemas/ProductResponse"
+"$ref": "#/components/schemas/ProductFamilyResponse"
 }
 }
 }
@@ -2998,7 +2650,7 @@
 }
 },
 "409": {
-"description": "El SKU o el código de barras ya están en uso.",
+"description": "El SKU o el código de barras ya están en uso, aquí o en otra línea de la petición.",
 "content": {
 "application/json": {
 "schema": {
@@ -3076,11 +2728,31 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Página de listas de precios.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PageResponse"
+}
+}
+}
+},
+"400": {
+"description": "Parámetros de paginación inválidos.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "La organización no es la del usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -3097,6 +2769,7 @@
 "Listas de precios"
 ],
 "summary": "Crear una lista de precios (RF-29)",
+"description": "El código es único dentro de la organización y no es modificable después.",
 "operationId": "createPriceList",
 "parameters": [
 {
@@ -3120,12 +2793,62 @@
 "required": true
 },
 "responses": {
-"200": {
-"description": "OK",
+"201": {
+"description": "Lista de precios creada.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PriceListResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza, o la organización no es la suya.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La organización no existe.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "El código ya está en uso en la organización.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La vigencia es incoherente: `validUntil` anterior a `validFrom`.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -3144,6 +2867,7 @@
 "Rutas logísticas"
 ],
 "summary": "Listar rutas logísticas",
+"description": "Filtra por sucursal de origen, de destino y por estado.",
 "operationId": "searchLogisticsRoutes",
 "parameters": [
 {
@@ -3207,11 +2931,31 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Página de rutas.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PageResponse"
+}
+}
+}
+},
+"400": {
+"description": "Parámetros de paginación inválidos.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "La organización no es la del usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -3228,6 +2972,7 @@
 "Rutas logísticas"
 ],
 "summary": "Registrar una ruta logística",
+"description": "Origen y destino deben ser sucursales distintas (RN-07), y la pareja origen/destino no puede repetirse.",
 "operationId": "createLogisticsRoute",
 "parameters": [
 {
@@ -3251,12 +2996,62 @@
 "required": true
 },
 "responses": {
-"200": {
-"description": "OK",
+"201": {
+"description": "Ruta creada.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/LogisticsRouteResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza, o la organización no es la suya.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La organización o alguna de las sucursales no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "Ya existe una ruta con ese origen y ese destino.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "Origen y destino coinciden (RN-07), o la duración estimada no es positiva.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -3490,6 +3285,7 @@
 "Transportistas"
 ],
 "summary": "Listar transportistas",
+"description": "Búsqueda parcial por `text` sobre código y nombre. Si se omite `active`, devuelve activos e inactivos.",
 "operationId": "searchCarriers",
 "parameters": [
 {
@@ -3560,11 +3356,31 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Página de transportistas.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PageResponse"
+}
+}
+}
+},
+"400": {
+"description": "Parámetros de paginación u ordenación inválidos.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "La organización no es la del usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -3581,6 +3397,7 @@
 "Transportistas"
 ],
 "summary": "Registrar un transportista",
+"description": "El código es único dentro de la organización.",
 "operationId": "createCarrier",
 "parameters": [
 {
@@ -3604,12 +3421,52 @@
 "required": true
 },
 "responses": {
-"200": {
-"description": "OK",
+"201": {
+"description": "Transportista creado.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/CarrierResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza, o la organización no es la suya.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La organización no existe.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "El código ya está en uso en la organización.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -3837,80 +3694,6 @@
 }
 }
 },
-"/api/v1/logistics-routes/{routeId}/deactivation": {
-"post": {
-"tags": [
-"Rutas logísticas"
-],
-"summary": "Dar de baja una ruta logística",
-"operationId": "deactivateLogisticsRoute",
-"parameters": [
-{
-"name": "routeId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/LogisticsRouteResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/logistics-routes/{routeId}/activation": {
-"post": {
-"tags": [
-"Rutas logísticas"
-],
-"summary": "Reactivar una ruta logística",
-"operationId": "activateLogisticsRoute",
-"parameters": [
-{
-"name": "routeId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/LogisticsRouteResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
 "/api/v1/inventory-alerts/{alertId}/resolution": {
 "post": {
 "tags": [
@@ -4007,250 +3790,13 @@
 ]
 }
 },
-"/api/v1/inventory-adjustments/{adjustmentId}/approval": {
-"post": {
-"tags": [
-"Ajustes de inventario"
-],
-"summary": "Aprobar el ajuste",
-"description": "Confirma el ajuste y postea un movimiento `ADJUSTMENT_IN`/`ADJUSTMENT_OUT` por cada línea. A partir de aquí el documento es inmutable.",
-"operationId": "approveInventoryAdjustment",
-"parameters": [
-{
-"name": "adjustmentId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "Ajuste aprobado y stock actualizado.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/InventoryAdjustmentResponse"
-}
-}
-}
-},
-"404": {
-"description": "No existe un ajuste con ese identificador.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ApiError"
-}
-}
-}
-},
-"422": {
-"description": "El ajuste ya fue aprobado.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ApiError"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/categories/{categoryId}/deactivation": {
-"post": {
-"tags": [
-"Categorías"
-],
-"summary": "Dar de baja una categoría",
-"description": "Retira la categoría del catálogo. Es baja lógica: los productos históricos siguen apuntando a ella.\n\n**No se puede dar de baja si aún tiene productos activos**: quedarían clasificados en una categoría retirada, y el catálogo perdería coherencia sin que nada lo advirtiera. Reclasifique o dé de baja esos productos primero.",
-"operationId": "deactivateCategory",
-"parameters": [
-{
-"name": "categoryId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "Categoría dada de baja.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/CategoryResponse"
-}
-}
-}
-},
-"404": {
-"description": "No existe una categoría con ese identificador.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ApiError"
-}
-}
-}
-},
-"422": {
-"description": "La categoría aún tiene productos activos.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ApiError"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/categories/{categoryId}/activation": {
-"post": {
-"tags": [
-"Categorías"
-],
-"summary": "Reactivar una categoría",
-"operationId": "activateCategory",
-"parameters": [
-{
-"name": "categoryId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "Categoría reactivada.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/CategoryResponse"
-}
-}
-}
-},
-"404": {
-"description": "No existe una categoría con ese identificador.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ApiError"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/carriers/{carrierId}/deactivation": {
-"post": {
-"tags": [
-"Transportistas"
-],
-"summary": "Dar de baja un transportista",
-"operationId": "deactivateCarrier",
-"parameters": [
-{
-"name": "carrierId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/CarrierResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
-"/api/v1/carriers/{carrierId}/activation": {
-"post": {
-"tags": [
-"Transportistas"
-],
-"summary": "Reactivar un transportista",
-"operationId": "activateCarrier",
-"parameters": [
-{
-"name": "carrierId",
-"in": "path",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "OK",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/CarrierResponse"
-}
-}
-}
-}
-},
-"security": [
-{
-"bearerAuth": []
-}
-]
-}
-},
 "/api/v1/branches/{originBranchId}/transfers": {
 "post": {
 "tags": [
 "Transferencias"
 ],
 "summary": "Solicitar una transferencia (HU-27)",
-"description": "El origen pide reponer stock desde otra sucursal. Origen y destino deben ser distintos (RN-07).",
+"description": "El origen pide reponer stock desde otra sucursal. Origen y destino deben ser distintos (RN-07). La transferencia nace solicitada: todavía no compromete stock, que solo se descuenta al despachar.",
 "operationId": "createTransfer",
 "parameters": [
 {
@@ -4274,12 +3820,62 @@
 "required": true
 },
 "responses": {
-"200": {
-"description": "OK",
+"201": {
+"description": "Transferencia solicitada.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/TransferResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido, o llega sin líneas.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza, o la sucursal no es operable por el usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "Alguna de las sucursales, o algún producto, no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "El número de transferencia ya está en uso.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "Origen y destino coinciden (RN-07).",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -4298,6 +3894,7 @@
 "Ventas"
 ],
 "summary": "Consultar histórico de ventas (HU-26, RF-30)",
+"description": "Filtra por estado y por rango de fechas de venta.",
 "operationId": "searchSales",
 "parameters": [
 {
@@ -4361,11 +3958,41 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Página de ventas.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PageResponse"
+}
+}
+}
+},
+"400": {
+"description": "Parámetros de paginación o fechas inválidos.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "La sucursal no es operable por el usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "El valor de `status` no es un estado conocido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -4382,6 +4009,7 @@
 "Ventas"
 ],
 "summary": "Crear una venta en borrador (HU-22)",
+"description": "La venta nace en borrador y todavía no toca el inventario: el stock se descuenta al confirmar. El número de venta es único y debe haber al menos una línea.\n\nCada línea puede traer su `unitPrice`; si no lo trae, se resuelve contra la lista de precios de la venta, que entonces es obligatoria (HU-25). Una variante es un producto distinto: se vende en su propia línea y con su propio precio.",
 "operationId": "createSale",
 "parameters": [
 {
@@ -4405,12 +4033,62 @@
 "required": true
 },
 "responses": {
-"200": {
-"description": "OK",
+"201": {
+"description": "Venta creada en borrador.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/SaleResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido, o la venta llega sin líneas.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza, o la sucursal no es operable por el usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La sucursal, la lista de precios, algún producto o su precio en la lista no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "El número de venta ya está en uso.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "Una línea va sin precio y la venta no tiene lista de precios asociada (HU-25).",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -4493,11 +4171,41 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Página de órdenes de compra.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PageResponse"
+}
+}
+}
+},
+"400": {
+"description": "Parámetros de paginación inválidos.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "La sucursal no es operable por el usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "El valor de `status` no es un estado conocido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -4514,6 +4222,7 @@
 "Compras"
 ],
 "summary": "Crear una orden de compra en borrador (HU-17, HU-18)",
+"description": "La orden nace en borrador: todavía no mueve inventario. El número de orden es único y debe tener al menos una línea.\n\nCada línea apunta a un producto y a la cantidad en la unidad de ese producto. Una variante es un producto distinto: se pide en su propia línea.",
 "operationId": "createPurchaseOrder",
 "parameters": [
 {
@@ -4537,12 +4246,62 @@
 "required": true
 },
 "responses": {
-"200": {
-"description": "OK",
+"201": {
+"description": "Orden creada en borrador.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PurchaseOrderResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido, o la orden llega sin líneas.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza, o la sucursal no es operable por el usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La sucursal, el proveedor o algún producto no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "El número de orden ya está en uso.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "El plazo de pago es negativo, o la orden queda sin líneas válidas.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -4739,94 +4498,6 @@
 ]
 }
 },
-"/api/v1/branches/{branchId}/deactivation": {
-"post": {
-"tags": [
-"Sucursales"
-],
-"summary": "Dar de baja una sucursal",
-"description": "Retira la sucursal de la operación. Deja de admitir ventas, compras, movimientos y transferencias nuevas.\n\nEs una baja lógica, nunca un borrado. La sucursal aparece en ventas, compras y movimientos históricos, y eliminarla dejaría ese histórico sin poder explicarse (ENTITIES.md §30). Todo su pasado sigue siendo consultable.\n\nLa operación es idempotente: dar de baja una sucursal ya inactiva devuelve 200 y no produce ningún cambio.",
-"operationId": "deactivateBranch",
-"parameters": [
-{
-"name": "branchId",
-"in": "path",
-"description": "Identificador de la sucursal.",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "Sucursal dada de baja.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/BranchResponse"
-}
-}
-}
-},
-"404": {
-"description": "No existe una sucursal con ese identificador.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ApiError"
-}
-}
-}
-}
-}
-}
-},
-"/api/v1/branches/{branchId}/activation": {
-"post": {
-"tags": [
-"Sucursales"
-],
-"summary": "Reactivar una sucursal",
-"description": "Devuelve a la operación una sucursal dada de baja.\n\nEs idempotente: reactivar una sucursal ya activa devuelve 200 sin cambios.",
-"operationId": "activateBranch",
-"parameters": [
-{
-"name": "branchId",
-"in": "path",
-"description": "Identificador de la sucursal.",
-"required": true,
-"schema": {
-"type": "string",
-"format": "uuid"
-}
-}
-],
-"responses": {
-"200": {
-"description": "Sucursal reactivada.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/BranchResponse"
-}
-}
-}
-},
-"404": {
-"description": "No existe una sucursal con ese identificador.",
-"content": {
-"application/json": {
-"schema": {
-"$ref": "#/components/schemas/ApiError"
-}
-}
-}
-}
-}
-}
-},
 "/api/v1/auth/refresh": {
 "post": {
 "tags": [
@@ -4931,6 +4602,1438 @@
 }
 },
 "security": []
+}
+},
+"/api/v1/transfers/{transferId}/approval": {
+"patch": {
+"tags": [
+"Transferencias"
+],
+"summary": "Aprobar una transferencia solicitada (HU-29)",
+"description": "Cada línea se aprueba por la cantidad indicada, o por la solicitada si no se indica ninguna. Comprometer stock de origen es una decisión de supervisión, fuera del alcance del operador.",
+"operationId": "approveTransfer",
+"parameters": [
+{
+"name": "transferId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApproveTransferRequest"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "Transferencia aprobada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/TransferResponse"
+}
+}
+}
+},
+"400": {
+"description": "Alguna cantidad aprobada es negativa o no es un número.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza a comprometer stock de origen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La transferencia o alguna de las líneas indicadas no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La transferencia no está solicitada, o se aprueba más de lo pedido en una línea.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/suppliers/{supplierId}/deactivation": {
+"patch": {
+"tags": [
+"Proveedores"
+],
+"summary": "Dar de baja un proveedor",
+"description": "Baja lógica: el proveedor sigue apareciendo en las órdenes de compra históricas. Idempotente.",
+"operationId": "deactivateSupplier",
+"parameters": [
+{
+"name": "supplierId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Proveedor dado de baja.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/SupplierResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe un proveedor con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/suppliers/{supplierId}/activation": {
+"patch": {
+"tags": [
+"Proveedores"
+],
+"summary": "Reactivar un proveedor",
+"operationId": "activateSupplier",
+"parameters": [
+{
+"name": "supplierId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Proveedor reactivado.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/SupplierResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe un proveedor con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/sales/{saleId}/confirmation": {
+"patch": {
+"tags": [
+"Ventas"
+],
+"summary": "Confirmar la venta",
+"description": "Descuenta inventario mediante SALE_OUT, validando stock disponible (RN-03).",
+"operationId": "confirmSale",
+"parameters": [
+{
+"name": "saleId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Venta confirmada y stock descontado.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/SaleResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe una venta con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"409": {
+"description": "Otra operación tocó el mismo saldo a la vez; reintente.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "Stock insuficiente en alguna línea (RN-03), o la venta ya no está en borrador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/sales/{saleId}/cancellation": {
+"patch": {
+"tags": [
+"Ventas"
+],
+"summary": "Cancelar la venta",
+"description": "Si estaba confirmada, restituye el inventario con un movimiento RETURN_IN compensatorio. El movimiento original no se toca: se compensa, nunca se reescribe (RNF-12).",
+"operationId": "cancelSale",
+"parameters": [
+{
+"name": "saleId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Venta cancelada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/SaleResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe una venta con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La venta ya estaba cancelada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/purchase-orders/{purchaseOrderId}/items/{itemId}/receipt": {
+"patch": {
+"tags": [
+"Compras"
+],
+"summary": "Confirmar la recepción de una línea (HU-19)",
+"description": "Incrementa automáticamente el inventario y recalcula el costo promedio ponderado del producto (RF-21, RF-23). Admite recepción parcial.",
+"operationId": "receivePurchaseOrderItem",
+"parameters": [
+{
+"name": "purchaseOrderId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+},
+{
+"name": "itemId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ReceivePurchaseOrderItemRequest"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "Recepción registrada. La respuesta trae la orden completa con la cantidad recibida acumulada de cada línea.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/PurchaseOrderResponse"
+}
+}
+}
+},
+"400": {
+"description": "La cantidad recibida falta o no es un número positivo.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La orden o la línea no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La orden no está confirmada, o lo recibido supera lo pedido en esa línea.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/purchase-orders/{purchaseOrderId}/confirmation": {
+"patch": {
+"tags": [
+"Compras"
+],
+"summary": "Confirmar la orden con el proveedor",
+"description": "A partir de aquí puede empezar a recibirse mercancía.",
+"operationId": "confirmPurchaseOrder",
+"parameters": [
+{
+"name": "purchaseOrderId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Orden confirmada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/PurchaseOrderResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe una orden con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La orden no está en un estado desde el que pueda confirmarse.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/purchase-orders/{purchaseOrderId}/cancellation": {
+"patch": {
+"tags": [
+"Compras"
+],
+"summary": "Cancelar la orden",
+"description": "Solo antes de recibir cualquier mercancía.",
+"operationId": "cancelPurchaseOrder",
+"parameters": [
+{
+"name": "purchaseOrderId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Orden cancelada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/PurchaseOrderResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe una orden con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La orden ya recibió mercancía, o su estado no admite cancelación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/products/{productId}/deactivation": {
+"patch": {
+"tags": [
+"Productos"
+],
+"summary": "Dar de baja un producto",
+"description": "Baja lógica. El producto aparece en ventas, compras y movimientos históricos, y eliminarlo dejaría ese histórico sin poder explicarse. Dar de baja un principal no da de baja sus variantes: son productos autónomos.",
+"operationId": "deactivateProduct",
+"parameters": [
+{
+"name": "productId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Producto dado de baja.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ProductResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe un producto con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/products/{productId}/activation": {
+"patch": {
+"tags": [
+"Productos"
+],
+"summary": "Reactivar un producto",
+"operationId": "activateProduct",
+"parameters": [
+{
+"name": "productId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Producto reactivado.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ProductResponse"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/price-lists/{priceListId}/product-prices": {
+"get": {
+"tags": [
+"Listas de precios"
+],
+"summary": "Consultar el precio de un producto en la lista",
+"operationId": "getProductPrice",
+"parameters": [
+{
+"name": "priceListId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+},
+{
+"name": "productId",
+"in": "query",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Precio encontrado.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ProductPriceResponse"
+}
+}
+}
+},
+"400": {
+"description": "Falta el parámetro `productId` o no es un UUID.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "El producto no tiene precio fijado en esa lista.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+},
+"patch": {
+"tags": [
+"Listas de precios"
+],
+"summary": "Fijar el precio de un producto en la lista (HU-25)",
+"description": "Crea el precio si no existe, o lo reemplaza si ya estaba fijado para ese producto. Hay un precio por producto y lista: las variantes, al ser productos completos, llevan el suyo propio.",
+"operationId": "setProductPrice",
+"parameters": [
+{
+"name": "priceListId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/SetProductPriceRequest"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "Precio fijado.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ProductPriceResponse"
+}
+}
+}
+},
+"400": {
+"description": "Campos con formato inválido, o precio negativo.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La lista de precios o el producto no existen.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/price-lists/{priceListId}/deactivation": {
+"patch": {
+"tags": [
+"Listas de precios"
+],
+"summary": "Dar de baja una lista de precios",
+"description": "Baja lógica e idempotente: repetirla sobre una lista ya inactiva no es un error.",
+"operationId": "deactivatePriceList",
+"parameters": [
+{
+"name": "priceListId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Lista de precios dada de baja.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/PriceListResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una lista con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/price-lists/{priceListId}/activation": {
+"patch": {
+"tags": [
+"Listas de precios"
+],
+"summary": "Reactivar una lista de precios",
+"operationId": "activatePriceList",
+"parameters": [
+{
+"name": "priceListId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Lista de precios reactivada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/PriceListResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una lista con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/logistics-routes/{routeId}/deactivation": {
+"patch": {
+"tags": [
+"Rutas logísticas"
+],
+"summary": "Dar de baja una ruta logística",
+"description": "Baja lógica: las transferencias que ya la usaron la conservan. Idempotente.",
+"operationId": "deactivateLogisticsRoute",
+"parameters": [
+{
+"name": "routeId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Ruta dada de baja.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/LogisticsRouteResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe una ruta con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/logistics-routes/{routeId}/activation": {
+"patch": {
+"tags": [
+"Rutas logísticas"
+],
+"summary": "Reactivar una ruta logística",
+"operationId": "activateLogisticsRoute",
+"parameters": [
+{
+"name": "routeId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Ruta reactivada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/LogisticsRouteResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe una ruta con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/inventory-adjustments/{adjustmentId}/approval": {
+"patch": {
+"tags": [
+"Ajustes de inventario"
+],
+"summary": "Aprobar el ajuste",
+"description": "Confirma el ajuste y postea un movimiento `ADJUSTMENT_IN`/`ADJUSTMENT_OUT` por cada línea. A partir de aquí el documento es inmutable.",
+"operationId": "approveInventoryAdjustment",
+"parameters": [
+{
+"name": "adjustmentId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Ajuste aprobado y stock actualizado.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/InventoryAdjustmentResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe un ajuste con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "El ajuste ya fue aprobado.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/categories/{categoryId}/deactivation": {
+"patch": {
+"tags": [
+"Categorías"
+],
+"summary": "Dar de baja una categoría",
+"description": "Retira la categoría del catálogo. Es baja lógica: los productos históricos siguen apuntando a ella.\n\n**No se puede dar de baja si aún tiene productos activos**: quedarían clasificados en una categoría retirada, y el catálogo perdería coherencia sin que nada lo advirtiera. Reclasifique o dé de baja esos productos primero.",
+"operationId": "deactivateCategory",
+"parameters": [
+{
+"name": "categoryId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Categoría dada de baja.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/CategoryResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una categoría con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "La categoría aún tiene productos activos.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/categories/{categoryId}/activation": {
+"patch": {
+"tags": [
+"Categorías"
+],
+"summary": "Reactivar una categoría",
+"operationId": "activateCategory",
+"parameters": [
+{
+"name": "categoryId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Categoría reactivada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/CategoryResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una categoría con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/carriers/{carrierId}/deactivation": {
+"patch": {
+"tags": [
+"Transportistas"
+],
+"summary": "Dar de baja un transportista",
+"description": "Baja lógica: sigue apareciendo en las transferencias que ya movió. Idempotente.",
+"operationId": "deactivateCarrier",
+"parameters": [
+{
+"name": "carrierId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Transportista dado de baja.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/CarrierResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe un transportista con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/carriers/{carrierId}/activation": {
+"patch": {
+"tags": [
+"Transportistas"
+],
+"summary": "Reactivar un transportista",
+"operationId": "activateCarrier",
+"parameters": [
+{
+"name": "carrierId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Transportista reactivado.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/CarrierResponse"
+}
+}
+}
+},
+"403": {
+"description": "El rol no autoriza la operación.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "No existe un transportista con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/branches/{branchId}/inventory/{productId}/minimum-stock": {
+"patch": {
+"tags": [
+"Inventario"
+],
+"summary": "Configurar el stock mínimo",
+"description": "Define el umbral que dispara una alerta de reabastecimiento (HU-15, RF-15).",
+"operationId": "setMinimumStock",
+"parameters": [
+{
+"name": "branchId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+},
+{
+"name": "productId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/SetMinimumStockRequest"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "Stock mínimo actualizado.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/InventoryResponse"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/branches/{branchId}/deactivation": {
+"patch": {
+"tags": [
+"Sucursales"
+],
+"summary": "Dar de baja una sucursal",
+"description": "Retira la sucursal de la operación. Deja de admitir ventas, compras, movimientos y transferencias nuevas.\n\nEs una baja lógica, nunca un borrado. La sucursal aparece en ventas, compras y movimientos históricos, y eliminarla dejaría ese histórico sin poder explicarse (ENTITIES.md §30). Todo su pasado sigue siendo consultable.\n\nLa operación es idempotente: dar de baja una sucursal ya inactiva devuelve 200 y no produce ningún cambio.",
+"operationId": "deactivateBranch",
+"parameters": [
+{
+"name": "branchId",
+"in": "path",
+"description": "Identificador de la sucursal.",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Sucursal dada de baja.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/BranchResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una sucursal con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+}
+}
+},
+"/api/v1/branches/{branchId}/activation": {
+"patch": {
+"tags": [
+"Sucursales"
+],
+"summary": "Reactivar una sucursal",
+"description": "Devuelve a la operación una sucursal dada de baja.\n\nEs idempotente: reactivar una sucursal ya activa devuelve 200 sin cambios.",
+"operationId": "activateBranch",
+"parameters": [
+{
+"name": "branchId",
+"in": "path",
+"description": "Identificador de la sucursal.",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Sucursal reactivada.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/BranchResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una sucursal con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+}
 }
 },
 "/api/v1/users/{userId}": {
@@ -5099,11 +6202,21 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Transferencia encontrada, con sus líneas y las cantidades solicitada, aprobada, despachada y recibida.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/TransferResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una transferencia con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -5137,7 +6250,7 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Incidencias de la transferencia. Vacío si no hubo faltantes.",
 "content": {
 "application/json": {
 "schema": {
@@ -5145,6 +6258,16 @@
 "items": {
 "$ref": "#/components/schemas/TransferIssueResponse"
 }
+}
+}
+}
+},
+"404": {
+"description": "No existe una transferencia con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -5177,11 +6300,21 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Venta encontrada, con sus líneas y su total.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/SaleResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una venta con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -5214,11 +6347,69 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Orden encontrada, con sus líneas.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PurchaseOrderResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe una orden con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+}
+},
+"security": [
+{
+"bearerAuth": []
+}
+]
+}
+},
+"/api/v1/products/{productId}/family": {
+"get": {
+"tags": [
+"Productos"
+],
+"summary": "Consultar un producto con sus variantes",
+"description": "Si el producto consultado es a su vez una variante, la familia llega sin variantes: el catálogo es de un solo nivel.",
+"operationId": "getProductFamily",
+"parameters": [
+{
+"name": "productId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string",
+"format": "uuid"
+}
+}
+],
+"responses": {
+"200": {
+"description": "Producto y variantes.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ProductFamilyResponse"
+}
+}
+}
+},
+"404": {
+"description": "No existe un producto con ese identificador.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -5252,7 +6443,7 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Cumplimiento por ruta. Una ruta sin transferencias completadas aparece sin tránsito real.",
 "content": {
 "application/json": {
 "schema": {
@@ -5260,6 +6451,26 @@
 "items": {
 "$ref": "#/components/schemas/RouteComplianceResponse"
 }
+}
+}
+}
+},
+"403": {
+"description": "La organización no es la del usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"404": {
+"description": "La organización no existe.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -5293,6 +6504,7 @@
 {
 "name": "branchId",
 "in": "query",
+"description": "Limita el resumen a una sucursal. Si se omite, abarca toda la organización.",
 "required": false,
 "schema": {
 "type": "string",
@@ -5302,6 +6514,7 @@
 {
 "name": "from",
 "in": "query",
+"description": "Inicio del período, en UTC. Por defecto, hace 6 meses.",
 "required": false,
 "schema": {
 "type": "string",
@@ -5311,6 +6524,7 @@
 {
 "name": "to",
 "in": "query",
+"description": "Fin del período, en UTC. Por defecto, ahora.",
 "required": false,
 "schema": {
 "type": "string",
@@ -5320,7 +6534,7 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Un registro por mes con ventas en el período.",
 "content": {
 "application/json": {
 "schema": {
@@ -5328,6 +6542,26 @@
 "items": {
 "$ref": "#/components/schemas/SalesSummaryResponse"
 }
+}
+}
+}
+},
+"400": {
+"description": "`from` o `to` no son fechas ISO-8601 válidas.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "La organización no es la del usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -5361,6 +6595,7 @@
 {
 "name": "branchId",
 "in": "query",
+"description": "Limita la rotación a una sucursal. Si se omite, abarca toda la organización.",
 "required": false,
 "schema": {
 "type": "string",
@@ -5370,6 +6605,7 @@
 {
 "name": "from",
 "in": "query",
+"description": "Inicio del período, en UTC. Por defecto, hace 6 meses.",
 "required": false,
 "schema": {
 "type": "string",
@@ -5379,6 +6615,7 @@
 {
 "name": "to",
 "in": "query",
+"description": "Fin del período, en UTC. Por defecto, ahora.",
 "required": false,
 "schema": {
 "type": "string",
@@ -5388,7 +6625,7 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Productos ordenados de mayor a menor demanda. Cada variante figura por separado: es un producto propio.",
 "content": {
 "application/json": {
 "schema": {
@@ -5396,6 +6633,26 @@
 "items": {
 "$ref": "#/components/schemas/ProductRotationResponse"
 }
+}
+}
+}
+},
+"400": {
+"description": "`from` o `to` no son fechas ISO-8601 válidas.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "La organización no es la del usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -5429,7 +6686,7 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Un registro por sucursal de la organización.",
 "content": {
 "application/json": {
 "schema": {
@@ -5437,6 +6694,16 @@
 "items": {
 "$ref": "#/components/schemas/BranchComparisonResponse"
 }
+}
+}
+}
+},
+"403": {
+"description": "El rol no es administrador general, o la organización no es la del usuario (RN-12).",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -5620,11 +6887,41 @@
 ],
 "responses": {
 "200": {
-"description": "OK",
+"description": "Página de transferencias.",
 "content": {
 "application/json": {
 "schema": {
 "$ref": "#/components/schemas/PageResponse"
+}
+}
+}
+},
+"400": {
+"description": "Parámetros de paginación inválidos.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"403": {
+"description": "La sucursal no es operable por el usuario.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
+}
+}
+}
+},
+"422": {
+"description": "El valor de `status` no es un estado conocido.",
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/ApiError"
 }
 }
 }
@@ -6216,7 +7513,7 @@
 },
 "ProductResponse": {
 "type": "object",
-"description": "Producto del catálogo con sus presentaciones.",
+"description": "Producto del catálogo.",
 "properties": {
 "id": {
 "type": "string",
@@ -6228,6 +7525,11 @@
 "format": "uuid",
 "description": "Organización a la que pertenece."
 },
+"parentProductId": {
+"type": "string",
+"format": "uuid",
+"description": "Producto principal del que es variante. Nulo si es principal."
+},
 "categoryId": {
 "type": "string",
 "format": "uuid",
@@ -6236,7 +7538,7 @@
 "sku": {
 "type": "string",
 "description": "SKU.",
-"example": "BEB-AGUA-600"
+"example": "BEB-BRISA-BOT-1L"
 },
 "barcode": {
 "type": "string",
@@ -6250,16 +7552,13 @@
 "type": "string",
 "description": "Descripción larga."
 },
+"unit": {
+"$ref": "#/components/schemas/UnitOfMeasureResponse",
+"description": "Unidad en la que se cuenta su stock."
+},
 "active": {
 "type": "boolean",
 "description": "Indica si el producto admite operaciones nuevas."
-},
-"units": {
-"type": "array",
-"description": "Presentaciones del producto. Exactamente una tiene `baseUnit: true`: es la unidad en la que se contabiliza el stock.",
-"items": {
-"$ref": "#/components/schemas/ProductUnitResponse"
-}
 },
 "createdAt": {
 "type": "string",
@@ -6270,35 +7569,6 @@
 "type": "string",
 "format": "date-time",
 "description": "Fecha de la última modificación, en UTC."
-}
-}
-},
-"ProductUnitResponse": {
-"type": "object",
-"description": "Presentación en la que se maneja un producto.",
-"properties": {
-"id": {
-"type": "string",
-"format": "uuid",
-"description": "Identificador de la presentación."
-},
-"unit": {
-"$ref": "#/components/schemas/UnitOfMeasureResponse",
-"description": "Unidad de medida."
-},
-"conversionFactor": {
-"type": "number",
-"description": "Unidades base que equivale una de esta presentación.",
-"example": 24
-},
-"baseUnit": {
-"type": "boolean",
-"description": "Indica si es la unidad en la que se mide el stock.",
-"example": false
-},
-"active": {
-"type": "boolean",
-"description": "Indica si la presentación sigue en uso."
 }
 }
 },
@@ -6314,34 +7584,19 @@
 "code": {
 "type": "string",
 "description": "Código de negocio.",
-"example": "BOX"
+"example": "BOT"
 },
 "name": {
 "type": "string",
 "description": "Nombre.",
-"example": "Caja"
+"example": "Botella"
 },
 "symbol": {
 "type": "string",
 "description": "Símbolo para mostrar.",
-"example": "caja"
+"example": "bot"
 }
 }
-},
-"ChangeUnitFactorRequest": {
-"type": "object",
-"description": "Nuevo factor de conversión de una presentación.",
-"properties": {
-"conversionFactor": {
-"type": "number",
-"description": "Nuevo factor de conversión.",
-"example": 12,
-"minimum": 0.000001
-}
-},
-"required": [
-"conversionFactor"
-]
 },
 "UpdatePriceListRequest": {
 "type": "object",
@@ -6427,7 +7682,11 @@
 },
 "priority": {
 "type": "integer",
-"format": "int32"
+"format": "int32",
+"default": 0,
+"description": "Prioridad relativa entre rutas: 0 (baja) a 3 (extrema).",
+"maximum": 3,
+"minimum": 0
 }
 },
 "required": [
@@ -6714,67 +7973,6 @@
 }
 }
 },
-"SetMinimumStockRequest": {
-"type": "object",
-"description": "Stock mínimo de un producto en una sucursal.",
-"properties": {
-"minimumStock": {
-"type": "number",
-"description": "Stock mínimo, en unidad base del producto.",
-"example": 10,
-"minimum": 0
-}
-},
-"required": [
-"minimumStock"
-]
-},
-"InventoryResponse": {
-"type": "object",
-"description": "Saldo de un producto en una sucursal.",
-"properties": {
-"id": {
-"type": "string",
-"format": "uuid",
-"description": "Identificador del saldo."
-},
-"branchId": {
-"type": "string",
-"format": "uuid",
-"description": "Sucursal."
-},
-"productId": {
-"type": "string",
-"format": "uuid",
-"description": "Producto."
-},
-"quantity": {
-"type": "number",
-"description": "Cantidad disponible, en unidad base."
-},
-"minimumStock": {
-"type": "number",
-"description": "Stock mínimo configurado."
-},
-"averageCost": {
-"type": "number",
-"description": "Costo promedio ponderado (RF-23)."
-},
-"lowStock": {
-"type": "boolean",
-"description": "Si el saldo está en o por debajo del mínimo."
-},
-"outOfStock": {
-"type": "boolean",
-"description": "Si el saldo está en cero."
-},
-"updatedAt": {
-"type": "string",
-"format": "date-time",
-"description": "Fecha de la última actualización, en UTC."
-}
-}
-},
 "ChangePasswordRequest": {
 "type": "object",
 "description": "Cambio de contraseña del propio usuario.",
@@ -6836,10 +8034,6 @@
 "format": "uuid"
 },
 "productId": {
-"type": "string",
-"format": "uuid"
-},
-"productUnitId": {
 "type": "string",
 "format": "uuid"
 },
@@ -7028,272 +8222,49 @@
 }
 }
 },
-"ApproveTransferRequest": {
+"ProductVariantRequest": {
 "type": "object",
+"description": "Variante de un producto. Es un producto completo, no una presentación.",
 "properties": {
-"approvedQuantities": {
-"type": "array",
-"description": "Cantidad aprobada por línea. Si una línea no aparece, se aprueba tal como fue solicitada (HU-29).",
-"items": {
-"$ref": "#/components/schemas/ItemQuantityRequest"
-}
-}
-}
-},
-"SaleItemResponse": {
-"type": "object",
-"properties": {
-"id": {
+"sku": {
 "type": "string",
-"format": "uuid"
+"description": "SKU propio de la variante.",
+"example": "BEB-BRISA-BOL-24",
+"maxLength": 60,
+"minLength": 0
 },
-"productId": {
+"name": {
 "type": "string",
-"format": "uuid"
+"description": "Nombre comercial de la variante.",
+"example": "Agua Brisa Bolsa x 24",
+"maxLength": 180,
+"minLength": 0
 },
-"productUnitId": {
+"barcode": {
 "type": "string",
-"format": "uuid"
+"description": "Código de barras propio. Si se informa, debe ser único.",
+"maxLength": 100,
+"minLength": 0
 },
-"quantity": {
-"type": "number"
-},
-"unitPrice": {
-"type": "number"
-},
-"discountPercentage": {
-"type": "number"
-}
-}
-},
-"SaleResponse": {
-"type": "object",
-"properties": {
-"id": {
+"description": {
 "type": "string",
-"format": "uuid"
+"description": "Descripción larga."
 },
-"branchId": {
+"categoryId": {
 "type": "string",
-"format": "uuid"
+"format": "uuid",
+"description": "Categoría propia. Si se omite, hereda la del producto principal."
 },
-"createdBy": {
-"type": "string",
-"format": "uuid"
-},
-"priceListId": {
-"type": "string",
-"format": "uuid"
-},
-"status": {
-"type": "string"
-},
-"saleNumber": {
-"type": "string"
-},
-"saleDate": {
-"type": "string",
-"format": "date-time"
-},
-"notes": {
-"type": "string"
-},
-"items": {
-"type": "array",
-"items": {
-"$ref": "#/components/schemas/SaleItemResponse"
-}
-},
-"total": {
-"type": "number"
-},
-"createdAt": {
-"type": "string",
-"format": "date-time"
-}
-}
-},
-"ReceivePurchaseOrderItemRequest": {
-"type": "object",
-"properties": {
-"quantityReceived": {
-"type": "number",
-"description": "Cantidad recibida ahora, en la unidad de la línea.",
-"minimum": 0
-}
-},
-"required": [
-"quantityReceived"
-]
-},
-"PurchaseOrderItemResponse": {
-"type": "object",
-"properties": {
-"id": {
-"type": "string",
-"format": "uuid"
-},
-"productId": {
-"type": "string",
-"format": "uuid"
-},
-"productUnitId": {
-"type": "string",
-"format": "uuid"
-},
-"quantity": {
-"type": "number"
-},
-"receivedQuantity": {
-"type": "number"
-},
-"unitPrice": {
-"type": "number"
-},
-"discountPercentage": {
-"type": "number"
-}
-}
-},
-"PurchaseOrderResponse": {
-"type": "object",
-"properties": {
-"id": {
-"type": "string",
-"format": "uuid"
-},
-"branchId": {
-"type": "string",
-"format": "uuid"
-},
-"supplierId": {
-"type": "string",
-"format": "uuid"
-},
-"createdBy": {
-"type": "string",
-"format": "uuid"
-},
-"status": {
-"type": "string"
-},
-"orderNumber": {
-"type": "string"
-},
-"orderDate": {
-"type": "string",
-"format": "date"
-},
-"paymentTermDays": {
-"type": "integer",
-"format": "int32"
-},
-"notes": {
-"type": "string"
-},
-"items": {
-"type": "array",
-"items": {
-"$ref": "#/components/schemas/PurchaseOrderItemResponse"
-}
-},
-"createdAt": {
-"type": "string",
-"format": "date-time"
-},
-"updatedAt": {
-"type": "string",
-"format": "date-time"
-}
-}
-},
-"AddProductUnitRequest": {
-"type": "object",
-"description": "Añade una presentación adicional al producto (RF-09).",
-"properties": {
 "unitOfMeasureId": {
 "type": "string",
 "format": "uuid",
-"description": "Unidad de medida de la presentación."
-},
-"conversionFactor": {
-"type": "number",
-"description": "Cuántas unidades base equivale una de esta presentación. Si la base es la botella, una caja de 24 tiene factor 24.",
-"example": 24,
-"minimum": 0.000001
+"description": "Unidad en la que se cuenta esta variante. Si se omite, hereda la del producto principal."
 }
 },
 "required": [
-"conversionFactor",
-"unitOfMeasureId"
+"name",
+"sku"
 ]
-},
-"ChangeBaseUnitRequest": {
-"type": "object",
-"description": "Designa otra presentación como unidad base.",
-"properties": {
-"newBaseProductUnitId": {
-"type": "string",
-"format": "uuid",
-"description": "Presentación que pasa a ser la unidad base."
-},
-"previousBaseNewFactor": {
-"type": "number",
-"description": "Factor que pasa a tener la unidad base anterior. Se exige explícitamente porque su equivalencia con la nueva base no es deducible: si la base pasa de botella a caja de 24, la botella pasa a valer 1/24, un dato que solo conoce el negocio.",
-"example": 0.041667,
-"minimum": 0.000001
-}
-},
-"required": [
-"newBaseProductUnitId",
-"previousBaseNewFactor"
-]
-},
-"SetProductPriceRequest": {
-"type": "object",
-"properties": {
-"productId": {
-"type": "string",
-"format": "uuid"
-},
-"productUnitId": {
-"type": "string",
-"format": "uuid"
-},
-"price": {
-"type": "number",
-"minimum": 0
-}
-},
-"required": [
-"price",
-"productId",
-"productUnitId"
-]
-},
-"ProductPriceResponse": {
-"type": "object",
-"properties": {
-"id": {
-"type": "string",
-"format": "uuid"
-},
-"priceListId": {
-"type": "string",
-"format": "uuid"
-},
-"productId": {
-"type": "string",
-"format": "uuid"
-},
-"productUnitId": {
-"type": "string",
-"format": "uuid"
-},
-"price": {
-"type": "number"
-}
-}
 },
 "CreateUserRequest": {
 "type": "object",
@@ -7401,19 +8372,19 @@
 },
 "CreateProductRequest": {
 "type": "object",
-"description": "Datos para dar de alta un producto.",
+"description": "Datos para dar de alta un producto y, opcionalmente, sus variantes.",
 "properties": {
 "sku": {
 "type": "string",
 "description": "SKU único dentro de la organización. Se normaliza a mayúsculas y es inmutable una vez creado.",
-"example": "BEB-AGUA-600",
+"example": "BEB-BRISA-BOT-1L",
 "maxLength": 60,
 "minLength": 0
 },
 "name": {
 "type": "string",
 "description": "Nombre comercial.",
-"example": "Agua mineral 600 ml",
+"example": "Agua Brisa Botella 1 L",
 "maxLength": 180,
 "minLength": 0
 },
@@ -7433,17 +8404,41 @@
 "type": "string",
 "description": "Descripción larga."
 },
-"baseUnitId": {
+"unitOfMeasureId": {
 "type": "string",
 "format": "uuid",
-"description": "Unidad en la que se mide el stock de este producto. Obligatoria: sin ella el producto no podría recibir existencias, porque no habría forma de saber en qué se cuentan. Su factor de conversión es 1 por definición."
+"description": "Unidad en la que se cuenta el stock de este producto: botella, bolsa, kg… Obligatoria, porque sin ella no se sabría en qué se miden sus existencias. No lleva factor de conversión: el stock son unidades de esta unidad, sin traducir a ninguna otra."
+},
+"variants": {
+"type": "array",
+"description": "Variantes que se dan de alta junto al producto. Opcional: si se omite, el producto queda solo y se le pueden añadir variantes más tarde.\n\nUna variante NO es otra presentación del mismo stock: es un producto aparte, con su propio SKU, su propio inventario y su propio precio. «Agua Brisa Botella 1 L» y «Agua Brisa Bolsa x 24» se cuentan por separado y solo aparecen juntas en el catálogo.",
+"items": {
+"$ref": "#/components/schemas/ProductVariantRequest"
+}
 }
 },
 "required": [
-"baseUnitId",
 "name",
-"sku"
+"sku",
+"unitOfMeasureId"
 ]
+},
+"ProductFamilyResponse": {
+"type": "object",
+"description": "Un producto principal junto a sus variantes. Cada miembro se inventaría y se vende por separado; la familia solo los presenta juntos.",
+"properties": {
+"principal": {
+"$ref": "#/components/schemas/ProductResponse",
+"description": "Producto principal."
+},
+"variants": {
+"type": "array",
+"description": "Variantes. Vacío si el producto no tiene ninguna.",
+"items": {
+"$ref": "#/components/schemas/ProductResponse"
+}
+}
+}
 },
 "CreatePriceListRequest": {
 "type": "object",
@@ -7506,7 +8501,9 @@
 "type": "integer",
 "format": "int32",
 "default": 0,
-"description": "Prioridad relativa entre rutas; mayor es más prioritaria."
+"description": "Prioridad relativa entre rutas: 0 (baja) a 3 (extrema).",
+"maximum": 3,
+"minimum": 0
 }
 },
 "required": [
@@ -7680,75 +8677,6 @@
 }
 }
 },
-"InventoryAdjustmentItemResponse": {
-"type": "object",
-"properties": {
-"id": {
-"type": "string",
-"format": "uuid"
-},
-"productId": {
-"type": "string",
-"format": "uuid"
-},
-"quantityDelta": {
-"type": "number"
-},
-"reason": {
-"type": "string"
-}
-}
-},
-"InventoryAdjustmentResponse": {
-"type": "object",
-"properties": {
-"id": {
-"type": "string",
-"format": "uuid",
-"description": "Identificador del ajuste."
-},
-"branchId": {
-"type": "string",
-"format": "uuid",
-"description": "Sucursal."
-},
-"createdBy": {
-"type": "string",
-"format": "uuid",
-"description": "Quien creó el ajuste."
-},
-"approvedBy": {
-"type": "string",
-"format": "uuid",
-"description": "Quien lo aprobó; nulo mientras está en borrador."
-},
-"reason": {
-"type": "string",
-"description": "Motivo general."
-},
-"approved": {
-"type": "boolean",
-"description": "Si ya fue aprobado y sus movimientos posteados."
-},
-"items": {
-"type": "array",
-"description": "Líneas del ajuste.",
-"items": {
-"$ref": "#/components/schemas/InventoryAdjustmentItemResponse"
-}
-},
-"createdAt": {
-"type": "string",
-"format": "date-time",
-"description": "Fecha de creación, en UTC."
-},
-"approvedAt": {
-"type": "string",
-"format": "date-time",
-"description": "Fecha de aprobación, en UTC; nula en borrador."
-}
-}
-},
 "CreateTransferRequest": {
 "type": "object",
 "properties": {
@@ -7797,10 +8725,6 @@
 "type": "string",
 "format": "uuid"
 },
-"productUnitId": {
-"type": "string",
-"format": "uuid"
-},
 "quantity": {
 "type": "number",
 "minimum": 0
@@ -7808,7 +8732,6 @@
 },
 "required": [
 "productId",
-"productUnitId",
 "quantity"
 ]
 },
@@ -7855,10 +8778,6 @@
 "type": "string",
 "format": "uuid"
 },
-"productUnitId": {
-"type": "string",
-"format": "uuid"
-},
 "quantity": {
 "type": "number",
 "minimum": 0
@@ -7877,9 +8796,77 @@
 },
 "required": [
 "productId",
-"productUnitId",
 "quantity"
 ]
+},
+"SaleItemResponse": {
+"type": "object",
+"properties": {
+"id": {
+"type": "string",
+"format": "uuid"
+},
+"productId": {
+"type": "string",
+"format": "uuid"
+},
+"quantity": {
+"type": "number"
+},
+"unitPrice": {
+"type": "number"
+},
+"discountPercentage": {
+"type": "number"
+}
+}
+},
+"SaleResponse": {
+"type": "object",
+"properties": {
+"id": {
+"type": "string",
+"format": "uuid"
+},
+"branchId": {
+"type": "string",
+"format": "uuid"
+},
+"createdBy": {
+"type": "string",
+"format": "uuid"
+},
+"priceListId": {
+"type": "string",
+"format": "uuid"
+},
+"status": {
+"type": "string"
+},
+"saleNumber": {
+"type": "string"
+},
+"saleDate": {
+"type": "string",
+"format": "date-time"
+},
+"notes": {
+"type": "string"
+},
+"items": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/SaleItemResponse"
+}
+},
+"total": {
+"type": "number"
+},
+"createdAt": {
+"type": "string",
+"format": "date-time"
+}
+}
 },
 "CreatePurchaseOrderRequest": {
 "type": "object",
@@ -7933,18 +8920,13 @@
 "type": "string",
 "format": "uuid"
 },
-"productUnitId": {
-"type": "string",
-"format": "uuid",
-"description": "Presentación en la que se compra (puede no ser la unidad base)."
-},
 "quantity": {
 "type": "number",
 "minimum": 0
 },
 "unitPrice": {
 "type": "number",
-"description": "Precio pactado por unidad de la presentación indicada.",
+"description": "Precio pactado por unidad del producto, en la unidad en que se cuenta.",
 "minimum": 0
 },
 "discountPercentage": {
@@ -7956,10 +8938,86 @@
 },
 "required": [
 "productId",
-"productUnitId",
 "quantity",
 "unitPrice"
 ]
+},
+"PurchaseOrderItemResponse": {
+"type": "object",
+"properties": {
+"id": {
+"type": "string",
+"format": "uuid"
+},
+"productId": {
+"type": "string",
+"format": "uuid"
+},
+"quantity": {
+"type": "number"
+},
+"receivedQuantity": {
+"type": "number"
+},
+"unitPrice": {
+"type": "number"
+},
+"discountPercentage": {
+"type": "number"
+}
+}
+},
+"PurchaseOrderResponse": {
+"type": "object",
+"properties": {
+"id": {
+"type": "string",
+"format": "uuid"
+},
+"branchId": {
+"type": "string",
+"format": "uuid"
+},
+"supplierId": {
+"type": "string",
+"format": "uuid"
+},
+"createdBy": {
+"type": "string",
+"format": "uuid"
+},
+"status": {
+"type": "string"
+},
+"orderNumber": {
+"type": "string"
+},
+"orderDate": {
+"type": "string",
+"format": "date"
+},
+"paymentTermDays": {
+"type": "integer",
+"format": "int32"
+},
+"notes": {
+"type": "string"
+},
+"items": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/PurchaseOrderItemResponse"
+}
+},
+"createdAt": {
+"type": "string",
+"format": "date-time"
+},
+"updatedAt": {
+"type": "string",
+"format": "date-time"
+}
+}
 },
 "RegisterInventoryMovementRequest": {
 "type": "object",
@@ -7972,7 +9030,7 @@
 },
 "quantity": {
 "type": "number",
-"description": "Cantidad, en unidad base del producto.",
+"description": "Cantidad, en la unidad del producto.",
 "example": 5,
 "minimum": 0
 },
@@ -8113,6 +9171,75 @@
 "quantityDelta"
 ]
 },
+"InventoryAdjustmentItemResponse": {
+"type": "object",
+"properties": {
+"id": {
+"type": "string",
+"format": "uuid"
+},
+"productId": {
+"type": "string",
+"format": "uuid"
+},
+"quantityDelta": {
+"type": "number"
+},
+"reason": {
+"type": "string"
+}
+}
+},
+"InventoryAdjustmentResponse": {
+"type": "object",
+"properties": {
+"id": {
+"type": "string",
+"format": "uuid",
+"description": "Identificador del ajuste."
+},
+"branchId": {
+"type": "string",
+"format": "uuid",
+"description": "Sucursal."
+},
+"createdBy": {
+"type": "string",
+"format": "uuid",
+"description": "Quien creó el ajuste."
+},
+"approvedBy": {
+"type": "string",
+"format": "uuid",
+"description": "Quien lo aprobó; nulo mientras está en borrador."
+},
+"reason": {
+"type": "string",
+"description": "Motivo general."
+},
+"approved": {
+"type": "boolean",
+"description": "Si ya fue aprobado y sus movimientos posteados."
+},
+"items": {
+"type": "array",
+"description": "Líneas del ajuste.",
+"items": {
+"$ref": "#/components/schemas/InventoryAdjustmentItemResponse"
+}
+},
+"createdAt": {
+"type": "string",
+"format": "date-time",
+"description": "Fecha de creación, en UTC."
+},
+"approvedAt": {
+"type": "string",
+"format": "date-time",
+"description": "Fecha de aprobación, en UTC; nula en borrador."
+}
+}
+},
 "RefreshTokenRequest": {
 "type": "object",
 "description": "Token de renovación con el que obtener un token de acceso nuevo.",
@@ -8183,6 +9310,129 @@
 "email",
 "password"
 ]
+},
+"ApproveTransferRequest": {
+"type": "object",
+"properties": {
+"approvedQuantities": {
+"type": "array",
+"description": "Cantidad aprobada por línea. Si una línea no aparece, se aprueba tal como fue solicitada (HU-29).",
+"items": {
+"$ref": "#/components/schemas/ItemQuantityRequest"
+}
+}
+}
+},
+"ReceivePurchaseOrderItemRequest": {
+"type": "object",
+"properties": {
+"quantityReceived": {
+"type": "number",
+"description": "Cantidad recibida ahora, en la unidad del producto de la línea.",
+"minimum": 0
+}
+},
+"required": [
+"quantityReceived"
+]
+},
+"SetProductPriceRequest": {
+"type": "object",
+"properties": {
+"productId": {
+"type": "string",
+"format": "uuid"
+},
+"price": {
+"type": "number",
+"minimum": 0
+}
+},
+"required": [
+"price",
+"productId"
+]
+},
+"ProductPriceResponse": {
+"type": "object",
+"properties": {
+"id": {
+"type": "string",
+"format": "uuid"
+},
+"priceListId": {
+"type": "string",
+"format": "uuid"
+},
+"productId": {
+"type": "string",
+"format": "uuid"
+},
+"price": {
+"type": "number"
+}
+}
+},
+"SetMinimumStockRequest": {
+"type": "object",
+"description": "Stock mínimo de un producto en una sucursal.",
+"properties": {
+"minimumStock": {
+"type": "number",
+"description": "Stock mínimo, en la unidad del producto.",
+"example": 10,
+"minimum": 0
+}
+},
+"required": [
+"minimumStock"
+]
+},
+"InventoryResponse": {
+"type": "object",
+"description": "Saldo de un producto en una sucursal.",
+"properties": {
+"id": {
+"type": "string",
+"format": "uuid",
+"description": "Identificador del saldo."
+},
+"branchId": {
+"type": "string",
+"format": "uuid",
+"description": "Sucursal."
+},
+"productId": {
+"type": "string",
+"format": "uuid",
+"description": "Producto."
+},
+"quantity": {
+"type": "number",
+"description": "Cantidad disponible, en la unidad del producto."
+},
+"minimumStock": {
+"type": "number",
+"description": "Stock mínimo configurado."
+},
+"averageCost": {
+"type": "number",
+"description": "Costo promedio ponderado (RF-23)."
+},
+"lowStock": {
+"type": "boolean",
+"description": "Si el saldo está en o por debajo del mínimo."
+},
+"outOfStock": {
+"type": "boolean",
+"description": "Si el saldo está en cero."
+},
+"updatedAt": {
+"type": "string",
+"format": "date-time",
+"description": "Fecha de la última actualización, en UTC."
+}
+}
 },
 "PageResponse": {
 "type": "object",

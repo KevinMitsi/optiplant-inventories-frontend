@@ -5,7 +5,6 @@ export function toTransferItem(dto: TransferItemResponseDto): TransferItem {
   return {
     id: dto.id,
     productId: dto.productId,
-    productUnitId: dto.productUnitId,
     requestedQuantity: dto.requestedQuantity,
     approvedQuantity: dto.approvedQuantity,
     shippedQuantity: dto.shippedQuantity,

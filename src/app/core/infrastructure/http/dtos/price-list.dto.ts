@@ -33,12 +33,10 @@ export interface ProductPriceResponseDto {
   id: string;
   priceListId: string;
   productId: string;
-  productUnitId: string;
   price: number;
 }
 
 export interface SetProductPriceRequestDto {
   productId: string;
-  productUnitId: string;
   price: number;
 }

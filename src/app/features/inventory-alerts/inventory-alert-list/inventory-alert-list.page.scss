@@ -8,4 +8,20 @@
 
 .data-table {
   @include ds.responsive-table;
+
+  // Columna "Acciones" con dos pills ("Resolver" + "Descartar"): mismo ajuste
+  // que product-list/user-list para que no se solapen.
+  th:last-child,
+  td.actions {
+    min-width: 12rem;
+  }
+
+  .actions {
+    a,
+    button {
+      padding: ds.space(1) ds.space(3);
+      font-size: ds.font-size('xs');
+      white-space: nowrap;
+    }
+  }
 }

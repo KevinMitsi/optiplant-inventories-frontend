@@ -65,14 +65,10 @@ export class PriceListHttpRepository extends PriceListRepository {
       .pipe(map(toPriceList));
   }
 
-  override getProductPrice(
-    priceListId: string,
-    productId: string,
-    productUnitId: string,
-  ): Observable<ProductPrice> {
+  override getProductPrice(priceListId: string, productId: string): Observable<ProductPrice> {
     return this.http
       .get<ProductPriceResponseDto>(ApiEndpoints.priceLists.productPrices(priceListId), {
-        params: toHttpParams({ productId, productUnitId }),
+        params: toHttpParams({ productId }),
       })
       .pipe(map(toProductPrice));
   }

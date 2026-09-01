@@ -13,7 +13,7 @@ import { Page } from '../models/page.model';
  * lógica que `CategoryRepository`, ampliado con la consulta/fijación del
  * precio de un producto (`ProductPrice`) dentro de la lista — la API no
  * expone un listado de precios de una lista, solo consulta puntual por
- * `productId`+`productUnitId` (ver `getProductPrice`).
+ * `productId` (ver `getProductPrice`).
  * Implementación en `core/infrastructure/repositories/price-list-http.repository.ts`.
  */
 export abstract class PriceListRepository {
@@ -23,10 +23,6 @@ export abstract class PriceListRepository {
   abstract update(priceListId: string, input: UpdatePriceListInput): Observable<PriceList>;
   abstract activate(priceListId: string): Observable<PriceList>;
   abstract deactivate(priceListId: string): Observable<PriceList>;
-  abstract getProductPrice(
-    priceListId: string,
-    productId: string,
-    productUnitId: string,
-  ): Observable<ProductPrice>;
+  abstract getProductPrice(priceListId: string, productId: string): Observable<ProductPrice>;
   abstract setProductPrice(priceListId: string, input: SetProductPriceInput): Observable<ProductPrice>;
 }

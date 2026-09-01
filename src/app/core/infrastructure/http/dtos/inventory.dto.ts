@@ -32,6 +32,10 @@ export interface InventoryMovementResponseDto {
   quantity: number;
   unitCost?: number;
   reason: string;
+  purchaseOrderId?: string | null;
+  saleId?: string | null;
+  transferId?: string | null;
+  adjustmentId?: string | null;
   occurredAt: string;
   createdAt: string;
 }

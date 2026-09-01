@@ -8,6 +8,24 @@
 
 .data-table {
   @include ds.responsive-table;
+
+  // La columna "Acciones" trae dos pills ("Editar mínimo"/"Guardar"+"Cancelar"
+  // + "Movimientos") que con el tamaño de botón genérico de `row-actions` no
+  // caben en el ancho de columna por defecto: botones más chicos + columna
+  // más ancha para que respiren (mismo ajuste que product-list/user-list).
+  th:last-child,
+  td.actions {
+    min-width: 13rem;
+  }
+
+  .actions {
+    a,
+    button {
+      padding: ds.space(1) ds.space(3);
+      font-size: ds.font-size('xs');
+      white-space: nowrap;
+    }
+  }
 }
 
 .checkbox {

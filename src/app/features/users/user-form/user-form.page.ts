@@ -91,7 +91,18 @@ const ROLES_REQUIRING_BRANCH: readonly Role[] = [Role.BranchManager, Role.Invent
         }
 
         <label for="password">Contraseña inicial</label>
-        <input id="password" type="password" formControlName="password" />
+        <div class="password-field">
+          <input id="password" [type]="passwordVisible() ? 'text' : 'password'" formControlName="password" />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="passwordVisible.set(!passwordVisible())"
+            [attr.aria-label]="passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            [attr.aria-pressed]="passwordVisible()"
+          >
+            {{ passwordVisible() ? '🙈' : '👁️' }}
+          </button>
+        </div>
         <p class="hint">Mínimo 8 caracteres. El usuario podrá cambiarla luego desde su propia cuenta.</p>
         @if (createForm.controls.password.invalid && createForm.controls.password.touched) {
           <p class="field-error" role="alert">
@@ -258,6 +269,7 @@ export class UserFormPage {
   protected readonly branches = signal<{ id: string; name: string }[]>([]);
 
   protected readonly submitting = signal(false);
+  protected readonly passwordVisible = signal(false);
   protected readonly createErrorMessage = signal<string | null>(null);
   protected readonly loadErrorMessage = signal<string | null>(null);
 

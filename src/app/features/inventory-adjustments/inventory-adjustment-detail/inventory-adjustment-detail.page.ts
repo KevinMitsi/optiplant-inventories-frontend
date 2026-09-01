@@ -28,6 +28,9 @@ import { AuthStore } from '../../../core/state/auth-store.service';
     } @else if (errorMessage(); as message) {
       <p class="form-error" role="alert">{{ message }}</p>
     } @else if (adjustment(); as adjustment) {
+      <p class="hint">
+        Identificador: <strong>{{ adjustment.id }}</strong> — guárdalo para consultar este ajuste después.
+      </p>
       <p class="hint">{{ adjustment.reason }}</p>
       <p class="hint">
         Estado:

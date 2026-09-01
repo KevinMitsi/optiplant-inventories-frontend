@@ -7,7 +7,6 @@
 export interface TransferItem {
   id: string;
   productId: string;
-  productUnitId: string;
   requestedQuantity: number;
   approvedQuantity: number;
   shippedQuantity: number;
@@ -56,7 +55,6 @@ export interface Transfer {
 /** Línea al solicitar una transferencia (`TransferItemRequest`). */
 export interface CreateTransferItemInput {
   productId: string;
-  productUnitId: string;
   quantity: number;
 }
 

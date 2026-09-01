@@ -70,6 +70,35 @@ input {
   }
 }
 
+.password-field {
+  position: relative;
+  display: flex;
+
+  input {
+    flex: 1;
+    padding-right: ds.space(8);
+  }
+
+  .password-toggle {
+    position: absolute;
+    top: calc(50% + #{ds.space(1)} / 2);
+    right: ds.space(2);
+    transform: translateY(-50%);
+    margin-top: 0;
+    padding: ds.space(1);
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    font-size: ds.font-size('base');
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: transparent;
+    }
+  }
+}
+
 .field-error {
   color: ds.color('danger');
   font-size: ds.font-size('xs');

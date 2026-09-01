@@ -38,8 +38,8 @@ import { AuthStore } from '../../../core/state/auth-store.service';
         {{ order.orderNumber }} · {{ supplierLabel(order.supplierId) }} ·
         <span
           class="badge"
-          [class.badge--warning]="order.status === 'DRAFT'"
-          [class.badge--active]="order.status === 'CONFIRMED'"
+          [class.badge--warning]="order.status === 'DRAFT' || order.status === 'PARTIALLY_RECEIVED'"
+          [class.badge--active]="order.status === 'CONFIRMED' || order.status === 'RECEIVED'"
           [class.badge--danger]="order.status === 'CANCELLED'"
         >
           {{ order.status }}
@@ -54,7 +54,7 @@ import { AuthStore } from '../../../core/state/auth-store.service';
         <thead>
           <tr>
             <th>Producto</th>
-            <th>Presentación</th>
+            <th>Unidad</th>
             <th>Cantidad</th>
             <th>Recibido</th>
             <th>Precio unitario</th>
@@ -66,7 +66,7 @@ import { AuthStore } from '../../../core/state/auth-store.service';
           @for (item of order.items; track item.id) {
             <tr>
               <td data-label="Producto">{{ productLabel(item.productId) }}</td>
-              <td data-label="Presentación">{{ unitLabel(item.productId, item.productUnitId) }}</td>
+              <td data-label="Unidad">{{ unitLabel(item.productId) }}</td>
               <td data-label="Cantidad">{{ item.quantity }}</td>
               <td data-label="Recibido">
                 @if (receivingItemId() === item.id) {
@@ -157,9 +157,9 @@ export class PurchaseOrderDetailPage {
     return supplier ? `${supplier.code} — ${supplier.name}` : supplierId;
   }
 
-  protected unitLabel(productId: string, productUnitId: string): string {
-    const unit = this.products().get(productId)?.units.find((productUnit) => productUnit.id === productUnitId);
-    return unit ? `${unit.unit.symbol} — ${unit.unit.name}` : productUnitId;
+  protected unitLabel(productId: string): string {
+    const unit = this.products().get(productId)?.unit;
+    return unit ? `${unit.symbol} — ${unit.name}` : '—';
   }
 
   protected canCancel(order: PurchaseOrder): boolean {
@@ -167,7 +167,14 @@ export class PurchaseOrderDetailPage {
   }
 
   protected canReceive(order: PurchaseOrder, item: PurchaseOrderItem): boolean {
-    return order.status === 'CONFIRMED' && item.receivedQuantity < item.quantity;
+    // El backend mueve la orden a `PARTIALLY_RECEIVED` en cuanto se registra la
+    // primera recepción parcial (no se queda en `CONFIRMED`, a diferencia de lo
+    // que asumía originalmente esta pantalla — ver docs/fase-10-compras.md);
+    // sin este segundo estado, tras la primera recepción parcial el botón
+    // "Recibir" desaparecía para siempre y no se podía completar la orden.
+    return (
+      (order.status === 'CONFIRMED' || order.status === 'PARTIALLY_RECEIVED') && item.receivedQuantity < item.quantity
+    );
   }
 
   protected startReceiptEdit(item: PurchaseOrderItem): void {
