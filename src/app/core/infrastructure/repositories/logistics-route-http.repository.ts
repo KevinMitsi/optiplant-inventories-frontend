@@ -54,13 +54,13 @@ export class LogisticsRouteHttpRepository extends LogisticsRouteRepository {
 
   override activate(routeId: string): Observable<LogisticsRoute> {
     return this.http
-      .post<LogisticsRouteResponseDto>(ApiEndpoints.logisticsRoutes.activate(routeId), {})
+      .patch<LogisticsRouteResponseDto>(ApiEndpoints.logisticsRoutes.activate(routeId), {})
       .pipe(map(toLogisticsRoute));
   }
 
   override deactivate(routeId: string): Observable<LogisticsRoute> {
     return this.http
-      .post<LogisticsRouteResponseDto>(ApiEndpoints.logisticsRoutes.deactivate(routeId), {})
+      .patch<LogisticsRouteResponseDto>(ApiEndpoints.logisticsRoutes.deactivate(routeId), {})
       .pipe(map(toLogisticsRoute));
   }
 }

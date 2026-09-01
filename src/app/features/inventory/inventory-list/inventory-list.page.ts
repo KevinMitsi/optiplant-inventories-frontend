@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SearchInventoryUseCase } from '../../../core/application/inventory/search-inventory.usecase';
@@ -155,6 +155,7 @@ export class InventoryListPage {
   private readonly searchBranchesUseCase = inject(SearchBranchesUseCase);
   private readonly searchProductsUseCase = inject(SearchProductsUseCase);
   private readonly authStore = inject(AuthStore);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly isAdmin = computed(() => this.authStore.currentUser()?.branchId === null);
   protected readonly loading = signal(true);
@@ -251,9 +252,15 @@ export class InventoryListPage {
       .subscribe({
         next: (page) => {
           this.branches.set(page.content);
-          const firstBranch = page.content[0];
-          if (firstBranch) {
-            this.filters.controls.branchId.setValue(firstBranch.id);
+          // Al volver de "Registrar entrada/salida" el router trae de vuelta
+          // `?branchId=…`: si se ignora, siempre se reselecciona la primera
+          // sucursal alfabética y el saldo recién movido parece no cambiar
+          // (en realidad se movió, pero en otra sucursal que la mostrada).
+          const requestedBranchId = this.route.snapshot.queryParamMap.get('branchId');
+          const preselected = page.content.find((branch) => branch.id === requestedBranchId);
+          const targetBranch = preselected ?? page.content[0];
+          if (targetBranch) {
+            this.filters.controls.branchId.setValue(targetBranch.id);
           } else {
             this.loading.set(false);
           }

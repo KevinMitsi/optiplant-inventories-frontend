@@ -29,4 +29,47 @@
     font-weight: 700;
     color: ds.color('neutral-900');
   }
+
+  // Los `<select>` de producto/presentación llevan etiquetas largas
+  // ("BEB-AGUA-001 — Cristal 200ml"): con el flex:1 1 0 parejo al resto de
+  // `.filters` (botones incluidos) quedaban tan angostos que el texto salía
+  // truncado con "…" y no se podía leer el valor elegido.
+  .filters {
+    @include ds.respond('md') {
+      > select {
+        flex: 2 1 16rem;
+      }
+
+      > input[type='number'] {
+        flex: 1 1 8rem;
+      }
+
+      > button {
+        flex: 0 0 auto;
+      }
+    }
+  }
+}
+
+// Mensaje de confirmación tras "Consultar"/"Guardar precio": antes era un
+// `.hint` gris y diminuto, fácil de perder. Ahora es una alerta verde
+// visible, igual de prominente que `.form-error` pero en éxito.
+.price-alert {
+  margin: ds.space(3) 0 0;
+  padding: ds.space(3) ds.space(4);
+  border-radius: ds.radius('sm');
+  font-weight: 600;
+
+  &--success {
+    background: ds.color('success-light');
+    color: ds.color('success');
+  }
+}
+
+// Tabla de precios guardados en esta sesión de edición: la API no expone un
+// listado de precios de la lista (ver comentario del componente), así que
+// esta tabla es solo la bitácora local de lo que se fue guardando aquí.
+.saved-prices-table {
+  @include ds.responsive-table;
+  margin-top: ds.space(4);
 }

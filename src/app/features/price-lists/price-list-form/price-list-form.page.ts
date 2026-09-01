@@ -168,10 +168,31 @@ interface ProductPriceForm {
           }
 
           @if (priceMessage(); as message) {
-            <p class="hint">{{ message }}</p>
+            <p class="price-alert price-alert--success" role="status">{{ message }}</p>
           }
           @if (priceErrorMessage(); as message) {
             <p class="form-error" role="alert">{{ message }}</p>
+          }
+
+          @if (savedPrices().length > 0) {
+            <table class="data-table saved-prices-table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Presentación</th>
+                  <th>Precio</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of savedPrices(); track row.id) {
+                  <tr>
+                    <td data-label="Producto">{{ row.productLabel }}</td>
+                    <td data-label="Presentación">{{ row.unitLabel }}</td>
+                    <td data-label="Precio">{{ row.price }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           }
         </section>
       }
@@ -227,11 +248,20 @@ export class PriceListFormPage {
     return this.products().find((product) => product.id === selectedId)?.units ?? [];
   });
 
-  protected readonly lookupDisabled = computed(
-    () => !this.selectedProductId() || !this.priceForm.controls.productUnitId.value,
-  );
+  // `lookupDisabled` es un `computed`: solo se re-evalúa cuando cambia un
+  // signal que lee dentro. `priceForm.controls.productUnitId.value` es una
+  // propiedad plana de Reactive Forms, no un signal — leerla directo aquí
+  // nunca disparaba la recomputación al elegir presentación, así que el
+  // botón "Consultar" quedaba deshabilitado para siempre tras elegir
+  // producto. Se necesita un signal propio para la presentación también.
+  protected readonly lookupDisabled = computed(() => !this.selectedProductId() || !this.selectedProductUnitId());
+
+  protected readonly savedPrices = signal<
+    { id: string; productLabel: string; unitLabel: string; price: number }[]
+  >([]);
 
   private readonly selectedProductId = signal('');
+  private readonly selectedProductUnitId = signal('');
 
   constructor() {
     this.loadProducts();
@@ -244,8 +274,13 @@ export class PriceListFormPage {
     this.priceForm.controls.productId.valueChanges.pipe(takeUntilDestroyed()).subscribe((productId) => {
       this.selectedProductId.set(productId);
       this.priceForm.controls.productUnitId.setValue('', { emitEvent: false });
+      this.selectedProductUnitId.set('');
       this.priceMessage.set(null);
       this.priceErrorMessage.set(null);
+    });
+
+    this.priceForm.controls.productUnitId.valueChanges.pipe(takeUntilDestroyed()).subscribe((productUnitId) => {
+      this.selectedProductUnitId.set(productUnitId);
     });
   }
 
@@ -281,6 +316,11 @@ export class PriceListFormPage {
     }
 
     const { productId, productUnitId, price } = this.priceForm.getRawValue();
+    const product = this.products().find((item) => item.id === productId);
+    const unit = product?.units.find((item) => item.id === productUnitId);
+    const productLabel = product ? `${product.sku} — ${product.name}` : productId;
+    const unitLabel = unit ? `${unit.unit.name} (${unit.unit.symbol})` : productUnitId;
+
     this.priceActionBusy.set(true);
     this.priceMessage.set(null);
     this.priceErrorMessage.set(null);
@@ -288,7 +328,22 @@ export class PriceListFormPage {
       .execute(priceListId, { productId, productUnitId, price: price! })
       .pipe(finalize(() => this.priceActionBusy.set(false)))
       .subscribe({
-        next: (productPrice) => this.priceMessage.set(`Precio guardado: ${productPrice.price}.`),
+        next: (productPrice) => {
+          this.priceMessage.set(`Precio guardado: ${productLabel}, ${unitLabel} → ${productPrice.price}.`);
+          this.savedPrices.update((rows) => [
+            { id: crypto.randomUUID(), productLabel, unitLabel, price: productPrice.price },
+            ...rows,
+          ]);
+          // Limpio el formulario para poder cargar el siguiente precio sin
+          // arrastrar la selección anterior (HU-25: alta de varios precios
+          // seguidos para la misma lista). `emitEvent: false` porque si no,
+          // las suscripciones a `valueChanges` de arriba (que limpian los
+          // mensajes al cambiar de producto) borrarían el mensaje de éxito
+          // que se acaba de fijar, un instante después de mostrarlo.
+          this.priceForm.reset({ productId: '', productUnitId: '', price: null }, { emitEvent: false });
+          this.selectedProductId.set('');
+          this.selectedProductUnitId.set('');
+        },
         error: (error: ApiError) => this.priceErrorMessage.set(error.message ?? 'No se pudo guardar el precio.'),
       });
   }

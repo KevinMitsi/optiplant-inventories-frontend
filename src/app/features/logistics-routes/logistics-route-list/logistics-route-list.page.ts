@@ -6,7 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SearchLogisticsRoutesUseCase } from '../../../core/application/logistics-routes/search-logistics-routes.usecase';
 import { SetLogisticsRouteStatusUseCase } from '../../../core/application/logistics-routes/set-logistics-route-status.usecase';
 import { SearchBranchesUseCase } from '../../../core/application/branches/search-branches.usecase';
-import { LogisticsRoute } from '../../../core/domain/models/logistics-route.model';
+import { LogisticsRoute, logisticsRoutePriorityLabel } from '../../../core/domain/models/logistics-route.model';
 import { Page } from '../../../core/domain/models/page.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { Role } from '../../../core/domain/enums/role.enum';
@@ -103,7 +103,7 @@ const EMPTY_PAGE: Page<LogisticsRoute> = {
               <td data-label="Destino">{{ branchName(route.destinationBranchId) }}</td>
               <td data-label="Duración estimada">{{ route.estimatedDurationMinutes }} min</td>
               <td data-label="Costo estimado">{{ route.estimatedCost }}</td>
-              <td data-label="Prioridad">{{ route.priority }}</td>
+              <td data-label="Prioridad">{{ priorityLabel(route.priority) }}</td>
               <td data-label="Estado">
                 <span class="badge" [class.badge--active]="route.active">
                   {{ route.active ? 'Activa' : 'Inactiva' }}
@@ -171,6 +171,10 @@ export class LogisticsRouteListPage {
 
   protected branchName(branchId: string): string {
     return this.branches().find((branch) => branch.id === branchId)?.name ?? branchId;
+  }
+
+  protected priorityLabel(priority: number): string {
+    return logisticsRoutePriorityLabel(priority);
   }
 
   protected goToPage(nextPage: number): void {

@@ -26,7 +26,7 @@ export class InventoryAdjustmentHttpRepository extends InventoryAdjustmentReposi
 
   override approve(adjustmentId: string): Observable<InventoryAdjustment> {
     return this.http
-      .post<InventoryAdjustmentResponseDto>(ApiEndpoints.inventoryAdjustments.approve(adjustmentId), {})
+      .patch<InventoryAdjustmentResponseDto>(ApiEndpoints.inventoryAdjustments.approve(adjustmentId), {})
       .pipe(map(toInventoryAdjustment));
   }
 }

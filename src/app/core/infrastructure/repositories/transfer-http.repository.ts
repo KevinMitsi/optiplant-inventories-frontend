@@ -56,7 +56,7 @@ export class TransferHttpRepository extends TransferRepository {
   override approve(transferId: string, input: ApproveTransferInput): Observable<Transfer> {
     const body: ApproveTransferRequestDto = input;
     return this.http
-      .post<TransferResponseDto>(ApiEndpoints.transfers.approve(transferId), body)
+      .patch<TransferResponseDto>(ApiEndpoints.transfers.approve(transferId), body)
       .pipe(map(toTransfer));
   }
 

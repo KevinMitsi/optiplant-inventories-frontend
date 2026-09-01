@@ -55,11 +55,11 @@ export class ProductHttpRepository extends ProductRepository {
   }
 
   override activate(productId: string): Observable<Product> {
-    return this.http.post<ProductResponseDto>(ApiEndpoints.products.activate(productId), {}).pipe(map(toProduct));
+    return this.http.patch<ProductResponseDto>(ApiEndpoints.products.activate(productId), {}).pipe(map(toProduct));
   }
 
   override deactivate(productId: string): Observable<Product> {
-    return this.http.post<ProductResponseDto>(ApiEndpoints.products.deactivate(productId), {}).pipe(map(toProduct));
+    return this.http.patch<ProductResponseDto>(ApiEndpoints.products.deactivate(productId), {}).pipe(map(toProduct));
   }
 
   override addUnit(productId: string, input: AddProductUnitInput): Observable<Product> {
@@ -80,7 +80,7 @@ export class ProductHttpRepository extends ProductRepository {
 
   override activateUnit(productId: string, productUnitId: string): Observable<Product> {
     return this.http
-      .post<ProductResponseDto>(ApiEndpoints.products.activateUnit(productId, productUnitId), {})
+      .patch<ProductResponseDto>(ApiEndpoints.products.activateUnit(productId, productUnitId), {})
       .pipe(map(toProduct));
   }
 

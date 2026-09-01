@@ -1,3 +1,8 @@
 @use '../../../../styles/abstracts' as ds;
 
+// Componente standalone con encapsulación propia: si no incluye también
+// `ds.button` aquí, las clases `.button`/`.button--danger`/`.button--ghost`
+// del template no tienen ninguna regla en este árbol de estilos y los
+// botones salen sin pintar (no se parecen al resto de la app).
+@include ds.button;
 @include ds.confirm-dialog;
