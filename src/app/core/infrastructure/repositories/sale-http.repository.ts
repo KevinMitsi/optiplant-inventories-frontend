@@ -33,10 +33,10 @@ export class SaleHttpRepository extends SaleRepository {
   }
 
   override confirm(saleId: string): Observable<Sale> {
-    return this.http.post<SaleResponseDto>(ApiEndpoints.sales.confirm(saleId), {}).pipe(map(toSale));
+    return this.http.patch<SaleResponseDto>(ApiEndpoints.sales.confirm(saleId), {}).pipe(map(toSale));
   }
 
   override cancel(saleId: string): Observable<Sale> {
-    return this.http.post<SaleResponseDto>(ApiEndpoints.sales.cancel(saleId), {}).pipe(map(toSale));
+    return this.http.patch<SaleResponseDto>(ApiEndpoints.sales.cancel(saleId), {}).pipe(map(toSale));
   }
 }

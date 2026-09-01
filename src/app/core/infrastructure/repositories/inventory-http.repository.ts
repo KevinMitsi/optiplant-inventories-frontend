@@ -48,7 +48,7 @@ export class InventoryHttpRepository extends InventoryRepository {
   ): Observable<Inventory> {
     const body: SetMinimumStockRequestDto = input;
     return this.http
-      .put<InventoryResponseDto>(ApiEndpoints.inventory.minimumStock(branchId, productId), body)
+      .patch<InventoryResponseDto>(ApiEndpoints.inventory.minimumStock(branchId, productId), body)
       .pipe(map(toInventory));
   }
 

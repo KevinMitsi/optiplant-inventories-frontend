@@ -71,14 +71,16 @@
   .actions {
     min-height: 2.75rem;
     flex-wrap: wrap;
-    gap: ds.space(2);
+    // Hasta 3 botones por fila (Cambiar factor / Fijar como base / Dar de
+    // baja): con el gap(2) heredado quedaban casi pegados unos a otros.
+    gap: ds.space(3);
 
     > * + * {
       margin-left: 0;
     }
 
     button {
-      padding: ds.space(1) ds.space(3);
+      padding: ds.space(2) ds.space(4);
       font-size: ds.font-size('xs');
       box-shadow: none;
 
