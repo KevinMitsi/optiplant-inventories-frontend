@@ -45,6 +45,8 @@ import { TransferRepository } from './core/domain/repositories/transfer.reposito
 import { TransferHttpRepository } from './core/infrastructure/repositories/transfer-http.repository';
 import { DashboardRepository } from './core/domain/repositories/dashboard.repository';
 import { DashboardHttpRepository } from './core/infrastructure/repositories/dashboard-http.repository';
+import { ActivityLogRepository } from './core/domain/repositories/activity-log.repository';
+import { ActivityLogHttpRepository } from './core/infrastructure/repositories/activity-log-http.repository';
 import { authInterceptor } from './core/infrastructure/http/auth.interceptor';
 import { errorNormalizerInterceptor } from './core/infrastructure/http/error-normalizer.interceptor';
 import { refreshInterceptor } from './core/infrastructure/http/refresh.interceptor';
@@ -98,6 +100,7 @@ export const appConfig: ApplicationConfig = {
     { provide: LogisticsRouteRepository, useClass: LogisticsRouteHttpRepository },
     { provide: TransferRepository, useClass: TransferHttpRepository },
     { provide: DashboardRepository, useClass: DashboardHttpRepository },
+    { provide: ActivityLogRepository, useClass: ActivityLogHttpRepository },
     // Resuelve si hay sesión válida antes de que el router active ningún guard.
     provideAppInitializer(() => firstValueFrom(inject(BootstrapSessionUseCase).execute())),
   ],

@@ -7,6 +7,7 @@ import { fullName } from '../../../core/domain/models/user.model';
 import { Role } from '../../../core/domain/enums/role.enum';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { LogoutUseCase } from '../../../core/application/auth/logout.usecase';
+import { InventoryAlertToastComponent } from '../inventory-alert-toast/inventory-alert-toast.component';
 
 type NavIcon =
   | 'dashboard'
@@ -24,7 +25,8 @@ type NavIcon =
   | 'routes'
   | 'suppliers'
   | 'units'
-  | 'users';
+  | 'users'
+  | 'audit';
 
 interface NavItem {
   label: string;
@@ -113,6 +115,7 @@ const NAV_STRUCTURE: readonly NavEntry[] = [
         { label: 'Usuarios', path: '/users', icon: 'users', roles: [Role.Admin, Role.BranchManager] },
         { label: 'Sucursales', path: '/branches', icon: 'branches' },
         { label: 'Proveedores', path: '/suppliers', icon: 'suppliers' },
+        { label: 'Auditoría', path: '/activity-logs', icon: 'audit', roles: [Role.Admin] },
       ],
     },
   },
@@ -128,7 +131,7 @@ const NAV_STRUCTURE: readonly NavEntry[] = [
  */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet, InventoryAlertToastComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',

@@ -80,6 +80,11 @@
         <circle cx="17" cy="8.5" r="2.3" />
         <path d="M15.5 14.2c2.5.5 4 2.7 4 5.8" />
       }
+      @case ('audit') {
+        <path d="M6.5 3.5h8L18.5 8v12.5h-12V3.5Z" />
+        <path d="M14.5 3.5V8h4" />
+        <path d="M9 13.5l2 2 3.5-4" />
+      }
     }
   </svg>
 </ng-template>
@@ -188,4 +193,6 @@
       <router-outlet />
     </main>
   </div>
+
+  <app-inventory-alert-toast />
 </div>
