@@ -12,6 +12,8 @@ import { Supplier } from '../../../core/domain/models/supplier.model';
 import { Page } from '../../../core/domain/models/page.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { PaginatorComponent } from '../../../shared/ui/table/paginator.component';
+import { purchaseOrderStatusLabel } from '../../../shared/utils/status-labels';
+import { formatDate } from '../../../shared/utils/formatters';
 
 const EMPTY_PAGE: Page<PurchaseOrder> = {
   content: [],
@@ -97,7 +99,7 @@ const EMPTY_PAGE: Page<PurchaseOrder> = {
               <tr>
                 <td data-label="Número">{{ order.orderNumber }}</td>
                 <td data-label="Proveedor">{{ supplierLabel(order.supplierId) }}</td>
-                <td data-label="Fecha">{{ order.orderDate }}</td>
+                <td data-label="Fecha">{{ formatDate(order.orderDate) }}</td>
                 <td data-label="Estado">
                   <span
                     class="badge"
@@ -105,7 +107,7 @@ const EMPTY_PAGE: Page<PurchaseOrder> = {
                     [class.badge--active]="order.status === 'CONFIRMED'"
                     [class.badge--danger]="order.status === 'CANCELLED'"
                   >
-                    {{ order.status }}
+                    {{ statusLabel(order.status) }}
                   </span>
                 </td>
                 <td data-label="Acciones" class="actions">
@@ -140,6 +142,8 @@ export class PurchaseOrderListPage {
   protected readonly result = signal<Page<PurchaseOrder>>(EMPTY_PAGE);
   protected readonly branches = signal<Branch[]>([]);
   protected readonly suppliers = signal<Supplier[]>([]);
+  protected readonly statusLabel = purchaseOrderStatusLabel;
+  protected readonly formatDate = formatDate;
 
   protected readonly filters = new FormGroup({
     branchId: new FormControl('', { nonNullable: true }),

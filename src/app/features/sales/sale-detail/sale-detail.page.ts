@@ -9,6 +9,8 @@ import { Sale } from '../../../core/domain/models/sale.model';
 import { Product } from '../../../core/domain/models/product.model';
 import { ApiError } from '../../../core/domain/models/api-error.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
+import { saleStatusLabel } from '../../../shared/utils/status-labels';
+import { formatDate, formatMoney } from '../../../shared/utils/formatters';
 
 /**
  * Comprobante de una venta (HU-26) con sus acciones de ciclo de vida:
@@ -37,9 +39,9 @@ import { AuthStore } from '../../../core/state/auth-store.service';
           [class.badge--active]="sale.status === 'CONFIRMED'"
           [class.badge--danger]="sale.status === 'CANCELLED'"
         >
-          {{ sale.status }}
+          {{ statusLabel(sale.status) }}
         </span>
-        · Fecha: {{ sale.saleDate }} · Total: {{ sale.total }}
+        · Fecha: {{ formatDate(sale.saleDate) }} · Total: {{ formatMoney(sale.total) }}
       </p>
       @if (sale.notes) {
         <p class="hint">{{ sale.notes }}</p>
@@ -61,7 +63,7 @@ import { AuthStore } from '../../../core/state/auth-store.service';
               <td data-label="Producto">{{ productLabel(item.productId) }}</td>
               <td data-label="Unidad">{{ unitLabel(item.productId) }}</td>
               <td data-label="Cantidad">{{ item.quantity }}</td>
-              <td data-label="Precio unitario">{{ item.unitPrice }}</td>
+              <td data-label="Precio unitario">{{ formatMoney(item.unitPrice) }}</td>
               <td data-label="Descuento %">{{ item.discountPercentage }}</td>
             </tr>
           }
@@ -103,6 +105,9 @@ export class SaleDetailPage {
   protected readonly products = signal<Map<string, Product>>(new Map());
   protected readonly acting = signal(false);
   protected readonly actionError = signal<string | null>(null);
+  protected readonly statusLabel = saleStatusLabel;
+  protected readonly formatDate = formatDate;
+  protected readonly formatMoney = formatMoney;
 
   constructor() {
     this.loadProducts();

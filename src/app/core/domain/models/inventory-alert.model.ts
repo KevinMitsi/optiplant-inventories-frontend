@@ -7,6 +7,8 @@
 export interface InventoryAlert {
   id: string;
   inventoryId: string;
+  branchId: string;
+  productId: string;
   alertType: string;
   status: string;
   triggeredQuantity: number;

@@ -8,6 +8,7 @@ import { InventoryAdjustment } from '../../../core/domain/models/inventory-adjus
 import { Product } from '../../../core/domain/models/product.model';
 import { ApiError } from '../../../core/domain/models/api-error.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
+import { formatDateTime, formatQuantity } from '../../../shared/utils/formatters';
 
 /**
  * Consulta de un ajuste por identificador y su aprobación (HU-15/RN-14). No
@@ -37,9 +38,9 @@ import { AuthStore } from '../../../core/state/auth-store.service';
         <span class="badge" [class.badge--active]="adjustment.approved" [class.badge--warning]="!adjustment.approved">
           {{ adjustment.approved ? 'Aprobado' : 'Borrador' }}
         </span>
-        · Creado: {{ adjustment.createdAt }}
+        · Creado: {{ formatDateTime(adjustment.createdAt) }}
         @if (adjustment.approved) {
-          · Aprobado: {{ adjustment.approvedAt }}
+          · Aprobado: {{ formatDateTime(adjustment.approvedAt) }}
         }
       </p>
 
@@ -55,7 +56,7 @@ import { AuthStore } from '../../../core/state/auth-store.service';
           @for (item of adjustment.items; track item.id) {
             <tr>
               <td data-label="Producto">{{ productLabel(item.productId) }}</td>
-              <td data-label="Cantidad">{{ item.quantityDelta }}</td>
+              <td data-label="Cantidad">{{ formatQuantity(item.quantityDelta) }}</td>
               <td data-label="Motivo de línea">{{ item.reason || '—' }}</td>
             </tr>
           }
@@ -91,6 +92,8 @@ export class InventoryAdjustmentDetailPage {
   protected readonly products = signal<Map<string, Product>>(new Map());
   protected readonly approving = signal(false);
   protected readonly approveError = signal<string | null>(null);
+  protected readonly formatDateTime = formatDateTime;
+  protected readonly formatQuantity = formatQuantity;
 
   constructor() {
     this.loadProducts();

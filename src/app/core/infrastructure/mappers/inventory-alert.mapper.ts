@@ -5,6 +5,8 @@ export function toInventoryAlert(dto: InventoryAlertResponseDto): InventoryAlert
   return {
     id: dto.id,
     inventoryId: dto.inventoryId,
+    branchId: dto.branchId,
+    productId: dto.productId,
     alertType: dto.alertType,
     status: dto.status,
     triggeredQuantity: dto.triggeredQuantity,

@@ -6,11 +6,15 @@ import { SearchInventoryAlertsUseCase } from '../../../core/application/inventor
 import { DismissInventoryAlertUseCase } from '../../../core/application/inventory-alerts/dismiss-inventory-alert.usecase';
 import { ResolveInventoryAlertUseCase } from '../../../core/application/inventory-alerts/resolve-inventory-alert.usecase';
 import { SearchBranchesUseCase } from '../../../core/application/branches/search-branches.usecase';
+import { SearchProductsUseCase } from '../../../core/application/products/search-products.usecase';
 import { InventoryAlert } from '../../../core/domain/models/inventory-alert.model';
 import { Branch } from '../../../core/domain/models/branch.model';
+import { Product } from '../../../core/domain/models/product.model';
 import { Page } from '../../../core/domain/models/page.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { PaginatorComponent } from '../../../shared/ui/table/paginator.component';
+import { inventoryAlertStatusLabel, inventoryAlertTypeLabel } from '../../../shared/utils/status-labels';
+import { formatDateTime, formatQuantity } from '../../../shared/utils/formatters';
 
 const EMPTY_PAGE: Page<InventoryAlert> = {
   content: [],
@@ -63,6 +67,10 @@ const EMPTY_PAGE: Page<InventoryAlert> = {
     <table class="data-table">
       <thead>
         <tr>
+          <th>Producto</th>
+          @if (isAdmin()) {
+            <th>Sucursal</th>
+          }
           <th>Tipo</th>
           <th>Mensaje</th>
           <th>Cantidad</th>
@@ -75,29 +83,33 @@ const EMPTY_PAGE: Page<InventoryAlert> = {
       <tbody>
         @if (loading()) {
           <tr>
-            <td colspan="7">Cargando…</td>
+            <td [attr.colspan]="alertColspan()">Cargando…</td>
           </tr>
         } @else if (result().content.length === 0) {
           <tr>
-            <td colspan="7">No hay alertas que coincidan con el filtro.</td>
+            <td [attr.colspan]="alertColspan()">No hay alertas que coincidan con el filtro.</td>
           </tr>
         } @else {
           @for (alert of result().content; track alert.id) {
             <tr>
-              <td data-label="Tipo">{{ alert.alertType }}</td>
+              <td data-label="Producto">{{ productLabel(alert.productId) }}</td>
+              @if (isAdmin()) {
+                <td data-label="Sucursal">{{ branchLabel(alert.branchId) }}</td>
+              }
+              <td data-label="Tipo">{{ alertTypeLabel(alert.alertType) }}</td>
               <td data-label="Mensaje">{{ alert.message }}</td>
-              <td data-label="Cantidad">{{ alert.triggeredQuantity }}</td>
-              <td data-label="Mínimo">{{ alert.minimumStock }}</td>
+              <td data-label="Cantidad">{{ formatQuantity(alert.triggeredQuantity) }}</td>
+              <td data-label="Mínimo">{{ formatQuantity(alert.minimumStock) }}</td>
               <td data-label="Estado">
                 <span
                   class="badge"
                   [class.badge--danger]="alert.status === 'OPEN'"
                   [class.badge--active]="alert.status !== 'OPEN'"
                 >
-                  {{ alert.status }}
+                  {{ alertStatusLabel(alert.status) }}
                 </span>
               </td>
-              <td data-label="Creada">{{ alert.createdAt }}</td>
+              <td data-label="Creada">{{ formatDateTime(alert.createdAt) }}</td>
               <td data-label="Acciones" class="actions">
                 @if (alert.status === 'OPEN') {
                   <button type="button" (click)="resolve(alert.id)" [disabled]="actioningId() === alert.id">
@@ -129,6 +141,7 @@ export class InventoryAlertListPage {
   private readonly dismissInventoryAlertUseCase = inject(DismissInventoryAlertUseCase);
   private readonly resolveInventoryAlertUseCase = inject(ResolveInventoryAlertUseCase);
   private readonly searchBranchesUseCase = inject(SearchBranchesUseCase);
+  private readonly searchProductsUseCase = inject(SearchProductsUseCase);
   private readonly authStore = inject(AuthStore);
 
   protected readonly isAdmin = computed(() => this.authStore.currentUser()?.branchId === null);
@@ -136,7 +149,13 @@ export class InventoryAlertListPage {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly result = signal<Page<InventoryAlert>>(EMPTY_PAGE);
   protected readonly branches = signal<Branch[]>([]);
+  protected readonly products = signal<Map<string, Product>>(new Map());
   protected readonly actioningId = signal<string | null>(null);
+  protected readonly alertStatusLabel = inventoryAlertStatusLabel;
+  protected readonly alertTypeLabel = inventoryAlertTypeLabel;
+  protected readonly formatDateTime = formatDateTime;
+  protected readonly formatQuantity = formatQuantity;
+  protected readonly alertColspan = computed(() => (this.isAdmin() ? 8 : 7));
 
   protected readonly filters = new FormGroup({
     branchId: new FormControl('', { nonNullable: true }),
@@ -146,6 +165,8 @@ export class InventoryAlertListPage {
   private page = 0;
 
   constructor() {
+    this.loadProducts();
+
     if (this.isAdmin()) {
       this.loadBranches();
     }
@@ -156,6 +177,16 @@ export class InventoryAlertListPage {
       this.page = 0;
       this.search();
     });
+  }
+
+  protected productLabel(productId: string): string {
+    const product = this.products().get(productId);
+    return product ? `${product.sku} — ${product.name}` : productId;
+  }
+
+  protected branchLabel(branchId: string): string {
+    const branch = this.branches().find((candidate) => candidate.id === branchId);
+    return branch ? branch.name : branchId;
   }
 
   protected goToPage(nextPage: number): void {
@@ -183,6 +214,17 @@ export class InventoryAlertListPage {
         next: () => this.search(),
         error: () => this.errorMessage.set('No se pudo descartar la alerta.'),
       });
+  }
+
+  private loadProducts(): void {
+    const organizationId = this.authStore.currentUser()?.organizationId;
+    if (!organizationId) {
+      return;
+    }
+
+    this.searchProductsUseCase.execute(organizationId, { size: 100, sortBy: 'name', sortDirection: 'ASC' }).subscribe({
+      next: (page) => this.products.set(new Map(page.content.map((product) => [product.id, product]))),
+    });
   }
 
   private loadBranches(): void {

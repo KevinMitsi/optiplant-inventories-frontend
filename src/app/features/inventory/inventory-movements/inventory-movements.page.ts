@@ -9,6 +9,8 @@ import { Product } from '../../../core/domain/models/product.model';
 import { Page } from '../../../core/domain/models/page.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { PaginatorComponent } from '../../../shared/ui/table/paginator.component';
+import { inventoryMovementTypeLabel } from '../../../shared/utils/status-labels';
+import { formatDateTime, formatMoney, formatQuantity } from '../../../shared/utils/formatters';
 
 const EMPTY_PAGE: Page<InventoryMovement> = {
   content: [],
@@ -48,7 +50,8 @@ const EMPTY_PAGE: Page<InventoryMovement> = {
       }
       @if (inventory(); as currentInventory) {
         <p class="hint">
-          Saldo actual: {{ currentInventory.quantity }} · Mínimo: {{ currentInventory.minimumStock }}
+          Saldo actual: {{ formatQuantity(currentInventory.quantity) }} · Mínimo:
+          {{ formatQuantity(currentInventory.minimumStock) }}
         </p>
       }
 
@@ -79,15 +82,15 @@ const EMPTY_PAGE: Page<InventoryMovement> = {
           } @else {
             @for (movement of result().content; track movement.id) {
               <tr>
-                <td data-label="Fecha">{{ movement.occurredAt }}</td>
-                <td data-label="Tipo">{{ movement.movementType }}</td>
+                <td data-label="Fecha">{{ formatDateTime(movement.occurredAt) }}</td>
+                <td data-label="Tipo">{{ movementTypeLabel(movement.movementType) }}</td>
                 <td data-label="Sentido">
                   <span class="badge" [class.badge--active]="movement.direction === 'IN'" [class.badge--danger]="movement.direction === 'OUT'">
                     {{ movement.direction === 'IN' ? 'Entrada' : 'Salida' }}
                   </span>
                 </td>
-                <td data-label="Cantidad">{{ movement.quantity }}</td>
-                <td data-label="Costo unitario">{{ movement.unitCost ?? '—' }}</td>
+                <td data-label="Cantidad">{{ formatQuantity(movement.quantity) }}</td>
+                <td data-label="Costo unitario">{{ formatMoney(movement.unitCost) }}</td>
                 <td data-label="Motivo">{{ movement.reason || '—' }}</td>
               </tr>
             }
@@ -120,6 +123,10 @@ export class InventoryMovementsPage {
   protected readonly inventory = signal<Inventory | null>(null);
   protected readonly product = signal<Product | null>(null);
   protected readonly result = signal<Page<InventoryMovement>>(EMPTY_PAGE);
+  protected readonly movementTypeLabel = inventoryMovementTypeLabel;
+  protected readonly formatDateTime = formatDateTime;
+  protected readonly formatMoney = formatMoney;
+  protected readonly formatQuantity = formatQuantity;
 
   protected readonly branchQueryParams = this.route.snapshot.queryParamMap.get('branchId')
     ? { branchId: this.route.snapshot.queryParamMap.get('branchId') }

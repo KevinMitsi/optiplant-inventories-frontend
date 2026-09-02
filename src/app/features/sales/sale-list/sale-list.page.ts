@@ -10,6 +10,8 @@ import { Branch } from '../../../core/domain/models/branch.model';
 import { Page } from '../../../core/domain/models/page.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { PaginatorComponent } from '../../../shared/ui/table/paginator.component';
+import { saleStatusLabel } from '../../../shared/utils/status-labels';
+import { formatDate, formatMoney } from '../../../shared/utils/formatters';
 
 const EMPTY_PAGE: Page<Sale> = {
   content: [],
@@ -90,7 +92,7 @@ const EMPTY_PAGE: Page<Sale> = {
             @for (sale of result().content; track sale.id) {
               <tr>
                 <td data-label="Número">{{ sale.saleNumber }}</td>
-                <td data-label="Fecha">{{ sale.saleDate }}</td>
+                <td data-label="Fecha">{{ formatDate(sale.saleDate) }}</td>
                 <td data-label="Estado">
                   <span
                     class="badge"
@@ -98,10 +100,10 @@ const EMPTY_PAGE: Page<Sale> = {
                     [class.badge--active]="sale.status === 'CONFIRMED'"
                     [class.badge--danger]="sale.status === 'CANCELLED'"
                   >
-                    {{ sale.status }}
+                    {{ statusLabel(sale.status) }}
                   </span>
                 </td>
-                <td data-label="Total">{{ sale.total }}</td>
+                <td data-label="Total">{{ formatMoney(sale.total) }}</td>
                 <td data-label="Acciones" class="actions">
                   <a [routerLink]="[sale.id]">Ver</a>
                 </td>
@@ -132,6 +134,9 @@ export class SaleListPage {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly result = signal<Page<Sale>>(EMPTY_PAGE);
   protected readonly branches = signal<Branch[]>([]);
+  protected readonly statusLabel = saleStatusLabel;
+  protected readonly formatDate = formatDate;
+  protected readonly formatMoney = formatMoney;
 
   protected readonly filters = new FormGroup({
     branchId: new FormControl('', { nonNullable: true }),

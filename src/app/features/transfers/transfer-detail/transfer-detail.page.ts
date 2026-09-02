@@ -23,6 +23,13 @@ import { LogisticsRoute } from '../../../core/domain/models/logistics-route.mode
 import { ApiError } from '../../../core/domain/models/api-error.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { Role } from '../../../core/domain/enums/role.enum';
+import {
+  transferStatusLabel,
+  transferPriorityLabel,
+  transferIssueTypeLabel,
+  transferIssueResolutionLabel,
+} from '../../../shared/utils/status-labels';
+import { formatDateTime } from '../../../shared/utils/formatters';
 
 type LineActionMode = 'approve' | 'dispatch' | 'receive' | null;
 
@@ -57,9 +64,9 @@ type LineActionMode = 'approve' | 'dispatch' | 'receive' | null;
           [class.badge--active]="transfer.status === 'RECEIVED' || transfer.status === 'CLOSED'"
           [class.badge--danger]="transfer.status === 'CANCELLED' || transfer.status === 'PARTIALLY_RECEIVED'"
         >
-          {{ transfer.status }}
+          {{ statusLabel(transfer.status) }}
         </span>
-        · Prioridad: {{ transfer.priority }}
+        · Prioridad: {{ priorityLabel(transfer.priority) }}
       </p>
       @if (transfer.notes) {
         <p class="hint">{{ transfer.notes }}</p>
@@ -68,7 +75,7 @@ type LineActionMode = 'approve' | 'dispatch' | 'receive' | null;
         <p class="hint">
           Logística: {{ carrierLabel(transfer.carrierId) }} · {{ routeLabel(transfer.routeId) }}
           @if (transfer.estimatedArrivalAt) {
-            · Llegada estimada: {{ transfer.estimatedArrivalAt }}
+            · Llegada estimada: {{ formatDateTime(transfer.estimatedArrivalAt) }}
           }
         </p>
       }
@@ -172,10 +179,10 @@ type LineActionMode = 'approve' | 'dispatch' | 'receive' | null;
             @for (issue of issues(); track issue.id) {
               <tr>
                 <td data-label="Línea">{{ itemLabel(transfer, issue.transferItemId) }}</td>
-                <td data-label="Tipo">{{ issue.issueType }}</td>
+                <td data-label="Tipo">{{ issueTypeLabel(issue.issueType) }}</td>
                 <td data-label="Cantidad">{{ issue.quantity }}</td>
-                <td data-label="Descripción">{{ issue.description }}</td>
-                <td data-label="Resolución">{{ issue.resolutionType || '—' }}</td>
+                <td data-label="Descripción">{{ issueDescription(transfer, issue) }}</td>
+                <td data-label="Resolución">{{ issue.resolutionType ? issueResolutionLabel(issue.resolutionType) : '—' }}</td>
                 <td data-label="Acciones" class="actions">
                   @if (!issue.resolvedAt) {
                     @if (resolvingIssueId() === issue.id) {
@@ -292,6 +299,12 @@ export class TransferDetailPage {
     nonNullable: true,
   });
 
+  protected readonly statusLabel = transferStatusLabel;
+  protected readonly priorityLabel = transferPriorityLabel;
+  protected readonly issueTypeLabel = transferIssueTypeLabel;
+  protected readonly issueResolutionLabel = transferIssueResolutionLabel;
+  protected readonly formatDateTime = formatDateTime;
+
   constructor() {
     this.loadProducts();
     this.loadBranches();
@@ -333,6 +346,16 @@ export class TransferDetailPage {
   protected itemLabel(transfer: Transfer, transferItemId: string): string {
     const item = transfer.items.find((candidate) => candidate.id === transferItemId);
     return item ? this.productLabel(item.productId) : transferItemId;
+  }
+
+  /**
+   * El `description` que manda el backend incluye el UUID crudo del producto
+   * ("Faltante al recibir la transferencia TR-2026-0002: producto
+   * 1f9120f2-...") en vez de su nombre — se arma acá una descripción legible
+   * a partir de datos que ya tenemos (línea + producto), ignorando ese texto.
+   */
+  protected issueDescription(transfer: Transfer, issue: TransferIssue): string {
+    return `${this.issueTypeLabel(issue.issueType)} de ${issue.quantity} · ${this.itemLabel(transfer, issue.transferItemId)}`;
   }
 
   protected canApprove(transfer: Transfer): boolean {
@@ -382,8 +405,16 @@ export class TransferDetailPage {
     this.lineActionMode.set(mode);
     this.lineControls.set(
       items.map((item) => {
+        // Recepción: por defecto lo que falta por recibir (despachado menos
+        // ya recibido), no 0 — así una segunda recepción parcial no obliga a
+        // recalcular el pendiente a mano, igual que ya hace la recepción de
+        // órdenes de compra (`PurchaseOrderDetailPage.startReceiptEdit`).
         const defaultQuantity =
-          mode === 'approve' ? item.requestedQuantity : mode === 'dispatch' ? item.approvedQuantity : 0;
+          mode === 'approve'
+            ? item.requestedQuantity
+            : mode === 'dispatch'
+              ? item.approvedQuantity
+              : item.shippedQuantity - item.receivedQuantity;
         return new FormControl<number | null>(defaultQuantity, { validators: [Validators.min(0)] });
       }),
     );
