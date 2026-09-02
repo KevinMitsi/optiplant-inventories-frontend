@@ -1,0 +1,104 @@
+
+<div class="header">
+  <h1>Sucursales</h1>
+  @if (isAdmin()) {
+    <a routerLink="new" class="button button--primary">Nueva sucursal</a>
+  }
+</div>
+
+<form class="filters" [formGroup]="filters">
+  <input type="search" formControlName="text" placeholder="Buscar por código o nombre…" />
+  <select [formControl]="departmentControl" (change)="onDepartmentChange()">
+    <option value="">Todos los departamentos</option>
+    @for (department of departments(); track department.code) {
+      <option [value]="department.code">{{ department.name }}</option>
+    }
+  </select>
+  <select formControlName="city">
+    <option value="">Todas las ciudades</option>
+    @for (municipality of cities(); track municipality.code) {
+      <option [value]="municipality.name">{{ municipality.name }}</option>
+    }
+  </select>
+  <select formControlName="active">
+    <option value="">Todas</option>
+    <option value="true">Activas</option>
+    <option value="false">Inactivas</option>
+  </select>
+</form>
+@if (locationDirectory.error(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+@if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+<table class="branch-table">
+  <thead>
+    <tr>
+      <th>Código</th>
+      <th>Nombre</th>
+      <th>Ciudad</th>
+      <th>Estado</th>
+      @if (isAdmin()) {
+        <th>Acciones</th>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @if (loading()) {
+      <tr>
+        <td colspan="5">Cargando…</td>
+      </tr>
+    } @else if (result().content.length === 0) {
+      <tr>
+        <td colspan="5">No hay sucursales que coincidan con el filtro.</td>
+      </tr>
+    } @else {
+      @for (branch of result().content; track branch.id) {
+        <tr>
+          <td data-label="Código">{{ branch.code }}</td>
+          <td data-label="Nombre">{{ branch.name }}</td>
+          <td data-label="Ciudad">{{ branch.city }}</td>
+          <td data-label="Estado">
+            <span class="badge" [class.badge--active]="branch.active">
+              {{ branch.active ? 'Activa' : 'Inactiva' }}
+            </span>
+          </td>
+          @if (isAdmin()) {
+            <td data-label="Acciones" class="actions">
+              <a [routerLink]="[branch.id, 'edit']">Editar</a>
+              <button
+                type="button"
+                (click)="toggleStatus(branch)"
+                [disabled]="togglingId() === branch.id"
+              >
+                {{ branch.active ? 'Dar de baja' : 'Reactivar' }}
+              </button>
+            </td>
+          }
+        </tr>
+      }
+    }
+  </tbody>
+</table>
+
+<app-paginator
+  [page]="result().page"
+  [totalPages]="result().totalPages"
+  [totalElements]="result().totalElements"
+  [hasNext]="result().hasNext"
+  (pageChange)="goToPage($event)"
+/>
+
+<app-confirm-dialog
+  [open]="!!branchToDeactivate()"
+  title="Dar de baja sucursal"
+  [message]="
+    '¿Seguro que deseas dar de baja la sucursal ' + (branchToDeactivate()?.name ?? '') + '? Podrás reactivarla luego.'
+  "
+  confirmLabel="Dar de baja"
+  (confirm)="confirmDeactivate()"
+  (cancel)="branchToDeactivate.set(null)"
+/>

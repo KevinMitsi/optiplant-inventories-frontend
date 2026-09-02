@@ -1,0 +1,97 @@
+
+<div class="header">
+  <h1>Productos</h1>
+  @if (isAdmin()) {
+    <a routerLink="new" class="button button--primary">Nuevo producto</a>
+  }
+</div>
+
+<form class="filters" [formGroup]="filters">
+  <input type="search" formControlName="text" placeholder="Buscar por SKU, nombre o código de barras…" />
+  <select formControlName="categoryId">
+    <option value="">Todas las categorías</option>
+    @for (category of categories(); track category.id) {
+      <option [value]="category.id">{{ category.name }}</option>
+    }
+  </select>
+  <select formControlName="active">
+    <option value="">Todos</option>
+    <option value="true">Activos</option>
+    <option value="false">Inactivos</option>
+  </select>
+</form>
+
+@if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>SKU</th>
+      <th>Nombre</th>
+      <th>Código de barras</th>
+      <th>Unidad base</th>
+      <th>Estado</th>
+      @if (isAdmin()) {
+        <th></th>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @if (loading()) {
+      <tr>
+        <td colspan="6">Cargando…</td>
+      </tr>
+    } @else if (result().content.length === 0) {
+      <tr>
+        <td colspan="6">No hay productos que coincidan con el filtro.</td>
+      </tr>
+    } @else {
+      @for (product of result().content; track product.id) {
+        <tr>
+          <td data-label="SKU">{{ product.sku }}</td>
+          <td data-label="Nombre">{{ product.name }}</td>
+          <td data-label="Código de barras">{{ product.barcode || '—' }}</td>
+          <td data-label="Unidad base">{{ baseUnitLabel(product) }}</td>
+          <td data-label="Estado">
+            <span class="badge" [class.badge--active]="product.active">
+              {{ product.active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          @if (isAdmin()) {
+            <td data-label="Acciones" class="actions">
+              <a [routerLink]="[product.id, 'edit']">Editar</a>
+              <button
+                type="button"
+                (click)="toggleStatus(product)"
+                [disabled]="togglingId() === product.id"
+              >
+                {{ product.active ? 'Dar de baja' : 'Reactivar' }}
+              </button>
+            </td>
+          }
+        </tr>
+      }
+    }
+  </tbody>
+</table>
+
+<app-paginator
+  [page]="result().page"
+  [totalPages]="result().totalPages"
+  [totalElements]="result().totalElements"
+  [hasNext]="result().hasNext"
+  (pageChange)="goToPage($event)"
+/>
+
+<app-confirm-dialog
+  [open]="!!productToDeactivate()"
+  title="Dar de baja producto"
+  [message]="
+    '¿Seguro que deseas dar de baja el producto ' + (productToDeactivate()?.name ?? '') + '? Podrás reactivarlo luego.'
+  "
+  confirmLabel="Dar de baja"
+  (confirm)="confirmDeactivate()"
+  (cancel)="productToDeactivate.set(null)"
+/>

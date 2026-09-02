@@ -1,0 +1,90 @@
+
+<h1>{{ isEditMode() ? 'Editar ruta logística' : 'Nueva ruta logística' }}</h1>
+
+@if (loadingRoute()) {
+  <p>Cargando…</p>
+} @else {
+  <form class="entity-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <label for="originBranchId">Sucursal origen</label>
+    <select id="originBranchId" formControlName="originBranchId">
+      <option value="" disabled>Seleccione…</option>
+      @for (branch of branches(); track branch.id) {
+        <option [value]="branch.id">{{ branch.name }}</option>
+      }
+    </select>
+    @if (isEditMode()) {
+      <p class="hint">El origen es inmutable una vez creada la ruta.</p>
+    } @else if (form.controls.originBranchId.invalid && form.controls.originBranchId.touched) {
+      <p class="field-error" role="alert">Selecciona la sucursal origen.</p>
+    }
+
+    <label for="destinationBranchId">Sucursal destino</label>
+    <select id="destinationBranchId" formControlName="destinationBranchId">
+      <option value="" disabled>Seleccione…</option>
+      @for (branch of branches(); track branch.id) {
+        <option [value]="branch.id">{{ branch.name }}</option>
+      }
+    </select>
+    @if (isEditMode()) {
+      <p class="hint">El destino es inmutable una vez creada la ruta.</p>
+    } @else if (form.controls.destinationBranchId.invalid && form.controls.destinationBranchId.touched) {
+      <p class="field-error" role="alert">Selecciona la sucursal destino.</p>
+    } @else if (form.errors?.['sameBranch'] && form.controls.destinationBranchId.touched) {
+      <p class="field-error" role="alert">El destino no puede ser la misma sucursal que el origen.</p>
+    }
+
+    <label for="name">Nombre</label>
+    <input id="name" formControlName="name" placeholder="Opcional" />
+    @if (form.controls.name.invalid && form.controls.name.touched) {
+      <p class="field-error" role="alert">Máximo 150 caracteres.</p>
+    }
+
+    <label for="durationValue">Duración estimada</label>
+    <div class="field-group">
+      <input id="durationValue" type="number" min="0" formControlName="durationValue" />
+      <select formControlName="durationUnit" aria-label="Unidad de la duración estimada">
+        <option value="MINUTES">Minutos</option>
+        <option value="HOURS">Horas</option>
+        <option value="DAYS">Días</option>
+      </select>
+    </div>
+    <p class="hint">Se guarda internamente en minutos ({{ estimatedDurationMinutes() ?? 0 }} min).</p>
+    @if (form.controls.durationValue.invalid && form.controls.durationValue.touched) {
+      <p class="field-error" role="alert">
+        {{
+          form.controls.durationValue.hasError('required')
+            ? 'La duración estimada es obligatoria.'
+            : 'No puede ser negativa.'
+        }}
+      </p>
+    }
+
+    <label for="estimatedCost">Costo estimado</label>
+    <input id="estimatedCost" type="number" min="0" step="0.01" formControlName="estimatedCost" />
+    @if (form.controls.estimatedCost.invalid && form.controls.estimatedCost.touched) {
+      <p class="field-error" role="alert">No puede ser negativo.</p>
+    }
+
+    <label for="priority">Prioridad</label>
+    <select id="priority" formControlName="priority">
+      @for (option of priorityOptions; track option.value) {
+        <option [value]="option.value">{{ option.label }}</option>
+      }
+    </select>
+
+    @if (errorMessage(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+
+    @if (form.invalid && form.touched) {
+      <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
+    }
+
+    <div class="actions">
+      <a routerLink="/logistics-routes" class="button button--ghost">Cancelar</a>
+      <button type="submit" class="button button--primary" [disabled]="form.invalid || submitting()">
+        {{ submitting() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+}

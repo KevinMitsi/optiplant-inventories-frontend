@@ -21,37 +21,7 @@ import { AuthStore } from '../../../core/state/auth-store.service';
   selector: 'app-inventory-adjustment-lookup-page',
   imports: [ReactiveFormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="header">
-      <h1>Ajustes de inventario</h1>
-      @if (branchId(); as branchId) {
-        <a routerLink="new" [queryParams]="branchQueryParams()" class="button button--primary">Nuevo ajuste</a>
-      }
-    </div>
-
-    @if (isAdmin()) {
-      <div class="filters">
-        <select [formControl]="branchSelect">
-          <option value="" disabled>Seleccione una sucursal…</option>
-          @for (branch of branches(); track branch.id) {
-            <option [value]="branch.id">{{ branch.name }}</option>
-          }
-        </select>
-      </div>
-      @if (!branchId()) {
-        <p class="hint">Seleccione una sucursal para crear un ajuste nuevo.</p>
-      }
-    }
-
-    <p class="hint">
-      No hay un listado de ajustes; consulte uno por su identificador (visible al crearlo o aprobarlo).
-    </p>
-
-    <form class="filters" [formGroup]="form" (ngSubmit)="lookup()">
-      <input formControlName="adjustmentId" placeholder="Identificador del ajuste" />
-      <button type="submit" class="button button--ghost" [disabled]="form.invalid">Consultar</button>
-    </form>
-  `,
+  templateUrl: './inventory-adjustment-lookup.page.html',
   styleUrl: './inventory-adjustment-lookup.page.scss',
 })
 export class InventoryAdjustmentLookupPage {

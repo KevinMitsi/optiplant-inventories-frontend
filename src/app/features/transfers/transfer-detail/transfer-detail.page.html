@@ -1,0 +1,193 @@
+
+<h1>Transferencia</h1>
+
+@if (loading()) {
+  <p>Cargando…</p>
+} @else if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+} @else if (transfer(); as transfer) {
+  <p class="hint">
+    {{ transfer.transferNumber }} · {{ branchLabel(transfer.originBranchId) }} →
+    {{ branchLabel(transfer.destinationBranchId) }} ·
+    <span
+      class="badge"
+      [class.badge--warning]="transfer.status === 'REQUESTED' || transfer.status === 'IN_PREPARATION'"
+      [class.badge--info]="transfer.status === 'APPROVED' || transfer.status === 'IN_TRANSIT'"
+      [class.badge--active]="transfer.status === 'RECEIVED' || transfer.status === 'CLOSED'"
+      [class.badge--danger]="transfer.status === 'CANCELLED' || transfer.status === 'PARTIALLY_RECEIVED'"
+    >
+      {{ statusLabel(transfer.status) }}
+    </span>
+    · Prioridad: {{ priorityLabel(transfer.priority) }}
+  </p>
+  @if (transfer.notes) {
+    <p class="hint">{{ transfer.notes }}</p>
+  }
+  @if (transfer.carrierId || transfer.routeId) {
+    <p class="hint">
+      Logística: {{ carrierLabel(transfer.carrierId) }} · {{ routeLabel(transfer.routeId) }}
+      @if (transfer.estimatedArrivalAt) {
+        · Llegada estimada: {{ formatDateTime(transfer.estimatedArrivalAt) }}
+      }
+    </p>
+  }
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Unidad</th>
+        <th>Solicitado</th>
+        <th>Aprobado</th>
+        <th>Despachado</th>
+        <th>Recibido</th>
+        @if (lineActionMode()) {
+          <th>Cantidad</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of transfer.items; track item.id; let itemIndex = $index) {
+        <tr>
+          <td data-label="Producto">{{ productLabel(item.productId) }}</td>
+          <td data-label="Unidad">{{ unitLabel(item.productId) }}</td>
+          <td data-label="Solicitado">{{ item.requestedQuantity }}</td>
+          <td data-label="Aprobado">{{ item.approvedQuantity }}</td>
+          <td data-label="Despachado">{{ item.shippedQuantity }}</td>
+          <td data-label="Recibido">{{ item.receivedQuantity }}</td>
+          @if (lineActionMode()) {
+            <td data-label="Cantidad">
+              <input type="number" [formControl]="lineControls()[itemIndex]" step="any" min="0" />
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  @if (lineActionMode(); as mode) {
+    <div class="actions">
+      <button type="button" class="button button--primary" (click)="submitLineAction(transfer)" [disabled]="acting()">
+        {{ acting() ? 'Guardando…' : lineActionLabel(mode) }}
+      </button>
+      <button type="button" class="button button--ghost" (click)="cancelLineAction()">Cancelar</button>
+    </div>
+  }
+
+  @if (canAssignLogistics(transfer)) {
+    @if (assigningLogistics()) {
+      <form class="entity-form" [formGroup]="logisticsForm" (ngSubmit)="submitLogistics(transfer.id)" novalidate>
+        <h2>Asignar logística</h2>
+        <label for="carrierId">Transportista</label>
+        <select id="carrierId" formControlName="carrierId">
+          <option value="" disabled>Seleccione un transportista…</option>
+          @for (carrier of carriers(); track carrier.id) {
+            <option [value]="carrier.id">{{ carrier.code }} — {{ carrier.name }}</option>
+          }
+        </select>
+
+        <label for="routeId">Ruta</label>
+        <select id="routeId" formControlName="routeId">
+          <option value="" disabled>Seleccione una ruta…</option>
+          @for (route of matchingRoutes(); track route.id) {
+            <option [value]="route.id">{{ route.name || route.id }} ({{ route.estimatedDurationMinutes }} min)</option>
+          }
+        </select>
+        @if (matchingRoutes().length === 0) {
+          <p class="hint">No hay rutas logísticas activas entre estas dos sucursales.</p>
+        }
+
+        <label for="estimatedArrivalAt">Llegada estimada (opcional)</label>
+        <input id="estimatedArrivalAt" type="datetime-local" formControlName="estimatedArrivalAt" />
+
+        <div class="actions">
+          <button type="button" class="button button--ghost" (click)="assigningLogistics.set(false)">Cancelar</button>
+          <button type="submit" class="button button--primary" [disabled]="logisticsForm.invalid || acting()">
+            {{ acting() ? 'Asignando…' : 'Asignar' }}
+          </button>
+        </div>
+      </form>
+    } @else {
+      <div class="actions">
+        <button type="button" class="button button--primary" (click)="startAssignLogistics()">Asignar logística</button>
+      </div>
+    }
+  }
+
+  @if (issues().length > 0) {
+    <h2>Incidencias</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Línea</th>
+          <th>Tipo</th>
+          <th>Cantidad</th>
+          <th>Descripción</th>
+          <th>Resolución</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (issue of issues(); track issue.id) {
+          <tr>
+            <td data-label="Línea">{{ itemLabel(transfer, issue.transferItemId) }}</td>
+            <td data-label="Tipo">{{ issueTypeLabel(issue.issueType) }}</td>
+            <td data-label="Cantidad">{{ issue.quantity }}</td>
+            <td data-label="Descripción">{{ issueDescription(transfer, issue) }}</td>
+            <td data-label="Resolución">{{ issue.resolutionType ? issueResolutionLabel(issue.resolutionType) : '—' }}</td>
+            <td data-label="Acciones" class="actions">
+              @if (!issue.resolvedAt) {
+                @if (resolvingIssueId() === issue.id) {
+                  <select [formControl]="resolutionTypeControl">
+                    <option value="RESHIPMENT">Reenvío</option>
+                    <option value="ADJUSTMENT">Ajuste</option>
+                    <option value="CLAIM">Reclamación</option>
+                  </select>
+                  <button type="button" (click)="saveIssueResolution(transfer.id, issue.id)" [disabled]="acting()">
+                    Confirmar
+                  </button>
+                  <button type="button" (click)="resolvingIssueId.set(null)">Cancelar</button>
+                } @else {
+                  <button type="button" (click)="resolvingIssueId.set(issue.id)">Resolver</button>
+                }
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (actionError(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  <div class="actions">
+    <a routerLink="/transfers" class="button button--ghost">Volver</a>
+    @if (canApprove(transfer) && !lineActionMode()) {
+      <button type="button" class="button button--primary" (click)="startLineAction('approve', transfer.items)" [disabled]="acting()">
+        Aprobar
+      </button>
+    }
+    @if (canStartPreparation(transfer)) {
+      <button type="button" class="button button--primary" (click)="startPreparation(transfer.id)" [disabled]="acting()">
+        {{ acting() ? 'Iniciando…' : 'Iniciar preparación' }}
+      </button>
+    }
+    @if (canDispatch(transfer) && !lineActionMode()) {
+      <button type="button" class="button button--primary" (click)="startLineAction('dispatch', transfer.items)" [disabled]="acting()">
+        Despachar
+      </button>
+    }
+    @if (canReceive(transfer) && !lineActionMode()) {
+      <button type="button" class="button button--primary" (click)="startLineAction('receive', transfer.items)" [disabled]="acting()">
+        Recibir
+      </button>
+    }
+    @if (canCancel(transfer)) {
+      <button type="button" class="button button--ghost" (click)="cancel(transfer.id)" [disabled]="acting()">
+        {{ acting() ? 'Cancelando…' : 'Cancelar transferencia' }}
+      </button>
+    }
+  </div>
+}

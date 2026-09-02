@@ -1,0 +1,142 @@
+
+<h1>{{ isEditMode() ? 'Editar producto' : 'Nuevo producto' }}</h1>
+
+@if (loadingProduct()) {
+  <p>Cargando…</p>
+} @else {
+  <form class="entity-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <label for="sku">SKU</label>
+    <input id="sku" formControlName="sku" placeholder="BEB-AGUA-600" />
+    @if (isEditMode()) {
+      <p class="hint">El SKU es inmutable una vez creado el producto.</p>
+    } @else if (form.controls.sku.invalid && form.controls.sku.touched) {
+      <p class="field-error" role="alert">
+        {{ form.controls.sku.hasError('required') ? 'El SKU es obligatorio.' : 'Máximo 60 caracteres.' }}
+      </p>
+    }
+
+    <label for="name">Nombre</label>
+    <input id="name" formControlName="name" />
+    @if (form.controls.name.invalid && form.controls.name.touched) {
+      <p class="field-error" role="alert">
+        {{ form.controls.name.hasError('required') ? 'El nombre es obligatorio.' : 'Máximo 180 caracteres.' }}
+      </p>
+    }
+
+    <label for="categoryId">Categoría</label>
+    <select id="categoryId" formControlName="categoryId">
+      <option value="">Sin categoría</option>
+      @for (category of categories(); track category.id) {
+        <option [value]="category.id">{{ category.name }}</option>
+      }
+    </select>
+
+    <label for="barcode">Código de barras</label>
+    <input id="barcode" formControlName="barcode" />
+    @if (form.controls.barcode.invalid && form.controls.barcode.touched) {
+      <p class="field-error" role="alert">Máximo 100 caracteres.</p>
+    }
+
+    <label for="description">Descripción</label>
+    <input id="description" formControlName="description" />
+
+    @if (!isEditMode()) {
+      <label for="unitOfMeasureId">Unidad</label>
+      <select id="unitOfMeasureId" formControlName="unitOfMeasureId">
+        <option value="" disabled>Seleccione una unidad…</option>
+        @for (unit of unitsOfMeasure(); track unit.id) {
+          <option [value]="unit.id">{{ unit.name }} ({{ unit.symbol }})</option>
+        }
+      </select>
+      <p class="hint">Unidad en la que se contabiliza el stock. No se puede cambiar después de crear el producto.</p>
+      @if (form.controls.unitOfMeasureId.invalid && form.controls.unitOfMeasureId.touched) {
+        <p class="field-error" role="alert">Selecciona la unidad.</p>
+      }
+    } @else if (product(); as currentProduct) {
+      <p class="hint">Unidad: {{ currentProduct.unit.name }} ({{ currentProduct.unit.symbol }}).</p>
+    }
+
+    @if (errorMessage(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+
+    @if (form.invalid && form.touched) {
+      <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
+    }
+
+    <div class="actions">
+      <a routerLink="/products" class="button button--ghost">Cancelar</a>
+      <button type="submit" class="button button--primary" [disabled]="form.invalid || submitting()">
+        {{ submitting() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+
+  @if (isEditMode() && product(); as currentProduct) {
+    <section class="units-section">
+      <h2>Variantes</h2>
+      <p class="hint">
+        Una variante NO es otra presentación del mismo stock: es un producto aparte, con su propio SKU, su
+        propio inventario y su propio precio. Solo un producto principal admite variantes.
+      </p>
+
+      @if (variants().length > 0) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Nombre</th>
+              <th>Unidad</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (variant of variants(); track variant.id) {
+              <tr>
+                <td data-label="SKU">{{ variant.sku }}</td>
+                <td data-label="Nombre">{{ variant.name }}</td>
+                <td data-label="Unidad">{{ variant.unit.name }} ({{ variant.unit.symbol }})</td>
+                <td data-label="Estado">
+                  <span class="badge" [class.badge--active]="variant.active">
+                    {{ variant.active ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="hint">Este producto todavía no tiene variantes.</p>
+      }
+
+      <form class="filters" [formGroup]="addVariantForm" (ngSubmit)="addVariant(currentProduct.id)">
+        <input formControlName="sku" placeholder="SKU de la variante" />
+        <input formControlName="name" placeholder="Nombre de la variante" />
+        <input formControlName="barcode" placeholder="Código de barras (opcional)" />
+        <input formControlName="description" placeholder="Descripción (opcional)" />
+        <select formControlName="unitOfMeasureId">
+          <option value="">Hereda la unidad del principal</option>
+          @for (unit of unitsOfMeasure(); track unit.id) {
+            <option [value]="unit.id">{{ unit.name }} ({{ unit.symbol }})</option>
+          }
+        </select>
+        <button
+          type="submit"
+          class="button button--primary"
+          [disabled]="addVariantForm.invalid || variantActionBusy()"
+        >
+          Añadir variante
+        </button>
+      </form>
+      @if (addVariantForm.controls.sku.invalid && addVariantForm.controls.sku.touched) {
+        <p class="field-error" role="alert">El SKU de la variante es obligatorio.</p>
+      }
+      @if (addVariantForm.controls.name.invalid && addVariantForm.controls.name.touched) {
+        <p class="field-error" role="alert">El nombre de la variante es obligatorio.</p>
+      }
+      @if (variantsErrorMessage(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+    </section>
+  }
+}

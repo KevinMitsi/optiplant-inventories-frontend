@@ -1,0 +1,72 @@
+
+<div class="header">
+  <h1>Movimientos{{ product() ? ' · ' + product()!.sku : '' }}</h1>
+  <a [routerLink]="['/inventory']" [queryParams]="branchQueryParams" class="button button--ghost">Volver</a>
+</div>
+
+@if (loadingHeader()) {
+  <p>Cargando…</p>
+} @else if (headerErrorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+} @else {
+  @if (product(); as currentProduct) {
+    <p class="hint">{{ currentProduct.name }}</p>
+  }
+  @if (inventory(); as currentInventory) {
+    <p class="hint">
+      Saldo actual: {{ formatQuantity(currentInventory.quantity) }} · Mínimo:
+      {{ formatQuantity(currentInventory.minimumStock) }}
+    </p>
+  }
+
+  @if (errorMessage(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Tipo</th>
+        <th>Sentido</th>
+        <th>Cantidad</th>
+        <th>Costo unitario</th>
+        <th>Motivo</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="6">Cargando…</td>
+        </tr>
+      } @else if (result().content.length === 0) {
+        <tr>
+          <td colspan="6">Este saldo no tiene movimientos.</td>
+        </tr>
+      } @else {
+        @for (movement of result().content; track movement.id) {
+          <tr>
+            <td data-label="Fecha">{{ formatDateTime(movement.occurredAt) }}</td>
+            <td data-label="Tipo">{{ movementTypeLabel(movement.movementType) }}</td>
+            <td data-label="Sentido">
+              <span class="badge" [class.badge--active]="movement.direction === 'IN'" [class.badge--danger]="movement.direction === 'OUT'">
+                {{ movement.direction === 'IN' ? 'Entrada' : 'Salida' }}
+              </span>
+            </td>
+            <td data-label="Cantidad">{{ formatQuantity(movement.quantity) }}</td>
+            <td data-label="Costo unitario">{{ formatMoney(movement.unitCost) }}</td>
+            <td data-label="Motivo">{{ movement.reason || '—' }}</td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+
+  <app-paginator
+    [page]="result().page"
+    [totalPages]="result().totalPages"
+    [totalElements]="result().totalElements"
+    [hasNext]="result().hasNext"
+    (pageChange)="goToPage($event)"
+  />
+}

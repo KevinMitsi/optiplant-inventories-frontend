@@ -1,0 +1,90 @@
+
+<div class="header">
+  <h1>Órdenes de compra</h1>
+  @if (branchId(); as branchId) {
+    <a routerLink="new" [queryParams]="branchQueryParams()" class="button button--primary">Nueva orden</a>
+  }
+</div>
+
+<form class="filters" [formGroup]="filters">
+  @if (isAdmin()) {
+    <select formControlName="branchId">
+      <option value="" disabled>Seleccione una sucursal…</option>
+      @for (branch of branches(); track branch.id) {
+        <option [value]="branch.id">{{ branch.name }}</option>
+      }
+    </select>
+  }
+  <select formControlName="supplierId">
+    <option value="">Todos los proveedores</option>
+    @for (supplier of suppliers(); track supplier.id) {
+      <option [value]="supplier.id">{{ supplier.code }} — {{ supplier.name }}</option>
+    }
+  </select>
+  <select formControlName="status">
+    <option value="">Todos los estados</option>
+    <option value="DRAFT">Borrador</option>
+    <option value="CONFIRMED">Confirmada</option>
+    <option value="CANCELLED">Cancelada</option>
+  </select>
+</form>
+
+@if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+@if (!branchId()) {
+  <p>Seleccione una sucursal para ver sus órdenes de compra.</p>
+} @else {
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Número</th>
+        <th>Proveedor</th>
+        <th>Fecha</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="5">Cargando…</td>
+        </tr>
+      } @else if (result().content.length === 0) {
+        <tr>
+          <td colspan="5">No hay órdenes que coincidan con el filtro.</td>
+        </tr>
+      } @else {
+        @for (order of result().content; track order.id) {
+          <tr>
+            <td data-label="Número">{{ order.orderNumber }}</td>
+            <td data-label="Proveedor">{{ supplierLabel(order.supplierId) }}</td>
+            <td data-label="Fecha">{{ formatDate(order.orderDate) }}</td>
+            <td data-label="Estado">
+              <span
+                class="badge"
+                [class.badge--warning]="order.status === 'DRAFT'"
+                [class.badge--active]="order.status === 'CONFIRMED'"
+                [class.badge--danger]="order.status === 'CANCELLED'"
+              >
+                {{ statusLabel(order.status) }}
+              </span>
+            </td>
+            <td data-label="Acciones" class="actions">
+              <a [routerLink]="[order.id]">Ver</a>
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+
+  <app-paginator
+    [page]="result().page"
+    [totalPages]="result().totalPages"
+    [totalElements]="result().totalElements"
+    [hasNext]="result().hasNext"
+    (pageChange)="goToPage($event)"
+  />
+}

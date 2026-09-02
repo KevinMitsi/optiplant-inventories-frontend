@@ -1,0 +1,101 @@
+
+<div class="header">
+  <h1>Usuarios</h1>
+  @if (isAdmin()) {
+    <a routerLink="new" class="button button--primary">Nuevo usuario</a>
+  }
+</div>
+
+<form class="filters" [formGroup]="filters">
+  <input type="search" formControlName="text" placeholder="Buscar por nombre o correo…" />
+  <select formControlName="role">
+    <option value="">Todos los roles</option>
+    <option value="ADMIN">Administrador</option>
+    <option value="BRANCH_MANAGER">Gerente de sucursal</option>
+    <option value="INVENTORY_OPERATOR">Operador de inventario</option>
+  </select>
+  <select formControlName="branchId">
+    <option value="">Todas las sucursales</option>
+    @for (branch of branches(); track branch.id) {
+      <option [value]="branch.id">{{ branch.name }}</option>
+    }
+  </select>
+  <select formControlName="active">
+    <option value="">Todos</option>
+    <option value="true">Activos</option>
+    <option value="false">Inactivos</option>
+  </select>
+</form>
+
+@if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Correo</th>
+      <th>Rol</th>
+      <th>Sucursal</th>
+      <th>Estado</th>
+      @if (isAdmin()) {
+        <th>Acciones</th>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @if (loading()) {
+      <tr>
+        <td colspan="6">Cargando…</td>
+      </tr>
+    } @else if (result().content.length === 0) {
+      <tr>
+        <td colspan="6">No hay usuarios que coincidan con el filtro.</td>
+      </tr>
+    } @else {
+      @for (user of result().content; track user.id) {
+        <tr>
+          <td data-label="Nombre">{{ fullName(user) }}</td>
+          <td data-label="Correo">{{ user.email }}</td>
+          <td data-label="Rol">{{ user.roleName }}</td>
+          <td data-label="Sucursal">{{ branchName(user.branchId) }}</td>
+          <td data-label="Estado">
+            <span class="badge" [class.badge--active]="user.active">
+              {{ user.active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          @if (isAdmin()) {
+            <td data-label="Acciones" class="actions">
+              <a [routerLink]="[user.id, 'edit']">Editar</a>
+              <button type="button" (click)="toggleStatus(user)" [disabled]="togglingId() === user.id">
+                {{ user.active ? 'Dar de baja' : 'Reactivar' }}
+              </button>
+            </td>
+          }
+        </tr>
+      }
+    }
+  </tbody>
+</table>
+
+<app-paginator
+  [page]="result().page"
+  [totalPages]="result().totalPages"
+  [totalElements]="result().totalElements"
+  [hasNext]="result().hasNext"
+  (pageChange)="goToPage($event)"
+/>
+
+<app-confirm-dialog
+  [open]="!!userToDeactivate()"
+  title="Dar de baja usuario"
+  [message]="
+    '¿Seguro que deseas dar de baja a ' +
+    (userToDeactivate() ? fullName(userToDeactivate()!) : '') +
+    '? Deja de poder iniciar sesión; podrás reactivarlo luego. No se puede dar de baja al último administrador activo.'
+  "
+  confirmLabel="Dar de baja"
+  (confirm)="confirmDeactivate()"
+  (cancel)="userToDeactivate.set(null)"
+/>

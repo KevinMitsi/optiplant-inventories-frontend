@@ -1,0 +1,86 @@
+
+<div class="header">
+  <h1>Ventas</h1>
+  @if (branchId(); as branchId) {
+    <a routerLink="new" [queryParams]="branchQueryParams()" class="button button--primary">Nueva venta</a>
+  }
+</div>
+
+<form class="filters" [formGroup]="filters">
+  @if (isAdmin()) {
+    <select formControlName="branchId">
+      <option value="" disabled>Seleccione una sucursal…</option>
+      @for (branch of branches(); track branch.id) {
+        <option [value]="branch.id">{{ branch.name }}</option>
+      }
+    </select>
+  }
+  <select formControlName="status">
+    <option value="">Todos los estados</option>
+    <option value="DRAFT">Borrador</option>
+    <option value="CONFIRMED">Confirmada</option>
+    <option value="CANCELLED">Cancelada</option>
+  </select>
+  <input type="date" formControlName="fromDate" />
+  <input type="date" formControlName="toDate" />
+</form>
+
+@if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+@if (!branchId()) {
+  <p>Seleccione una sucursal para ver sus ventas.</p>
+} @else {
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Número</th>
+        <th>Fecha</th>
+        <th>Estado</th>
+        <th>Total</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="5">Cargando…</td>
+        </tr>
+      } @else if (result().content.length === 0) {
+        <tr>
+          <td colspan="5">No hay ventas que coincidan con el filtro.</td>
+        </tr>
+      } @else {
+        @for (sale of result().content; track sale.id) {
+          <tr>
+            <td data-label="Número">{{ sale.saleNumber }}</td>
+            <td data-label="Fecha">{{ formatDate(sale.saleDate) }}</td>
+            <td data-label="Estado">
+              <span
+                class="badge"
+                [class.badge--warning]="sale.status === 'DRAFT'"
+                [class.badge--active]="sale.status === 'CONFIRMED'"
+                [class.badge--danger]="sale.status === 'CANCELLED'"
+              >
+                {{ statusLabel(sale.status) }}
+              </span>
+            </td>
+            <td data-label="Total">{{ formatMoney(sale.total) }}</td>
+            <td data-label="Acciones" class="actions">
+              <a [routerLink]="[sale.id]">Ver</a>
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+
+  <app-paginator
+    [page]="result().page"
+    [totalPages]="result().totalPages"
+    [totalElements]="result().totalElements"
+    [hasNext]="result().hasNext"
+    (pageChange)="goToPage($event)"
+  />
+}

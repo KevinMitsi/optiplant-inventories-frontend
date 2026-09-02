@@ -6,13 +6,7 @@ import { RouterLink } from '@angular/router';
   selector: 'app-forbidden-page',
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="wrapper">
-      <h1>403</h1>
-      <p>Tu rol no tiene permiso para ver esta sección.</p>
-      <a routerLink="/dashboard">Volver al panel</a>
-    </div>
-  `,
+  templateUrl: './forbidden.page.html',
   styles: `
     .wrapper {
       min-height: 100dvh;

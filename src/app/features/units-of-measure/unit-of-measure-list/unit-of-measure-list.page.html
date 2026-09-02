@@ -1,0 +1,35 @@
+
+<h1>Unidades de medida</h1>
+
+@if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Código</th>
+      <th>Nombre</th>
+      <th>Símbolo</th>
+    </tr>
+  </thead>
+  <tbody>
+    @if (loading()) {
+      <tr>
+        <td colspan="3">Cargando…</td>
+      </tr>
+    } @else if (units().length === 0) {
+      <tr>
+        <td colspan="3">No hay unidades de medida registradas.</td>
+      </tr>
+    } @else {
+      @for (unit of units(); track unit.id) {
+        <tr>
+          <td data-label="Código">{{ unit.code }}</td>
+          <td data-label="Nombre">{{ unit.name }}</td>
+          <td data-label="Símbolo">{{ unit.symbol }}</td>
+        </tr>
+      }
+    }
+  </tbody>
+</table>

@@ -23,62 +23,7 @@ interface CategoryForm {
   selector: 'app-category-form-page',
   imports: [ReactiveFormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <h1>{{ isEditMode() ? 'Editar categoría' : 'Nueva categoría' }}</h1>
-
-    @if (loadingCategory()) {
-      <p>Cargando…</p>
-    } @else {
-      <form class="entity-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-        <label for="code">Código</label>
-        <input id="code" formControlName="code" placeholder="BEB" />
-        @if (isEditMode()) {
-          <p class="hint">El código es inmutable una vez creada la categoría.</p>
-        } @else if (form.controls.code.invalid && form.controls.code.touched) {
-          <p class="field-error" role="alert">
-            {{
-              form.controls.code.hasError('required')
-                ? 'El código es obligatorio.'
-                : form.controls.code.hasError('maxlength')
-                  ? 'Máximo 30 caracteres.'
-                  : 'Solo letras, números, puntos, guiones y guion bajo.'
-            }}
-          </p>
-        }
-
-        <label for="name">Nombre</label>
-        <input id="name" formControlName="name" />
-        @if (form.controls.name.invalid && form.controls.name.touched) {
-          <p class="field-error" role="alert">
-            {{
-              form.controls.name.hasError('required') ? 'El nombre es obligatorio.' : 'Máximo 100 caracteres.'
-            }}
-          </p>
-        }
-
-        <label for="description">Descripción</label>
-        <input id="description" formControlName="description" />
-        @if (form.controls.description.invalid && form.controls.description.touched) {
-          <p class="field-error" role="alert">Máximo 250 caracteres.</p>
-        }
-
-        @if (errorMessage(); as message) {
-          <p class="form-error" role="alert">{{ message }}</p>
-        }
-
-        @if (form.invalid && form.touched) {
-          <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
-        }
-
-        <div class="actions">
-          <a routerLink="/categories" class="button button--ghost">Cancelar</a>
-          <button type="submit" class="button button--primary" [disabled]="form.invalid || submitting()">
-            {{ submitting() ? 'Guardando…' : 'Guardar' }}
-          </button>
-        </div>
-      </form>
-    }
-  `,
+  templateUrl: './category-form.page.html',
   styleUrl: './category-form.page.scss',
 })
 export class CategoryFormPage {

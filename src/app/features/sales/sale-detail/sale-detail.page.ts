@@ -23,72 +23,7 @@ import { formatDate, formatMoney } from '../../../shared/utils/formatters';
   selector: 'app-sale-detail-page',
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <h1>Venta</h1>
-
-    @if (loading()) {
-      <p>Cargando…</p>
-    } @else if (errorMessage(); as message) {
-      <p class="form-error" role="alert">{{ message }}</p>
-    } @else if (sale(); as sale) {
-      <p class="hint">
-        {{ sale.saleNumber }} ·
-        <span
-          class="badge"
-          [class.badge--warning]="sale.status === 'DRAFT'"
-          [class.badge--active]="sale.status === 'CONFIRMED'"
-          [class.badge--danger]="sale.status === 'CANCELLED'"
-        >
-          {{ statusLabel(sale.status) }}
-        </span>
-        · Fecha: {{ formatDate(sale.saleDate) }} · Total: {{ formatMoney(sale.total) }}
-      </p>
-      @if (sale.notes) {
-        <p class="hint">{{ sale.notes }}</p>
-      }
-
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Unidad</th>
-            <th>Cantidad</th>
-            <th>Precio unitario</th>
-            <th>Descuento %</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of sale.items; track item.id) {
-            <tr>
-              <td data-label="Producto">{{ productLabel(item.productId) }}</td>
-              <td data-label="Unidad">{{ unitLabel(item.productId) }}</td>
-              <td data-label="Cantidad">{{ item.quantity }}</td>
-              <td data-label="Precio unitario">{{ formatMoney(item.unitPrice) }}</td>
-              <td data-label="Descuento %">{{ item.discountPercentage }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-
-      @if (actionError(); as message) {
-        <p class="form-error" role="alert">{{ message }}</p>
-      }
-
-      <div class="actions">
-        <a routerLink="/sales" class="button button--ghost">Volver</a>
-        @if (sale.status === 'DRAFT') {
-          <button type="button" class="button button--primary" (click)="confirm(sale.id)" [disabled]="acting()">
-            {{ acting() ? 'Confirmando…' : 'Confirmar venta' }}
-          </button>
-        }
-        @if (sale.status === 'DRAFT' || sale.status === 'CONFIRMED') {
-          <button type="button" class="button button--ghost" (click)="cancel(sale.id)" [disabled]="acting()">
-            {{ acting() ? 'Cancelando…' : 'Cancelar venta' }}
-          </button>
-        }
-      </div>
-    }
-  `,
+  templateUrl: './sale-detail.page.html',
   styleUrl: './sale-detail.page.scss',
 })
 export class SaleDetailPage {

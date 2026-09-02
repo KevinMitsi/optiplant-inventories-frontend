@@ -14,57 +14,7 @@ interface LoginForm {
   selector: 'app-login-page',
   imports: [ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="login-screen">
-      <form class="login-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-        <h1 class="brand">OptiPlant</h1>
-        <p class="subtitle">Inventario multi-sucursal</p>
-
-        <label for="email">Correo electrónico</label>
-        <input
-          id="email"
-          type="email"
-          formControlName="email"
-          autocomplete="username"
-          [class.invalid]="isInvalid('email')"
-        />
-        @if (isInvalid('email')) {
-          <span class="field-error">Ingresa un correo válido.</span>
-        }
-
-        <label for="password">Contraseña</label>
-        <div class="password-field">
-          <input
-            id="password"
-            [type]="passwordVisible() ? 'text' : 'password'"
-            formControlName="password"
-            autocomplete="current-password"
-            [class.invalid]="isInvalid('password')"
-          />
-          <button
-            type="button"
-            class="password-toggle"
-            (click)="passwordVisible.set(!passwordVisible())"
-            [attr.aria-label]="passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-            [attr.aria-pressed]="passwordVisible()"
-          >
-            {{ passwordVisible() ? '🙈' : '👁️' }}
-          </button>
-        </div>
-        @if (isInvalid('password')) {
-          <span class="field-error">La contraseña es obligatoria.</span>
-        }
-
-        @if (errorMessage()) {
-          <p class="form-error" role="alert">{{ errorMessage() }}</p>
-        }
-
-        <button type="submit" [disabled]="form.invalid || submitting()">
-          {{ submitting() ? 'Ingresando…' : 'Ingresar' }}
-        </button>
-      </form>
-    </div>
-  `,
+  templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })
 export class LoginPage {
