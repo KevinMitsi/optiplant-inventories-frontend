@@ -7,6 +7,13 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+
+# Secreto inyectado en build time (docker build --build-arg COUNTRIES_API_KEY=...).
+# Nunca hardcodear el valor real en el repo ni en este Dockerfile.
+ARG COUNTRIES_API_KEY
+RUN test -n "$COUNTRIES_API_KEY" || (echo "ERROR: falta --build-arg COUNTRIES_API_KEY" && exit 1)
+RUN sed -i "s|__COUNTRIES_API_KEY__|$COUNTRIES_API_KEY|g" src/environments/environment.ts
+
 RUN npm run build
 
 # ---- Stage 2: runtime (SSR Node server) ----

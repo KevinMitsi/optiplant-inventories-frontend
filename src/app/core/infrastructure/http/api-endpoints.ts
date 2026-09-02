@@ -150,6 +150,11 @@ export const ApiEndpoints = {
     resolveIssue: (transferId: string, issueId: string) =>
       `${environment.apiBaseUrl}/transfers/${transferId}/issues/${issueId}/resolution`,
   },
+  activityLogs: {
+    search: (organizationId: string) =>
+      `${environment.apiBaseUrl}/organizations/${organizationId}/activity-logs`,
+    byId: (activityLogId: string) => `${environment.apiBaseUrl}/activity-logs/${activityLogId}`,
+  },
   dashboard: {
     salesSummary: (organizationId: string) =>
       `${environment.apiBaseUrl}/organizations/${organizationId}/dashboard/sales-summary`,

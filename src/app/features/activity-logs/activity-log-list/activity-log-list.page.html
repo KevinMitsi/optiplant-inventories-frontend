@@ -1,0 +1,84 @@
+
+<div class="header">
+  <h1>Auditoría</h1>
+</div>
+
+<form class="filters" [formGroup]="filters">
+  <input type="search" formControlName="text" placeholder="Buscar en la operación…" />
+  <input type="search" formControlName="username" placeholder="Correo del autor…" />
+  <input type="search" formControlName="useCase" placeholder="Módulo (ej. Sale, Transfer)…" />
+  <select formControlName="role">
+    <option value="">Todos los roles</option>
+    <option value="ADMIN">Administrador</option>
+    <option value="BRANCH_MANAGER">Gerente de sucursal</option>
+    <option value="INVENTORY_OPERATOR">Operador de inventario</option>
+    <option value="SYSTEM">Sistema</option>
+  </select>
+  <select formControlName="level">
+    <option value="">Todos los niveles</option>
+    <option value="INFO">Info</option>
+    <option value="WARNING">Advertencia</option>
+    <option value="SEVERE">Grave</option>
+  </select>
+  <input type="date" formControlName="from" />
+  <input type="date" formControlName="to" />
+  <label class="checkbox">
+    <input type="checkbox" formControlName="includeSystem" />
+    Incluir registros del sistema
+  </label>
+</form>
+
+@if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Fecha</th>
+      <th>Usuario</th>
+      <th>Rol</th>
+      <th>Módulo</th>
+      <th>Operación</th>
+      <th>Nivel</th>
+    </tr>
+  </thead>
+  <tbody>
+    @if (loading()) {
+      <tr>
+        <td colspan="6">Cargando…</td>
+      </tr>
+    } @else if (result().content.length === 0) {
+      <tr>
+        <td colspan="6">No hay registros que coincidan con el filtro.</td>
+      </tr>
+    } @else {
+      @for (log of result().content; track log.id) {
+        <tr>
+          <td data-label="Fecha">{{ formatDateTime(log.occurredAt) }}</td>
+          <td data-label="Usuario">{{ log.username }}</td>
+          <td data-label="Rol">{{ roleLabel(log.role) }}</td>
+          <td data-label="Módulo">{{ log.useCase }}</td>
+          <td data-label="Operación" class="operation-cell">{{ log.operation }}</td>
+          <td data-label="Nivel">
+            <span
+              class="badge"
+              [class.badge--warning]="log.level === 'WARNING'"
+              [class.badge--danger]="log.level === 'SEVERE'"
+            >
+              {{ levelLabel(log.level) }}
+            </span>
+          </td>
+        </tr>
+      }
+    }
+  </tbody>
+</table>
+
+<app-paginator
+  [page]="result().page"
+  [totalPages]="result().totalPages"
+  [totalElements]="result().totalElements"
+  [hasNext]="result().hasNext"
+  (pageChange)="goToPage($event)"
+/>

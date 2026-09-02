@@ -1,0 +1,33 @@
+@if (store.visible()) {
+  <div class="alert-toast" role="status" aria-live="polite">
+    <button type="button" class="alert-toast__close" aria-label="Cerrar aviso" (click)="close()">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 6l12 12M18 6 6 18" />
+      </svg>
+    </button>
+
+    <div class="alert-toast__header">
+      <svg viewBox="0 0 24 24" class="alert-toast__icon" aria-hidden="true">
+        <path d="M12 3.5c-3 0-5 2.3-5 5.5v3l-2 3.5h14l-2-3.5V9c0-3.2-2-5.5-5-5.5Z" />
+        <path d="M9.5 19.5a2.5 2.5 0 0 0 5 0" />
+      </svg>
+      <span class="alert-toast__title">Alertas de inventario</span>
+      <span class="alert-toast__badge">{{ store.openAlerts().length }}</span>
+    </div>
+
+    <ul class="alert-toast__list">
+      @for (alert of store.previewAlerts(); track alert.id) {
+        <li>
+          <span class="alert-toast__type">{{ alertTypeLabel(alert.alertType) }}</span>
+          <span class="alert-toast__message">{{ alert.message }}</span>
+        </li>
+      }
+    </ul>
+
+    @if (store.extraCount() > 0) {
+      <p class="alert-toast__extra">+{{ store.extraCount() }} alerta(s) más sin manejar</p>
+    }
+
+    <button type="button" class="alert-toast__action" (click)="goToAlerts()">Ver alertas de inventario</button>
+  </div>
+}

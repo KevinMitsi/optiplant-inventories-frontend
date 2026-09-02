@@ -91,6 +91,11 @@ export const routes: Routes = [
         path: 'transfers',
         loadChildren: () => import('./features/transfers/transfers.routes').then((m) => m.TRANSFERS_ROUTES),
       },
+      {
+        path: 'activity-logs',
+        loadChildren: () =>
+          import('./features/activity-logs/activity-logs.routes').then((m) => m.ACTIVITY_LOGS_ROUTES),
+      },
     ],
   },
   { path: '**', redirectTo: '' },
