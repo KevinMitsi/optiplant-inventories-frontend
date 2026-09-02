@@ -1,12 +1,13 @@
-# OptiPlant — Inventarios (Frontend) — v1
+# OptiPlant — Inventarios (Frontend) — v2 (final)
 
-App Angular (SSR) de gestión de inventarios multisucursal: catálogo, inventario, ventas, compras, transferencias y dashboard, contra API REST documentada en `APIDOC.json`. Este README condensa las 12 fases de `/docs`.
+App Angular (SSR) de gestión de inventarios multisucursal: catálogo, inventario, ventas, compras, transferencias, dashboard, usuarios, auditoría y notificaciones de alertas, contra API REST documentada en `APIDOC.json`. Este README condensa las 14 fases de `/docs`.
 
 ## Stack
 
 - Angular 20 (standalone, zoneless, signals), SSR vía `@angular/ssr` + Express.
 - TypeScript strict, RxJS, Reactive Forms (obligatorio, `.claude/CLAUDE.md`).
 - SCSS con sistema de tokens propio (`src/styles/abstracts`), sin CSS frameworks.
+- `ng-apexcharts`/`apexcharts` para los gráficos del Dashboard (fase 8).
 - Sin librería de estado externa: signals + servicios `providedIn: 'root'`.
 
 ## Cómo correr
@@ -19,6 +20,15 @@ npm run serve:ssr:optiplant-inventarios-frontend   # sirve el build SSR (dist/..
 ```
 
 `npm test` (Karma/Jasmine) queda bloqueado en este entorno de desarrollo por falta de `CHROME_BIN`; pendiente en un entorno con navegador.
+
+### Docker
+
+`Dockerfile` (build multi-stage, `node:22-alpine`) construye el bundle SSR y lo sirve con Express en el puerto 4200. La API key de `countriesApiKey` (`src/environments/environment.ts`, usada por `country-directory.service.ts`) es un placeholder (`__COUNTRIES_API_KEY__`) sustituido en build time — nunca commitear el valor real:
+
+```bash
+docker build --build-arg COUNTRIES_API_KEY=<valor> -t optiplant-frontend .
+docker run -p 4200:4200 optiplant-frontend
+```
 
 ## Arquitectura (Clean Architecture por feature)
 
@@ -64,6 +74,8 @@ Regla de dependencia: dominio no conoce HTTP/Angular; casos de uso orquestan dom
 | 10 | Compras | Borrador → confirmación → recepción por línea (parcial admitida, recalcula costo promedio) → cancelación (solo antes de recibir). |
 | 11 | Rutas logísticas | CRUD con origen/destino inmutables tras creación; prerrequisito de Transferencias (selector de ruta filtrado por origen+destino). |
 | 12 | Transferencias entre sucursales | Ciclo completo: solicitud → aprobación (no visible para `INVENTORY_OPERATOR`) → preparación → asignación de logística → despacho (`TRANSFER_OUT`) → recepción (`TRANSFER_IN`, incidencias por faltante) → resolución de incidencias / cancelación (solo antes de despachar). |
+| 13 | Usuarios + correcciones de UX | CRUD Usuarios (alta/perfil/reasignación/activación como 4 operaciones independientes, reflejando la API — no un `PUT` único), sucursal condicionalmente obligatoria según rol (RN-13). Diálogos flotantes reemplazan estado inline en tablas (presentaciones de producto, listas de precios). Migración puntual de endpoints `POST`/`PUT` → `PATCH` en Sucursales/Transportistas/Proveedores/Producto. |
+| 14 | Auditoría + notificaciones | Listado de traza de auditoría (`activity-logs`, solo ADMIN, solo lectura — sin alta/edición, la API no lo expone). Pop-up no invasivo de alertas de inventario abiertas (esquina inferior derecha), alimentado por `InventoryAlertNotificationsStore`: reconsulta al iniciar sesión y cada 5 min mientras dure, sin mutar alertas. |
 
 Detalle completo de cada fase (qué se hizo, decisiones y su porqué) en `/docs/fase-N-*.md`.
 
@@ -72,7 +84,7 @@ Detalle completo de cada fase (qué se hizo, decisiones y su porqué) en `/docs/
 - **Listado + formulario combinado** (alta/edición en un solo componente, modo según `:id` en ruta) en todo módulo CRUD.
 - **Baja lógica** (`activate`/`deactivate`), nunca borrado, en todos los catálogos.
 - **Selector de sucursal solo para ADMIN** (`User.branchId === null`); el resto opera sobre su sucursal fija, impuesta también por el backend (RN-12/13). Repetido en Inventario, Alertas, Dashboard, Ventas, Compras, Transferencias.
-- **`roleGuard([Role.Admin])`** en alta/edición de catálogos maestros (Sucursales, Categorías, Transportistas, Proveedores, Productos, Listas de precios, Rutas logísticas); **sin guard de rol** en flujos operativos por sucursal (Inventario, Ajustes, Alertas, Ventas, Compras, Transferencias) — el backend ya impone el alcance real.
+- **`roleGuard([Role.Admin])`** en alta/edición de catálogos maestros (Sucursales, Categorías, Transportistas, Proveedores, Productos, Listas de precios, Rutas logísticas, alta/edición de Usuarios) y en Auditoría (solo lectura); **listado de Usuarios** además visible para `BRANCH_MANAGER`; **sin guard de rol** en flujos operativos por sucursal (Inventario, Ajustes, Alertas, Ventas, Compras, Transferencias) — el backend ya impone el alcance real.
 - **Sin listados que la API no expone** (precios de una lista, ajustes de inventario): se ofrece consulta puntual en vez de fabricar una tabla con llamadas N+1.
 - **Campos/estados sin `enum` documentado** (`Sale.status`, `PurchaseOrder.status`, `Transfer.status`/`priority`) se tratan como texto libre, valores inferidos de la descripción de cada endpoint en `APIDOC.json`.
 - **Tabla responsiva sin duplicar markup**: un único `<table>` con `data-label` + mixin `responsive-table` (SCSS) que la reapila como tarjetas en móvil.
@@ -88,10 +100,12 @@ Paleta completa (claves, uso y variantes `-light`) documentada en `.claude/CLAUD
 
 - **Pruebas unitarias**: `ng test` bloqueado en este entorno de desarrollo por falta de `CHROME_BIN`; ninguna fase pudo verificarse con Karma/Jasmine, solo con `ng build --configuration development` (browser + server, sin errores TS/SCSS).
 - Sin filtro de rango de fechas en el Dashboard (la API usa un default de 6 meses; no había requisito que pidiera elegir otro rango).
-- Revisando `APIDOC.json` al cierre de la Fase 12, no queda ningún RF/HU grande sin implementar. Queda por confirmar con el usuario si hay ajustes/refinamientos sobre lo construido o una nueva fase de requisitos.
+- Sin pantalla de reseteo de contraseña de otro usuario (la API solo permite que el propio dueño de la cuenta la cambie, con contraseña actual).
+- Migración `POST`/`PUT` → `PATCH` (fase 13) aplicada solo a los endpoints confirmados puntualmente contra el backend (Sucursales/Transportistas/Proveedores activación-baja, Producto base-unit/factor); el resto de endpoints de activación/baja quedó sin tocar por falta de confirmación.
+- Revisando `APIDOC.json` al cierre de la Fase 14, no queda ningún RF/HU grande sin implementar. Queda por confirmar con el usuario si hay ajustes/refinamientos sobre lo construido o una nueva fase de requisitos.
 
 ## Documentación fuente
 
-- `/docs/fase-1-fundacion-y-autenticacion.md` … `/docs/fase-12-transferencias.md`: bitácora fase a fase (qué se hizo / cómo se hizo — decisiones clave / qué sigue).
+- `/docs/fase-1-fundacion-y-autenticacion.md` … `/docs/fase-13-usuarios-y-mejoras-de-formularios.md`: bitácora fase a fase (qué se hizo / cómo se hizo — decisiones clave / qué sigue). Fase 14 (auditoría + notificaciones) sin doc propia en `/docs`, ver tabla de módulos arriba y commit `Notifications and logs`.
 - `APIDOC.json`: contrato de la API REST (fuente de verdad de entidades, DTOs y endpoints).
 - `.claude/CLAUDE.md`: convenciones de Angular/TypeScript, reglas de SCSS y paleta de colores del proyecto.
