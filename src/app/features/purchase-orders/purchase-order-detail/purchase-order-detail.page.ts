@@ -13,6 +13,8 @@ import { Product } from '../../../core/domain/models/product.model';
 import { Supplier } from '../../../core/domain/models/supplier.model';
 import { ApiError } from '../../../core/domain/models/api-error.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
+import { purchaseOrderStatusLabel } from '../../../shared/utils/status-labels';
+import { formatDate, formatMoney } from '../../../shared/utils/formatters';
 
 /**
  * Comprobante de una orden de compra (HU-20) con su ciclo de vida:
@@ -42,9 +44,9 @@ import { AuthStore } from '../../../core/state/auth-store.service';
           [class.badge--active]="order.status === 'CONFIRMED' || order.status === 'RECEIVED'"
           [class.badge--danger]="order.status === 'CANCELLED'"
         >
-          {{ order.status }}
+          {{ statusLabel(order.status) }}
         </span>
-        · Fecha: {{ order.orderDate }} · Plazo de pago: {{ order.paymentTermDays }} días
+        · Fecha: {{ formatDate(order.orderDate) }} · Plazo de pago: {{ order.paymentTermDays }} días
       </p>
       @if (order.notes) {
         <p class="hint">{{ order.notes }}</p>
@@ -75,7 +77,7 @@ import { AuthStore } from '../../../core/state/auth-store.service';
                   {{ item.receivedQuantity }}
                 }
               </td>
-              <td data-label="Precio unitario">{{ item.unitPrice }}</td>
+              <td data-label="Precio unitario">{{ formatMoney(item.unitPrice) }}</td>
               <td data-label="Descuento %">{{ item.discountPercentage }}</td>
               <td data-label="Acciones" class="actions">
                 @if (canReceive(order, item)) {
@@ -140,6 +142,10 @@ export class PurchaseOrderDetailPage {
   protected readonly hasAnyReceipt = computed(() =>
     (this.order()?.items ?? []).some((item) => item.receivedQuantity > 0),
   );
+
+  protected readonly statusLabel = purchaseOrderStatusLabel;
+  protected readonly formatDate = formatDate;
+  protected readonly formatMoney = formatMoney;
 
   constructor() {
     this.loadProducts();

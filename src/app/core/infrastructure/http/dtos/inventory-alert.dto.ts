@@ -3,6 +3,8 @@
 export interface InventoryAlertResponseDto {
   id: string;
   inventoryId: string;
+  branchId: string;
+  productId: string;
   alertType: string;
   status: string;
   triggeredQuantity: number;

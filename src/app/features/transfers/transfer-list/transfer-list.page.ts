@@ -10,6 +10,7 @@ import { Branch } from '../../../core/domain/models/branch.model';
 import { Page } from '../../../core/domain/models/page.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { PaginatorComponent } from '../../../shared/ui/table/paginator.component';
+import { transferStatusLabel, transferPriorityLabel } from '../../../shared/utils/status-labels';
 
 const EMPTY_PAGE: Page<Transfer> = {
   content: [],
@@ -98,7 +99,7 @@ const EMPTY_PAGE: Page<Transfer> = {
                 <td data-label="Número">{{ transfer.transferNumber }}</td>
                 <td data-label="Origen">{{ branchLabel(transfer.originBranchId) }}</td>
                 <td data-label="Destino">{{ branchLabel(transfer.destinationBranchId) }}</td>
-                <td data-label="Prioridad">{{ transfer.priority }}</td>
+                <td data-label="Prioridad">{{ priorityLabel(transfer.priority) }}</td>
                 <td data-label="Estado">
                   <span
                     class="badge"
@@ -107,7 +108,7 @@ const EMPTY_PAGE: Page<Transfer> = {
                     [class.badge--active]="transfer.status === 'RECEIVED' || transfer.status === 'CLOSED'"
                     [class.badge--danger]="transfer.status === 'CANCELLED' || transfer.status === 'PARTIALLY_RECEIVED'"
                   >
-                    {{ transfer.status }}
+                    {{ statusLabel(transfer.status) }}
                   </span>
                 </td>
                 <td data-label="Acciones" class="actions">
@@ -140,6 +141,8 @@ export class TransferListPage {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly result = signal<Page<Transfer>>(EMPTY_PAGE);
   protected readonly branches = signal<Branch[]>([]);
+  protected readonly statusLabel = transferStatusLabel;
+  protected readonly priorityLabel = transferPriorityLabel;
 
   protected readonly filters = new FormGroup({
     branchId: new FormControl('', { nonNullable: true }),

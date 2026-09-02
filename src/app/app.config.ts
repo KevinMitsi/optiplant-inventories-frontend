@@ -56,7 +56,21 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     // Transición nativa entre pantallas (fade + slight slide, ver
     // `::view-transition-*` en `styles.scss`) en vez de saltos secos de página.
-    provideRouter(routes, withViewTransitions()),
+    // `onViewTransitionCreated` silencia el `InvalidStateError: Transition was
+    // aborted because of invalid state` que el navegador lanza (como promise
+    // rechazada sin capturar, visible en consola) cuando una navegación nueva
+    // interrumpe una transición en curso — comportamiento normal de la View
+    // Transitions API ante navegaciones rápidas, no un error de la app.
+    provideRouter(
+      routes,
+      withViewTransitions({
+        onViewTransitionCreated: ({ transition }) => {
+          transition.ready.catch(() => {});
+          transition.updateCallbackDone.catch(() => {});
+          transition.finished.catch(() => {});
+        },
+      }),
+    ),
     provideClientHydration(withEventReplay()),
     provideHttpClient(
       withFetch(),

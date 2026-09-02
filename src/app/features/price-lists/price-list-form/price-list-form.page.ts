@@ -13,6 +13,7 @@ import { PriceList } from '../../../core/domain/models/price-list.model';
 import { Product } from '../../../core/domain/models/product.model';
 import { ApiError } from '../../../core/domain/models/api-error.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
+import { formatMoney } from '../../../shared/utils/formatters';
 
 interface PriceListForm {
   code: FormControl<string>;
@@ -179,7 +180,7 @@ interface ProductPriceForm {
                 @for (row of savedPrices(); track row.id) {
                   <tr>
                     <td data-label="Producto">{{ row.productLabel }}</td>
-                    <td data-label="Precio">{{ row.price }}</td>
+                    <td data-label="Precio">{{ formatMoney(row.price) }}</td>
                   </tr>
                 }
               </tbody>
@@ -214,7 +215,10 @@ export class PriceListFormPage {
   protected readonly priceMessage = signal<string | null>(null);
   protected readonly priceErrorMessage = signal<string | null>(null);
 
-  protected readonly showInfoDialog = signal(true);
+  // Solo al crear: en edición (incluida la redirección post-alta a
+  // `/price-lists/{id}/edit`) ya se entendió qué es una lista de precios,
+  // reaparecer ahí interrumpe sin aportar nada.
+  protected readonly showInfoDialog = signal(this.priceListId === null);
   protected readonly infoDialogTitleId = `price-list-info-title-${crypto.randomUUID()}`;
 
   protected readonly form = new FormGroup<PriceListForm>({
@@ -236,6 +240,7 @@ export class PriceListFormPage {
   protected readonly lookupDisabled = computed(() => !this.selectedProductId());
 
   protected readonly savedPrices = signal<{ id: string; productLabel: string; price: number }[]>([]);
+  protected readonly formatMoney = formatMoney;
 
   private readonly selectedProductId = signal('');
 
@@ -273,7 +278,7 @@ export class PriceListFormPage {
       .subscribe({
         next: (productPrice) => {
           this.priceForm.controls.price.setValue(productPrice.price);
-          this.priceMessage.set(`Precio actual: ${productPrice.price}.`);
+          this.priceMessage.set(`Precio actual: ${formatMoney(productPrice.price)}.`);
         },
         error: () => this.priceErrorMessage.set('Ese producto no tiene precio fijado en esta lista.'),
       });
@@ -297,7 +302,7 @@ export class PriceListFormPage {
       .pipe(finalize(() => this.priceActionBusy.set(false)))
       .subscribe({
         next: (productPrice) => {
-          this.priceMessage.set(`Precio guardado: ${productLabel} → ${productPrice.price}.`);
+          this.priceMessage.set(`Precio guardado: ${productLabel} → ${formatMoney(productPrice.price)}.`);
           this.savedPrices.update((rows) => [
             { id: crypto.randomUUID(), productLabel, price: productPrice.price },
             ...rows,

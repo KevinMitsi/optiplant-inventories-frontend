@@ -13,6 +13,7 @@ import { SortDirection } from '../../../core/domain/models/page-query.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { Role } from '../../../core/domain/enums/role.enum';
 import { PaginatorComponent } from '../../../shared/ui/table/paginator.component';
+import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog/confirm-dialog.component';
 
 interface ProductFilters {
   text: FormControl<string>;
@@ -40,7 +41,7 @@ const EMPTY_PAGE: Page<Product> = {
  */
 @Component({
   selector: 'app-product-list-page',
-  imports: [ReactiveFormsModule, RouterLink, PaginatorComponent],
+  imports: [ReactiveFormsModule, RouterLink, PaginatorComponent, ConfirmDialogComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="header">
@@ -128,6 +129,17 @@ const EMPTY_PAGE: Page<Product> = {
       [hasNext]="result().hasNext"
       (pageChange)="goToPage($event)"
     />
+
+    <app-confirm-dialog
+      [open]="!!productToDeactivate()"
+      title="Dar de baja producto"
+      [message]="
+        '¿Seguro que deseas dar de baja el producto ' + (productToDeactivate()?.name ?? '') + '? Podrás reactivarlo luego.'
+      "
+      confirmLabel="Dar de baja"
+      (confirm)="confirmDeactivate()"
+      (cancel)="productToDeactivate.set(null)"
+    />
   `,
   styleUrl: './product-list.page.scss',
 })
@@ -143,6 +155,7 @@ export class ProductListPage {
   protected readonly result = signal<Page<Product>>(EMPTY_PAGE);
   protected readonly togglingId = signal<string | null>(null);
   protected readonly categories = signal<Category[]>([]);
+  protected readonly productToDeactivate = signal<Product | null>(null);
 
   protected readonly filters = new FormGroup<ProductFilters>({
     text: new FormControl('', { nonNullable: true }),
@@ -175,9 +188,27 @@ export class ProductListPage {
   }
 
   protected toggleStatus(product: Product): void {
+    if (product.active) {
+      // Dar de baja es la operación sensible: pide confirmación antes de ejecutarla.
+      this.productToDeactivate.set(product);
+      return;
+    }
+    this.applyStatusChange(product, true);
+  }
+
+  protected confirmDeactivate(): void {
+    const product = this.productToDeactivate();
+    if (!product) {
+      return;
+    }
+    this.productToDeactivate.set(null);
+    this.applyStatusChange(product, false);
+  }
+
+  private applyStatusChange(product: Product, active: boolean): void {
     this.togglingId.set(product.id);
     this.setProductStatusUseCase
-      .execute(product.id, !product.active)
+      .execute(product.id, active)
       .pipe(finalize(() => this.togglingId.set(null)))
       .subscribe({
         next: () => this.search(),

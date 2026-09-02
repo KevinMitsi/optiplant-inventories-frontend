@@ -284,7 +284,19 @@ export class LogisticsRouteFormPage {
       return;
     }
     this.searchBranchesUseCase
-      .execute(organizationId, { page: 0, size: 100, sortBy: 'name', sortDirection: 'ASC' })
+      // Solo sucursales activas al crear: una ruta nueva no debe poder
+      // conectar una sucursal dada de baja (mismo criterio que
+      // `TransferCreatePage`). En edición los selects van deshabilitados
+      // (origen/destino inmutables) y son solo informativos, así que ahí sí
+      // se listan todas — si no, una ruta ligada a una sucursal ya inactiva
+      // mostraría el select en blanco.
+      .execute(organizationId, {
+        page: 0,
+        size: 100,
+        sortBy: 'name',
+        sortDirection: 'ASC',
+        active: this.isEditMode() ? undefined : true,
+      })
       .subscribe((page) => this.branches.set(page.content.map(({ id, name }) => ({ id, name }))));
   }
 }

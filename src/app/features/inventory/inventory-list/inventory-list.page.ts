@@ -13,6 +13,7 @@ import { Product } from '../../../core/domain/models/product.model';
 import { Page } from '../../../core/domain/models/page.model';
 import { AuthStore } from '../../../core/state/auth-store.service';
 import { PaginatorComponent } from '../../../shared/ui/table/paginator.component';
+import { formatMoney, formatQuantity } from '../../../shared/utils/formatters';
 
 const EMPTY_PAGE: Page<Inventory> = {
   content: [],
@@ -100,15 +101,15 @@ const EMPTY_PAGE: Page<Inventory> = {
               <tr>
                 <td data-label="SKU">{{ productLabel(item.productId).sku }}</td>
                 <td data-label="Producto">{{ productLabel(item.productId).name }}</td>
-                <td data-label="Cantidad">{{ item.quantity }}</td>
+                <td data-label="Cantidad">{{ formatQuantity(item.quantity) }}</td>
                 <td data-label="Stock mínimo">
                   @if (editingMinimumId() === item.id) {
                     <input type="number" [formControl]="minimumStockControl" step="any" min="0" />
                   } @else {
-                    {{ item.minimumStock }}
+                    {{ formatQuantity(item.minimumStock) }}
                   }
                 </td>
-                <td data-label="Costo promedio">{{ item.averageCost }}</td>
+                <td data-label="Costo promedio">{{ formatMoney(item.averageCost) }}</td>
                 <td data-label="Estado">
                   <span
                     class="badge"
@@ -167,6 +168,8 @@ export class InventoryListPage {
   protected readonly editingMinimumId = signal<string | null>(null);
   protected readonly savingMinimum = signal(false);
   protected readonly minimumStockControl = new FormControl<number | null>(null);
+  protected readonly formatMoney = formatMoney;
+  protected readonly formatQuantity = formatQuantity;
 
   protected readonly filters = new FormGroup({
     branchId: new FormControl('', { nonNullable: true }),
