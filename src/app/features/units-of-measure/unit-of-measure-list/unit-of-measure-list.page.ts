@@ -12,42 +12,7 @@ import { UnitOfMeasure } from '../../../core/domain/models/unit-of-measure.model
 @Component({
   selector: 'app-unit-of-measure-list-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <h1>Unidades de medida</h1>
-
-    @if (errorMessage(); as message) {
-      <p class="form-error" role="alert">{{ message }}</p>
-    }
-
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Nombre</th>
-          <th>Símbolo</th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (loading()) {
-          <tr>
-            <td colspan="3">Cargando…</td>
-          </tr>
-        } @else if (units().length === 0) {
-          <tr>
-            <td colspan="3">No hay unidades de medida registradas.</td>
-          </tr>
-        } @else {
-          @for (unit of units(); track unit.id) {
-            <tr>
-              <td data-label="Código">{{ unit.code }}</td>
-              <td data-label="Nombre">{{ unit.name }}</td>
-              <td data-label="Símbolo">{{ unit.symbol }}</td>
-            </tr>
-          }
-        }
-      </tbody>
-    </table>
-  `,
+  templateUrl: './unit-of-measure-list.page.html',
   styleUrl: './unit-of-measure-list.page.scss',
 })
 export class UnitOfMeasureListPage {

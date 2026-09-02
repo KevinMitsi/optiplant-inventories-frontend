@@ -1,0 +1,80 @@
+
+<div class="header">
+  <h1>Proveedores</h1>
+  @if (isAdmin()) {
+    <a routerLink="new" class="button button--primary">Nuevo proveedor</a>
+  }
+</div>
+
+<form class="filters" [formGroup]="filters">
+  <input type="search" formControlName="text" placeholder="Buscar por código o nombre…" />
+  <select formControlName="active">
+    <option value="">Todos</option>
+    <option value="true">Activos</option>
+    <option value="false">Inactivos</option>
+  </select>
+</form>
+
+@if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Código</th>
+      <th>Nombre</th>
+      <th>NIT</th>
+      <th>Contacto</th>
+      <th>Estado</th>
+      @if (isAdmin()) {
+        <th></th>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @if (loading()) {
+      <tr>
+        <td colspan="6">Cargando…</td>
+      </tr>
+    } @else if (result().content.length === 0) {
+      <tr>
+        <td colspan="6">No hay proveedores que coincidan con el filtro.</td>
+      </tr>
+    } @else {
+      @for (supplier of result().content; track supplier.id) {
+        <tr>
+          <td data-label="Código">{{ supplier.code }}</td>
+          <td data-label="Nombre">{{ supplier.name }}</td>
+          <td data-label="NIT">{{ supplier.taxId }}</td>
+          <td data-label="Contacto">{{ supplier.email }} · {{ supplier.phone }}</td>
+          <td data-label="Estado">
+            <span class="badge" [class.badge--active]="supplier.active">
+              {{ supplier.active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          @if (isAdmin()) {
+            <td data-label="Acciones" class="actions">
+              <a [routerLink]="[supplier.id, 'edit']">Editar</a>
+              <button
+                type="button"
+                (click)="toggleStatus(supplier)"
+                [disabled]="togglingId() === supplier.id"
+              >
+                {{ supplier.active ? 'Dar de baja' : 'Reactivar' }}
+              </button>
+            </td>
+          }
+        </tr>
+      }
+    }
+  </tbody>
+</table>
+
+<app-paginator
+  [page]="result().page"
+  [totalPages]="result().totalPages"
+  [totalElements]="result().totalElements"
+  [hasNext]="result().hasNext"
+  (pageChange)="goToPage($event)"
+/>

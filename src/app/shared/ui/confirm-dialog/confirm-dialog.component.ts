@@ -9,37 +9,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 @Component({
   selector: 'app-confirm-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    @if (open()) {
-      <div class="confirm-dialog-backdrop" (click)="cancel.emit()">
-        <div
-          class="confirm-dialog"
-          [class.confirm-dialog--neutral]="!danger()"
-          role="alertdialog"
-          aria-modal="true"
-          [attr.aria-labelledby]="titleId"
-          (click)="$event.stopPropagation()"
-        >
-          <h2 [id]="titleId">{{ title() }}</h2>
-          <p>{{ message() }}</p>
-          <div class="confirm-dialog__actions">
-            <button type="button" class="button button--ghost" (click)="cancel.emit()">
-              {{ cancelLabel() }}
-            </button>
-            <button
-              type="button"
-              class="button"
-              [class.button--danger]="danger()"
-              [class.button--primary]="!danger()"
-              (click)="confirm.emit()"
-            >
-              {{ confirmLabel() }}
-            </button>
-          </div>
-        </div>
-      </div>
-    }
-  `,
+  templateUrl: './confirm-dialog.component.html',
   styleUrl: './confirm-dialog.component.scss',
 })
 export class ConfirmDialogComponent {

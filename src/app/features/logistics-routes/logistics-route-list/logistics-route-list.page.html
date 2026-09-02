@@ -1,0 +1,95 @@
+
+<div class="header">
+  <h1>Rutas logísticas</h1>
+  @if (isAdmin()) {
+    <a routerLink="new" class="button button--primary">Nueva ruta</a>
+  }
+</div>
+
+<form class="filters" [formGroup]="filters">
+  <select formControlName="originBranchId">
+    <option value="">Cualquier origen</option>
+    @for (branch of branches(); track branch.id) {
+      <option [value]="branch.id">{{ branch.name }}</option>
+    }
+  </select>
+  <select formControlName="destinationBranchId">
+    <option value="">Cualquier destino</option>
+    @for (branch of branches(); track branch.id) {
+      <option [value]="branch.id">{{ branch.name }}</option>
+    }
+  </select>
+  <select formControlName="active">
+    <option value="">Todos</option>
+    <option value="true">Activas</option>
+    <option value="false">Inactivas</option>
+  </select>
+</form>
+
+@if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Origen</th>
+      <th>Destino</th>
+      <th>Duración estimada</th>
+      <th>Costo estimado</th>
+      <th>Prioridad</th>
+      <th>Estado</th>
+      @if (isAdmin()) {
+        <th></th>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @if (loading()) {
+      <tr>
+        <td colspan="8">Cargando…</td>
+      </tr>
+    } @else if (result().content.length === 0) {
+      <tr>
+        <td colspan="8">No hay rutas que coincidan con el filtro.</td>
+      </tr>
+    } @else {
+      @for (route of result().content; track route.id) {
+        <tr>
+          <td data-label="Nombre">{{ route.name || '—' }}</td>
+          <td data-label="Origen">{{ branchName(route.originBranchId) }}</td>
+          <td data-label="Destino">{{ branchName(route.destinationBranchId) }}</td>
+          <td data-label="Duración estimada">{{ route.estimatedDurationMinutes }} min</td>
+          <td data-label="Costo estimado">{{ route.estimatedCost }}</td>
+          <td data-label="Prioridad">{{ priorityLabel(route.priority) }}</td>
+          <td data-label="Estado">
+            <span class="badge" [class.badge--active]="route.active">
+              {{ route.active ? 'Activa' : 'Inactiva' }}
+            </span>
+          </td>
+          @if (isAdmin()) {
+            <td data-label="Acciones" class="actions">
+              <a [routerLink]="[route.id, 'edit']">Editar</a>
+              <button
+                type="button"
+                (click)="toggleStatus(route)"
+                [disabled]="togglingId() === route.id"
+              >
+                {{ route.active ? 'Dar de baja' : 'Reactivar' }}
+              </button>
+            </td>
+          }
+        </tr>
+      }
+    }
+  </tbody>
+</table>
+
+<app-paginator
+  [page]="result().page"
+  [totalPages]="result().totalPages"
+  [totalElements]="result().totalElements"
+  [hasNext]="result().hasNext"
+  (pageChange)="goToPage($event)"
+/>

@@ -1,0 +1,193 @@
+
+<h1>Panel</h1>
+
+@if (isAdmin()) {
+  <form class="filters" [formGroup]="filters">
+    <select formControlName="branchId">
+      <option value="">Todas las sucursales</option>
+      @for (branch of branches(); track branch.id) {
+        <option [value]="branch.id">{{ branch.name }}</option>
+      }
+    </select>
+  </form>
+}
+
+@if (errorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}
+
+<section class="charts-grid">
+  <div class="panel chart-panel">
+    <h2>Tendencia de ventas</h2>
+    @if (loading()) {
+      <p class="chart-empty">Cargando…</p>
+    } @else if (salesTrend().categories.length === 0) {
+      <p class="chart-empty">Sin ventas confirmadas en el período.</p>
+    } @else {
+      <apx-chart
+        [series]="salesTrend().series"
+        [chart]="areaChart"
+        [xaxis]="salesTrendXaxis()"
+        [stroke]="areaStroke"
+        [fill]="areaFill"
+        [colors]="[primaryColor]"
+        [dataLabels]="hiddenDataLabels"
+        [legend]="hiddenLegend"
+        [grid]="chartGrid"
+        [tooltip]="currencyTooltip"
+      />
+    }
+  </div>
+
+  <div class="panel chart-panel">
+    <h2>Productos más vendidos</h2>
+    @if (loading()) {
+      <p class="chart-empty">Cargando…</p>
+    } @else if (topProductsChart().categories.length === 0) {
+      <p class="chart-empty">Sin productos en el período.</p>
+    } @else {
+      <apx-chart
+        [series]="topProductsChart().series"
+        [chart]="horizontalBarChart"
+        [xaxis]="topProductsXaxis()"
+        [plotOptions]="horizontalBarPlotOptions"
+        [colors]="[purpleColor]"
+        [dataLabels]="hiddenDataLabels"
+        [legend]="hiddenLegend"
+        [grid]="chartGrid"
+        [tooltip]="unitsTooltip"
+      />
+    }
+  </div>
+
+  @if (isAdmin()) {
+    <div class="panel chart-panel chart-panel--wide">
+      <h2>Comparación de sucursales (últimos 30 días)</h2>
+      @if (loading()) {
+        <p class="chart-empty">Cargando…</p>
+      } @else if (branchComparisonChart().categories.length === 0) {
+        <p class="chart-empty">Sin datos de sucursales.</p>
+      } @else {
+        <apx-chart
+          [series]="branchComparisonChart().series"
+          [chart]="columnChart"
+          [xaxis]="branchComparisonXaxis()"
+          [plotOptions]="columnPlotOptions"
+          [colors]="[infoColor]"
+          [dataLabels]="hiddenDataLabels"
+          [legend]="hiddenLegend"
+          [grid]="chartGrid"
+          [tooltip]="currencyTooltip"
+        />
+      }
+    </div>
+  }
+</section>
+
+<section class="panel">
+  <h2>Ventas por mes</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Sucursal</th>
+        <th>Mes</th>
+        <th>Ventas</th>
+        <th>Monto</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="4">Cargando…</td>
+        </tr>
+      } @else if (salesSummary().length === 0) {
+        <tr>
+          <td colspan="4">Sin ventas confirmadas en el período.</td>
+        </tr>
+      } @else {
+        @for (row of salesSummary(); track row.branchId + '-' + row.year + '-' + row.month) {
+          <tr>
+            <td data-label="Sucursal">{{ row.branchName }}</td>
+            <td data-label="Mes">{{ row.year }}-{{ row.month.toString().padStart(2, '0') }}</td>
+            <td data-label="Ventas">{{ row.saleCount }}</td>
+            <td data-label="Monto">{{ row.totalAmount }}</td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <h2>Rotación de productos</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Cantidad vendida</th>
+        <th>Ventas</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr>
+          <td colspan="3">Cargando…</td>
+        </tr>
+      } @else if (productRotation().length === 0) {
+        <tr>
+          <td colspan="3">Sin productos en el período.</td>
+        </tr>
+      } @else {
+        @for (row of productRotation(); track row.productId) {
+          <tr>
+            <td data-label="Producto">{{ row.productName }}</td>
+            <td data-label="Cantidad vendida">{{ row.quantitySold }}</td>
+            <td data-label="Ventas">{{ row.saleCount }}</td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</section>
+
+@if (isAdmin()) {
+  <section class="panel">
+    <h2>Comparación de sucursales (últimos 30 días)</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Sucursal</th>
+          <th>Ventas</th>
+          <th>Monto</th>
+          <th>Valor de inventario</th>
+          <th>Stock crítico</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="5">Cargando…</td>
+          </tr>
+        } @else if (branchComparison().length === 0) {
+          <tr>
+            <td colspan="5">Sin datos de sucursales.</td>
+          </tr>
+        } @else {
+          @for (row of branchComparison(); track row.branchId) {
+            <tr>
+              <td data-label="Sucursal">{{ row.branchName }}</td>
+              <td data-label="Ventas">{{ row.saleCount30d }}</td>
+              <td data-label="Monto">{{ row.totalSalesAmount30d }}</td>
+              <td data-label="Valor de inventario">{{ row.inventoryValue }}</td>
+              <td data-label="Stock crítico">
+                <span class="badge" [class.badge--danger]="row.lowStockCount > 0" [class.badge--active]="row.lowStockCount === 0">
+                  {{ row.lowStockCount }}
+                </span>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </section>
+}

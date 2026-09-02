@@ -1,0 +1,149 @@
+
+<h1>{{ isEditMode() ? 'Editar lista de precios' : 'Nueva lista de precios' }}</h1>
+
+@if (showInfoDialog()) {
+  <div class="confirm-dialog-backdrop" (click)="dismissInfoDialog()">
+    <div
+      class="confirm-dialog confirm-dialog--neutral"
+      role="alertdialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="infoDialogTitleId"
+      (click)="$event.stopPropagation()"
+    >
+      <h2 [id]="infoDialogTitleId">¿Qué es una lista de precios?</h2>
+      <p>
+        Es una forma de agrupar precios distintos para los mismos productos. Por ejemplo: un precio para venta
+        al por mayor y otro al detal, o precios especiales por sucursal o por cliente.
+      </p>
+      <p>
+        Cada lista tiene un código y un nombre que la identifican (ej. "MINORISTA — Precio al detal"). Después,
+        a cada producto le asignas un precio dentro de esa lista. Un mismo producto puede tener un precio
+        diferente en cada lista que crees.
+      </p>
+      <p>
+        A la hora de vender, eliges qué lista de precios usar para esa venta. Así, el mismo producto se cobra a
+        un valor u otro según la lista que hayas escogido — sin tener que cambiar el precio del producto cada
+        vez.
+      </p>
+      <div class="confirm-dialog__actions">
+        <button type="button" class="button button--primary" (click)="dismissInfoDialog()">Entendido</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (loadingPriceList()) {
+  <p>Cargando…</p>
+} @else {
+  <form class="entity-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <label for="code">Código</label>
+    <input id="code" formControlName="code" placeholder="MINORISTA" />
+    @if (isEditMode()) {
+      <p class="hint">El código es inmutable una vez creada la lista de precios.</p>
+    } @else if (form.controls.code.invalid && form.controls.code.touched) {
+      <p class="field-error" role="alert">
+        {{
+          form.controls.code.hasError('required') ? 'El código es obligatorio.' : 'Máximo 30 caracteres.'
+        }}
+      </p>
+    }
+
+    <label for="name">Nombre</label>
+    <input id="name" formControlName="name" />
+    @if (form.controls.name.invalid && form.controls.name.touched) {
+      <p class="field-error" role="alert">
+        {{
+          form.controls.name.hasError('required') ? 'El nombre es obligatorio.' : 'Máximo 100 caracteres.'
+        }}
+      </p>
+    }
+
+    <label for="description">Descripción</label>
+    <input id="description" formControlName="description" />
+
+    <label for="validFrom">Vigente desde</label>
+    <input id="validFrom" type="date" formControlName="validFrom" />
+
+    <label for="validUntil">Vigente hasta</label>
+    <input id="validUntil" type="date" formControlName="validUntil" />
+
+    @if (errorMessage(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+
+    @if (form.invalid && form.touched) {
+      <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
+    }
+
+    <div class="actions">
+      <a routerLink="/price-lists" class="button button--ghost">Cancelar</a>
+      <button type="submit" class="button button--primary" [disabled]="form.invalid || submitting()">
+        {{ submitting() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+
+  @if (isEditMode() && priceList(); as currentPriceList) {
+    <section class="units-section">
+      <h2>Precio de un producto</h2>
+
+      <form class="filters" [formGroup]="priceForm" (ngSubmit)="setPrice(currentPriceList.id)">
+        <select formControlName="productId">
+          <option value="" disabled>Seleccione un producto…</option>
+          @for (product of products(); track product.id) {
+            <option [value]="product.id">{{ product.sku }} — {{ product.name }}</option>
+          }
+        </select>
+        <input type="number" formControlName="price" step="any" min="0" placeholder="Precio" />
+        <button
+          type="button"
+          class="button button--ghost"
+          (click)="lookupPrice(currentPriceList.id)"
+          [disabled]="lookupDisabled() || priceActionBusy()"
+        >
+          Consultar
+        </button>
+        <button
+          type="submit"
+          class="button button--primary"
+          [disabled]="priceForm.invalid || priceActionBusy()"
+        >
+          Guardar precio
+        </button>
+      </form>
+      @if (priceForm.controls.price.invalid && priceForm.controls.price.touched) {
+        <p class="field-error" role="alert">
+          {{
+            priceForm.controls.price.hasError('required') ? 'El precio es obligatorio.' : 'No puede ser negativo.'
+          }}
+        </p>
+      }
+
+      @if (priceMessage(); as message) {
+        <p class="price-alert price-alert--success" role="status">{{ message }}</p>
+      }
+      @if (priceErrorMessage(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+
+      @if (savedPrices().length > 0) {
+        <table class="data-table saved-prices-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Precio</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of savedPrices(); track row.id) {
+              <tr>
+                <td data-label="Producto">{{ row.productLabel }}</td>
+                <td data-label="Precio">{{ formatMoney(row.price) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+}

@@ -1,0 +1,198 @@
+
+<h1>{{ isEditMode() ? 'Editar usuario' : 'Nuevo usuario' }}</h1>
+
+@if (loadingUser()) {
+  <p>Cargando…</p>
+} @else if (!isEditMode()) {
+  <form class="entity-form" [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate>
+    <label for="firstName">Nombre</label>
+    <input id="firstName" formControlName="firstName" />
+    @if (createForm.controls.firstName.invalid && createForm.controls.firstName.touched) {
+      <p class="field-error" role="alert">
+        {{
+          createForm.controls.firstName.hasError('required') ? 'El nombre es obligatorio.' : 'Máximo 100 caracteres.'
+        }}
+      </p>
+    }
+
+    <label for="lastName">Apellido</label>
+    <input id="lastName" formControlName="lastName" />
+    @if (createForm.controls.lastName.invalid && createForm.controls.lastName.touched) {
+      <p class="field-error" role="alert">
+        {{
+          createForm.controls.lastName.hasError('required') ? 'El apellido es obligatorio.' : 'Máximo 100 caracteres.'
+        }}
+      </p>
+    }
+
+    <label for="email">Correo</label>
+    <input id="email" type="email" formControlName="email" placeholder="ana.torres@optiplant.co" />
+    <p class="hint">Es también la credencial de acceso. Debe ser único dentro de la organización.</p>
+    @if (createForm.controls.email.invalid && createForm.controls.email.touched) {
+      <p class="field-error" role="alert">
+        {{
+          createForm.controls.email.hasError('required')
+            ? 'El correo es obligatorio.'
+            : 'Escribe un correo válido.'
+        }}
+      </p>
+    }
+
+    <label for="password">Contraseña inicial</label>
+    <div class="password-field">
+      <input id="password" [type]="passwordVisible() ? 'text' : 'password'" formControlName="password" />
+      <button
+        type="button"
+        class="password-toggle"
+        (click)="passwordVisible.set(!passwordVisible())"
+        [attr.aria-label]="passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+        [attr.aria-pressed]="passwordVisible()"
+      >
+        {{ passwordVisible() ? '🙈' : '👁️' }}
+      </button>
+    </div>
+    <p class="hint">Mínimo 8 caracteres. El usuario podrá cambiarla luego desde su propia cuenta.</p>
+    @if (createForm.controls.password.invalid && createForm.controls.password.touched) {
+      <p class="field-error" role="alert">
+        {{
+          createForm.controls.password.hasError('required')
+            ? 'La contraseña es obligatoria.'
+            : 'Debe tener al menos 8 caracteres.'
+        }}
+      </p>
+    }
+
+    <label for="role">Rol</label>
+    <select id="role" formControlName="role">
+      <option value="" disabled>Seleccione un rol…</option>
+      <option value="ADMIN">Administrador</option>
+      <option value="BRANCH_MANAGER">Gerente de sucursal</option>
+      <option value="INVENTORY_OPERATOR">Operador de inventario</option>
+    </select>
+    <p class="hint">
+      El <strong>Administrador</strong> opera sobre toda la organización. El
+      <strong>Gerente de sucursal</strong> y el <strong>Operador de inventario</strong> operan sobre una sucursal
+      concreta y por eso deben tener una asignada.
+    </p>
+    @if (createForm.controls.role.invalid && createForm.controls.role.touched) {
+      <p class="field-error" role="alert">Selecciona un rol.</p>
+    }
+
+    @if (createRequiresBranch()) {
+      <label for="branchId">Sucursal</label>
+      <select id="branchId" formControlName="branchId">
+        <option value="" disabled>Seleccione una sucursal…</option>
+        @for (branch of branches(); track branch.id) {
+          <option [value]="branch.id">{{ branch.name }}</option>
+        }
+      </select>
+      @if (createForm.controls.branchId.invalid && createForm.controls.branchId.touched) {
+        <p class="field-error" role="alert">Selecciona la sucursal.</p>
+      }
+    }
+
+    @if (createErrorMessage(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+
+    <div class="actions">
+      <a routerLink="/users" class="button button--ghost">Cancelar</a>
+      <button type="submit" class="button button--primary" [disabled]="createForm.invalid || submitting()">
+        {{ submitting() ? 'Creando…' : 'Crear usuario' }}
+      </button>
+    </div>
+  </form>
+} @else if (user(); as currentUser) {
+  <form class="entity-form" [formGroup]="profileForm" (ngSubmit)="submitProfile(currentUser.id)" novalidate>
+    <label>Correo</label>
+    <input [value]="currentUser.email" disabled />
+    <p class="hint">El correo no se puede cambiar desde aquí.</p>
+
+    <label for="firstName">Nombre</label>
+    <input id="firstName" formControlName="firstName" />
+    @if (profileForm.controls.firstName.invalid && profileForm.controls.firstName.touched) {
+      <p class="field-error" role="alert">El nombre es obligatorio.</p>
+    }
+
+    <label for="lastName">Apellido</label>
+    <input id="lastName" formControlName="lastName" />
+    @if (profileForm.controls.lastName.invalid && profileForm.controls.lastName.touched) {
+      <p class="field-error" role="alert">El apellido es obligatorio.</p>
+    }
+
+    @if (profileErrorMessage(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+    @if (profileMessage(); as message) {
+      <p class="hint">{{ message }}</p>
+    }
+
+    <div class="actions">
+      <button type="submit" class="button button--primary" [disabled]="profileForm.invalid || profileBusy()">
+        {{ profileBusy() ? 'Guardando…' : 'Guardar datos personales' }}
+      </button>
+    </div>
+  </form>
+
+  <section class="units-section">
+    <h2>Rol y sucursal</h2>
+    <p class="hint">
+      Determinan sobre qué puede operar el usuario. Cambian siempre juntos: pasar a Administrador libera la
+      sucursal; dejar de serlo exige asignar una. No se puede degradar al último administrador activo — la
+      organización quedaría sin nadie capaz de gestionar usuarios ni sucursales.
+    </p>
+
+    <form class="filters" [formGroup]="assignmentForm" (ngSubmit)="submitAssignment(currentUser.id)">
+      <select formControlName="role">
+        <option value="ADMIN">Administrador</option>
+        <option value="BRANCH_MANAGER">Gerente de sucursal</option>
+        <option value="INVENTORY_OPERATOR">Operador de inventario</option>
+      </select>
+      @if (assignmentRequiresBranch()) {
+        <select formControlName="branchId">
+          <option value="" disabled>Seleccione una sucursal…</option>
+          @for (branch of branches(); track branch.id) {
+            <option [value]="branch.id">{{ branch.name }}</option>
+          }
+        </select>
+      }
+      <button
+        type="submit"
+        class="button button--primary"
+        [disabled]="assignmentForm.invalid || assignmentBusy()"
+      >
+        {{ assignmentBusy() ? 'Guardando…' : 'Reasignar' }}
+      </button>
+    </form>
+    @if (assignmentForm.controls.branchId.invalid && assignmentForm.controls.branchId.touched) {
+      <p class="field-error" role="alert">Selecciona la sucursal.</p>
+    }
+    @if (assignmentErrorMessage(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+    @if (assignmentMessage(); as message) {
+      <p class="hint">{{ message }}</p>
+    }
+  </section>
+
+  <section class="units-section">
+    <h2>Estado de la cuenta</h2>
+    <p class="hint">
+      @if (currentUser.active) {
+        La cuenta está activa: puede iniciar sesión con normalidad.
+      } @else {
+        La cuenta está dada de baja: no puede iniciar sesión, pero conserva su histórico de movimientos.
+      }
+    </p>
+    <div class="actions">
+      <button type="button" class="button button--primary" [disabled]="statusBusy()" (click)="toggleStatus(currentUser)">
+        {{ statusBusy() ? 'Guardando…' : currentUser.active ? 'Dar de baja' : 'Reactivar' }}
+      </button>
+    </div>
+    @if (statusErrorMessage(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+  </section>
+} @else if (loadErrorMessage(); as message) {
+  <p class="form-error" role="alert">{{ message }}</p>
+}

@@ -24,57 +24,7 @@ interface InventoryEntryForm {
   selector: 'app-inventory-entry-page',
   imports: [ReactiveFormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <h1>Registrar entrada</h1>
-
-    <form class="entity-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <label for="productId">Producto</label>
-      <select id="productId" formControlName="productId">
-        <option value="" disabled>Seleccione un producto…</option>
-        @for (product of products(); track product.id) {
-          <option [value]="product.id">{{ product.sku }} — {{ product.name }}</option>
-        }
-      </select>
-      @if (form.controls.productId.invalid && form.controls.productId.touched) {
-        <p class="field-error" role="alert">Selecciona un producto.</p>
-      }
-
-      <label for="quantity">Cantidad</label>
-      <input id="quantity" type="number" formControlName="quantity" step="any" min="0" />
-      @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
-        <p class="field-error" role="alert">
-          {{
-            form.controls.quantity.hasError('required') ? 'La cantidad es obligatoria.' : 'Debe ser mayor que 0.'
-          }}
-        </p>
-      }
-
-      <label for="reason">Motivo</label>
-      <input id="reason" formControlName="reason" placeholder="Devolución de cliente" />
-      @if (form.controls.reason.invalid && form.controls.reason.touched) {
-        <p class="field-error" role="alert">
-          {{
-            form.controls.reason.hasError('required') ? 'El motivo es obligatorio.' : 'Máximo 250 caracteres.'
-          }}
-        </p>
-      }
-
-      @if (errorMessage(); as message) {
-        <p class="form-error" role="alert">{{ message }}</p>
-      }
-
-      @if (form.invalid && form.touched) {
-        <p class="form-error" role="alert">Revisa los campos marcados en rojo antes de guardar.</p>
-      }
-
-      <div class="actions">
-        <a [routerLink]="['/inventory']" [queryParams]="branchQueryParams" class="button button--ghost">Cancelar</a>
-        <button type="submit" class="button button--primary" [disabled]="form.invalid || submitting()">
-          {{ submitting() ? 'Registrando…' : 'Registrar' }}
-        </button>
-      </div>
-    </form>
-  `,
+  templateUrl: './inventory-entry.page.html',
   styleUrl: './inventory-entry.page.scss',
 })
 export class InventoryEntryPage {

@@ -21,62 +21,7 @@ import { formatDateTime, formatQuantity } from '../../../shared/utils/formatters
   selector: 'app-inventory-adjustment-detail-page',
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <h1>Ajuste de inventario</h1>
-
-    @if (loading()) {
-      <p>Cargando…</p>
-    } @else if (errorMessage(); as message) {
-      <p class="form-error" role="alert">{{ message }}</p>
-    } @else if (adjustment(); as adjustment) {
-      <p class="hint">
-        Identificador: <strong>{{ adjustment.id }}</strong> — guárdalo para consultar este ajuste después.
-      </p>
-      <p class="hint">{{ adjustment.reason }}</p>
-      <p class="hint">
-        Estado:
-        <span class="badge" [class.badge--active]="adjustment.approved" [class.badge--warning]="!adjustment.approved">
-          {{ adjustment.approved ? 'Aprobado' : 'Borrador' }}
-        </span>
-        · Creado: {{ formatDateTime(adjustment.createdAt) }}
-        @if (adjustment.approved) {
-          · Aprobado: {{ formatDateTime(adjustment.approvedAt) }}
-        }
-      </p>
-
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Motivo de línea</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of adjustment.items; track item.id) {
-            <tr>
-              <td data-label="Producto">{{ productLabel(item.productId) }}</td>
-              <td data-label="Cantidad">{{ formatQuantity(item.quantityDelta) }}</td>
-              <td data-label="Motivo de línea">{{ item.reason || '—' }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-
-      @if (approveError(); as message) {
-        <p class="form-error" role="alert">{{ message }}</p>
-      }
-
-      <div class="actions">
-        <a routerLink="/inventory-adjustments" class="button button--ghost">Volver</a>
-        @if (!adjustment.approved) {
-          <button type="button" class="button button--primary" (click)="approve(adjustment.id)" [disabled]="approving()">
-            {{ approving() ? 'Aprobando…' : 'Aprobar ajuste' }}
-          </button>
-        }
-      </div>
-    }
-  `,
+  templateUrl: './inventory-adjustment-detail.page.html',
   styleUrl: './inventory-adjustment-detail.page.scss',
 })
 export class InventoryAdjustmentDetailPage {
